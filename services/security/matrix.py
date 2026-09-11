@@ -260,6 +260,10 @@ DECLARED: dict[tuple[str, str], str] = {
     ("GET", "/docs/oauth2-redirect"): INTERNAL_ONLY,
     ("GET", "/redoc"): INTERNAL_ONLY,
     ("GET", "/admin"): INTERNAL_ONLY,
+    # Served only when the candidate bundle is NOT built — it tells a developer
+    # where the dev servers are. Mutually exclusive with `GET /{full_path:path}`
+    # below, which is the built candidate app at the same address.
+    ("GET", "/"): INTERNAL_ONLY,
     ("GET", "/admin/{full_path:path}"): INTERNAL_ONLY,
     ("GET", "/recruiter"): INTERNAL_ONLY,
     ("GET", "/recruiter/{full_path:path}"): INTERNAL_ONLY,
@@ -300,6 +304,28 @@ class Discrepancy:
         return f"[{self.kind}] {self.route}: {self.detail}"
 
 
+#: Routes that exist only in a BUILT deployment, and their counterpart that
+#: exists only when the bundles are absent.
+#:
+#: `services/api/app.py` mounts the two SPAs behind `dist.exists()`, so a fresh
+#: clone that has not run `npm run build` serves neither — and the dev notice at
+#: `GET /` stands in for the candidate app. Both states are correct, so neither
+#: may be reported as a discrepancy: declaring them unconditionally made a
+#: freshly cloned repository fail its own security test, which trains people to
+#: ignore exactly the test that should never be ignored.
+#:
+#: Their access class is still checked whenever they ARE mounted. This only
+#: permits absence, never a wrong classification.
+BUILD_DEPENDENT: frozenset[tuple[str, str]] = frozenset({
+    ("GET", "/"),
+    ("GET", "/recruiter"),
+    ("GET", "/recruiter/{full_path:path}"),
+    ("GET", "/{full_path:path}"),
+    ("MOUNT", "/assets"),
+    ("MOUNT", "/recruiter/assets"),
+})
+
+
 def audit(app: Any) -> list[Discrepancy]:
     """Every way the matrix and the code can disagree."""
     out: list[Discrepancy] = []
@@ -325,7 +351,7 @@ def audit(app: Any) -> list[Discrepancy]:
         ))
 
     for key in DECLARED:
-        if key not in by_key:
+        if key not in by_key and key not in BUILD_DEPENDENT:
             out.append(Discrepancy(
                 "stale", f"{key[0]} {key[1]}",
                 "declared in the access matrix but not mounted. Remove the row.",
