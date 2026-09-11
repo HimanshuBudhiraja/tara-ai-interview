@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.env.*
+.venv
+node_modules
+dist
+__pycache__
+*.pyc
+*.tsbuildinfo
+.pytest_cache
+data
+*.md
+evals
