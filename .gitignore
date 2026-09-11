@@ -9,4 +9,10 @@ __pycache__/
 
 # Runtime state: sessions, audit trails, invitations, published versions.
 # Authored question banks live in content/ and ARE checked in.
-data/
+#
+# Leading slash: anchors this to the repository root. A bare `data/` matches a
+# directory named `data` at ANY depth, which silently excluded the whole
+# `services/data/` package — the repository layer the app imports at startup —
+# from the initial commit. An ignore rule for one specific directory has to say
+# which one.
+/data/
