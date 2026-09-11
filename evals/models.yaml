@@ -1,0 +1,84 @@
+# Which models to evaluate, and what they cost.
+#
+# EDIT THIS FILE. The OpenRouter catalogue changes — models are added, renamed,
+# deprecated and repriced — so model ids live here rather than in code, and
+# nothing in the harness assumes any particular one exists. A model id that has
+# gone away is recorded as a failed run with the provider's error, not a crash.
+#
+# Verify ids before a long run:   python -m evals.cli check-models
+#
+# Prices are USD per 1,000,000 tokens, copied from the provider's pricing page.
+# They are used only to estimate cost and are NOT fetched at runtime: a number
+# that silently changes underneath a recorded result makes two runs
+# incomparable. Re-check them when you re-run.
+
+evaluation_models:
+  # --- runtime candidates: small and fast, for the two workloads a candidate waits on
+  - model: openai/gpt-4.1-mini
+    label: GPT-4.1 mini
+    prompt_usd_per_m: 0.40
+    completion_usd_per_m: 1.60
+    note: In production today as the answer classifier. The baseline everything is measured against.
+
+  - model: openai/gpt-5-nano
+    label: GPT-5 nano
+    prompt_usd_per_m: 0.05
+    completion_usd_per_m: 0.40
+
+  - model: google/gemini-2.5-flash-lite
+    label: Gemini 2.5 Flash Lite
+    prompt_usd_per_m: 0.10
+    completion_usd_per_m: 0.40
+
+  - model: anthropic/claude-haiku-4.5
+    label: Claude Haiku 4.5
+    prompt_usd_per_m: 1.00
+    completion_usd_per_m: 5.00
+
+  # --- design-time candidates: the four workloads nobody is waiting on
+  - model: openai/gpt-5.1
+    label: GPT-5.1
+    prompt_usd_per_m: 1.25
+    completion_usd_per_m: 10.00
+
+  - model: anthropic/claude-sonnet-5
+    label: Claude Sonnet 5
+    prompt_usd_per_m: 2.00
+    completion_usd_per_m: 10.00
+
+  - model: google/gemini-2.5-pro
+    label: Gemini 2.5 Pro
+    prompt_usd_per_m: 1.25
+    completion_usd_per_m: 10.00
+
+# Which models to try for which workload. Omit a workload to try every model.
+#
+# Runtime workloads are answered while a candidate sits in silence waiting for
+# Tara to speak, so a slow model is a worse product even if it scores better.
+# Design-time workloads are answered while a recruiter looks at a spinner they
+# expected. Weighting them the same would pick one compromise model for two
+# genuinely different jobs.
+workload_models:
+  answer_classifier:   [openai/gpt-4.1-mini, openai/gpt-5-nano, google/gemini-2.5-flash-lite, anthropic/claude-haiku-4.5]
+  followup_generator:  [openai/gpt-4.1-mini, openai/gpt-5-nano, google/gemini-2.5-flash-lite, anthropic/claude-haiku-4.5]
+  interview_designer:  [openai/gpt-4.1-mini, openai/gpt-5.1, anthropic/claude-sonnet-5, google/gemini-2.5-pro]
+  question_generator:  [openai/gpt-4.1-mini, openai/gpt-5.1, anthropic/claude-sonnet-5, google/gemini-2.5-pro]
+  scoring:             [openai/gpt-4.1-mini, openai/gpt-5.1, anthropic/claude-sonnet-5, google/gemini-2.5-pro]
+  report_generator:    [openai/gpt-4.1-mini, openai/gpt-5.1, anthropic/claude-sonnet-5, google/gemini-2.5-pro]
+
+# What each workload is being optimised for. Used to order the comparison table
+# and to say, in the report, WHY one model was recommended over a better-scoring
+# one. Not used to compute a winner — that stays a human decision.
+priorities:
+  answer_classifier:   {quality: 0.55, latency: 0.35, cost: 0.10}
+  followup_generator:  {quality: 0.55, latency: 0.35, cost: 0.10}
+  interview_designer:  {quality: 0.85, latency: 0.05, cost: 0.10}
+  question_generator:  {quality: 0.85, latency: 0.05, cost: 0.10}
+  scoring:             {quality: 0.85, latency: 0.05, cost: 0.10}
+  report_generator:    {quality: 0.85, latency: 0.05, cost: 0.10}
+
+# A runtime workload slower than this makes the conversation feel broken,
+# whatever it scores. Milliseconds, p95.
+latency_budget_ms:
+  answer_classifier: 2500
+  followup_generator: 3000

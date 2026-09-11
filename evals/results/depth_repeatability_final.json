@@ -1,0 +1,364 @@
+{
+  "runs": 3,
+  "cases": 12,
+  "depth_stable_cases": 8,
+  "depth_stability": 0.667,
+  "dimension_stable_cases": 7,
+  "criteria_stable_cases": 8,
+  "per_case": {
+    "dd-direct-02": {
+      "axis": "direct",
+      "expected": "direct",
+      "depths": [
+        "probed",
+        "probed",
+        "probed"
+      ],
+      "depth_stable": true,
+      "depth_always_right": false,
+      "dimension_sets": [
+        [
+          "conceptual_understanding",
+          "production_judgment",
+          "reasoning"
+        ],
+        [
+          "conceptual_understanding",
+          "production_judgment",
+          "reasoning"
+        ],
+        [
+          "conceptual_understanding",
+          "production_judgment",
+          "reasoning"
+        ]
+      ],
+      "dimensions_stable": true,
+      "criteria_stable": true,
+      "criterion_max_move": 0
+    },
+    "dd-probed-01": {
+      "axis": "probed",
+      "expected": "probed",
+      "depths": [
+        "probed",
+        "probed",
+        "probed"
+      ],
+      "depth_stable": true,
+      "depth_always_right": true,
+      "dimension_sets": [
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "reasoning"
+        ],
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "production_judgment",
+          "reasoning"
+        ],
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "reasoning"
+        ]
+      ],
+      "dimensions_stable": false,
+      "criteria_stable": false,
+      "criterion_max_move": 1
+    },
+    "dd-deep-02": {
+      "axis": "deep",
+      "expected": "deep_probed",
+      "depths": [
+        "deep_probed",
+        "deep_probed",
+        "deep_probed"
+      ],
+      "depth_stable": true,
+      "depth_always_right": true,
+      "dimension_sets": [
+        [
+          "practical_application",
+          "production_judgment",
+          "reasoning",
+          "trade_offs"
+        ],
+        [
+          "practical_application",
+          "production_judgment",
+          "reasoning",
+          "trade_offs"
+        ],
+        [
+          "practical_application",
+          "production_judgment",
+          "reasoning",
+          "trade_offs"
+        ]
+      ],
+      "dimensions_stable": true,
+      "criteria_stable": false,
+      "criterion_max_move": 1
+    },
+    "dd-deep-03": {
+      "axis": "deep",
+      "expected": "deep_probed",
+      "depths": [
+        "probed",
+        "deep_probed",
+        "probed"
+      ],
+      "depth_stable": false,
+      "depth_always_right": false,
+      "dimension_sets": [
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "trade_offs"
+        ],
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "production_judgment",
+          "trade_offs"
+        ],
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "trade_offs"
+        ]
+      ],
+      "dimensions_stable": false,
+      "criteria_stable": true,
+      "criterion_max_move": 0
+    },
+    "dd-len-long-01": {
+      "axis": "length",
+      "expected": "direct",
+      "depths": [
+        "direct",
+        "direct",
+        "direct"
+      ],
+      "depth_stable": true,
+      "depth_always_right": true,
+      "dimension_sets": [
+        [
+          "conceptual_understanding",
+          "production_judgment",
+          "reasoning"
+        ],
+        [
+          "conceptual_understanding",
+          "production_judgment",
+          "reasoning"
+        ],
+        [
+          "conceptual_understanding",
+          "production_judgment",
+          "reasoning"
+        ]
+      ],
+      "dimensions_stable": true,
+      "criteria_stable": true,
+      "criterion_max_move": 0
+    },
+    "dd-len-short-01": {
+      "axis": "length",
+      "expected": "deep_probed",
+      "depths": [
+        "deep_probed",
+        "deep_probed",
+        "deep_probed"
+      ],
+      "depth_stable": true,
+      "depth_always_right": true,
+      "dimension_sets": [
+        [
+          "practical_application",
+          "production_judgment",
+          "reasoning"
+        ],
+        [
+          "practical_application",
+          "production_judgment",
+          "reasoning"
+        ],
+        [
+          "practical_application",
+          "production_judgment",
+          "reasoning"
+        ]
+      ],
+      "dimensions_stable": true,
+      "criteria_stable": true,
+      "criterion_max_move": 0
+    },
+    "dd-jargon-01": {
+      "axis": "jargon",
+      "expected": "direct",
+      "depths": [
+        "direct",
+        "probed",
+        "probed"
+      ],
+      "depth_stable": false,
+      "depth_always_right": false,
+      "dimension_sets": [
+        [
+          "conceptual_understanding"
+        ],
+        [
+          "conceptual_understanding",
+          "reasoning"
+        ],
+        [
+          "conceptual_understanding",
+          "reasoning"
+        ]
+      ],
+      "dimensions_stable": false,
+      "criteria_stable": false,
+      "criterion_max_move": 1
+    },
+    "dd-assert-01": {
+      "axis": "assertion",
+      "expected": "direct",
+      "depths": [
+        "direct",
+        "direct",
+        "direct"
+      ],
+      "depth_stable": true,
+      "depth_always_right": true,
+      "dimension_sets": [
+        [],
+        [],
+        []
+      ],
+      "dimensions_stable": true,
+      "criteria_stable": true,
+      "criterion_max_move": 0
+    },
+    "dd-indep-shallow-01": {
+      "axis": "independence",
+      "expected": "direct",
+      "depths": [
+        "direct",
+        "direct",
+        "direct"
+      ],
+      "depth_stable": true,
+      "depth_always_right": true,
+      "dimension_sets": [
+        [
+          "conceptual_understanding"
+        ],
+        [
+          "conceptual_understanding"
+        ],
+        [
+          "conceptual_understanding"
+        ]
+      ],
+      "dimensions_stable": true,
+      "criteria_stable": true,
+      "criterion_max_move": 0
+    },
+    "dd-indep-deep-01": {
+      "axis": "independence",
+      "expected": "deep_probed",
+      "depths": [
+        "probed",
+        "deep_probed",
+        "deep_probed"
+      ],
+      "depth_stable": false,
+      "depth_always_right": false,
+      "dimension_sets": [
+        [
+          "practical_application",
+          "reasoning"
+        ],
+        [
+          "practical_application",
+          "production_judgment",
+          "reasoning"
+        ],
+        [
+          "practical_application",
+          "production_judgment",
+          "reasoning"
+        ]
+      ],
+      "dimensions_stable": false,
+      "criteria_stable": true,
+      "criterion_max_move": 0
+    },
+    "dd-contra-01": {
+      "axis": "contradiction",
+      "expected": "deep_probed",
+      "depths": [
+        "probed",
+        "deep_probed",
+        "direct"
+      ],
+      "depth_stable": false,
+      "depth_always_right": false,
+      "dimension_sets": [
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "trade_offs"
+        ],
+        [
+          "conceptual_understanding",
+          "edge_cases",
+          "practical_application"
+        ],
+        [
+          "conceptual_understanding",
+          "edge_cases",
+          "practical_application"
+        ]
+      ],
+      "dimensions_stable": false,
+      "criteria_stable": false,
+      "criterion_max_move": 1
+    },
+    "dd-stt-01": {
+      "axis": "stt",
+      "expected": "deep_probed",
+      "depths": [
+        "probed",
+        "probed",
+        "probed"
+      ],
+      "depth_stable": true,
+      "depth_always_right": false,
+      "dimension_sets": [
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "trade_offs"
+        ],
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "trade_offs"
+        ],
+        [
+          "conceptual_understanding",
+          "practical_application",
+          "trade_offs"
+        ]
+      ],
+      "dimensions_stable": true,
+      "criteria_stable": true,
+      "criterion_max_move": 0
+    }
+  }
+}

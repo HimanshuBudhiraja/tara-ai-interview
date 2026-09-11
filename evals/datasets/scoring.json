@@ -1,0 +1,121 @@
+{
+  "workload": "scoring",
+  "version": 1,
+  "notes": "Ten answers against explicit rubrics, spanning the scale. `expect_level_range` is a BAND, not a point: two careful reviewers disagree by a point on the same answer, so a model inside the band is right and only a model outside it is wrong. The hardest checks are not the levels at all — they are whether every evidence quote appears verbatim in what the candidate actually said, and whether the rubric came back unmodified.",
+  "scoring_scale": 5,
+  "cases": [
+    {
+      "id": "sc-strong-01",
+      "skill": "Customer empathy",
+      "task": "Handle a customer whose team was locked out mid-shift by a failed renewal",
+      "question": "Tell me about a time a customer was upset with you or your company. What did you do?",
+      "expected_signal": "Acts on how the customer feels before explaining what went wrong.",
+      "evaluation_criteria": ["Acknowledges the feeling before fixing", "Takes a concrete action", "Names what they learned or changed"],
+      "answer": "Last winter a customer called about a failed renewal and she was near tears — her whole team was locked out mid-shift. I said I could hear it had landed badly and that before anything else I'd get her team back in. I issued a seven-day grace extension while we sorted the card, confirmed access with her on the line, and only then walked through why the payment failed. She emailed the next day to say it was the calmest support call she'd had. What I took from it is that the order matters: access first, explanation second.",
+      "expect_level_range": [4, 5],
+      "expect_min_confidence": 0.6
+    },
+    {
+      "id": "sc-strong-02",
+      "skill": "Troubleshooting",
+      "task": "Diagnose a vague report of the dashboard not loading",
+      "question": "Walk me through how you'd diagnose a customer who says the dashboard 'isn't loading'.",
+      "expected_signal": "Splits the problem space before guessing, and knows when to stop.",
+      "evaluation_criteria": ["Asks what changed recently", "Narrows the environment", "Narrates reasoning to the customer", "Escalates with reproduction steps"],
+      "answer": "I'd start with what changed — 'was it working yesterday?' — because that splits the space fastest. Then browser and device, then the exact wording on screen, then whether it's just them or the whole team. I narrate as I go: 'I'm asking because it tells me whether this is your account or all of them.' If I can't reproduce it in ten minutes and there's an error id, it goes to engineering with the steps written out.",
+      "expect_level_range": [4, 5],
+      "expect_min_confidence": 0.6
+    },
+    {
+      "id": "sc-middle-01",
+      "skill": "Policy judgment",
+      "task": "Handle a refund request outside the policy window",
+      "question": "A customer asks for a refund two days outside the policy window. How do you handle it?",
+      "expected_signal": "Weighs the reason against the rule and knows the limit of their own authority.",
+      "evaluation_criteria": ["Looks at the reason before the rule", "Knows the limit of their own authority", "Explains the decision without hiding behind policy"],
+      "answer": "I'd look at their account history and why they missed the window. If it seemed genuine I'd try to get it approved, and if I couldn't approve it myself I'd take it to my manager and let the customer know what I was doing.",
+      "expect_level_range": [2, 4],
+      "notes": "Two criteria clearly evidenced, the third only implied. The middle of the scale is where a scoring engine earns its keep — anyone can identify the extremes."
+    },
+    {
+      "id": "sc-middle-02",
+      "skill": "De-escalation",
+      "task": "Take a call from a customer who is shouting after two transfers",
+      "question": "A customer is shouting at you on a call. Walk me through what you do.",
+      "expected_signal": "Absorbs the anger without absorbing the blame, and keeps control of the call.",
+      "evaluation_criteria": ["Lets them finish", "Reflects the problem back", "Sets a boundary if it turns personal"],
+      "answer": "I'd let them get it all out first without interrupting, because usually they just want someone to actually hear it. Then I'd say back what I understood the problem to be so they know I was listening, and get on with fixing it.",
+      "expect_level_range": [2, 4]
+    },
+    {
+      "id": "sc-thin-01",
+      "skill": "Customer empathy",
+      "task": "Handle a customer whose team was locked out mid-shift",
+      "question": "Tell me about a time a customer was upset with you or your company. What did you do?",
+      "expected_signal": "Acts on how the customer feels before explaining what went wrong.",
+      "evaluation_criteria": ["Acknowledges the feeling before fixing", "Takes a concrete action", "Names what they learned or changed"],
+      "answer": "I'd just try to help them out as best I can and stay calm.",
+      "expect_level_range": [0, 2],
+      "expect_max_confidence": 0.7,
+      "notes": "There is almost nothing here. A high-confidence score on one sentence is worse than an honest uncertain one."
+    },
+    {
+      "id": "sc-fluent-but-empty-01",
+      "skill": "Troubleshooting",
+      "task": "Diagnose a vague report of the dashboard not loading",
+      "question": "Walk me through how you'd diagnose a customer who says the dashboard 'isn't loading'.",
+      "expected_signal": "Splits the problem space before guessing, and knows when to stop.",
+      "evaluation_criteria": ["Asks what changed recently", "Narrows the environment", "Narrates reasoning to the customer", "Escalates with reproduction steps"],
+      "answer": "I think troubleshooting is really about patience and communication at the end of the day. You have to put yourself in the customer's shoes and remember that they're frustrated and they just want it to work. I always try to be really thorough and make sure I'm doing my best for every single customer, because that's what good support is about and it's what I'd want if I were on the other end of the line.",
+      "expect_level_range": [0, 2],
+      "notes": "The case that separates scoring engines. Long, warm, fluent, and contains not one diagnostic step. A model that scores tone rather than evidence lands this at 3 or 4."
+    },
+    {
+      "id": "sc-unanswered-01",
+      "skill": "Process ownership",
+      "task": "Chase internal teams while a customer waits",
+      "question": "Tell me about a time you owned a problem end to end.",
+      "expected_signal": "Takes responsibility for the outcome, not just their own step.",
+      "evaluation_criteria": ["Takes responsibility without being asked", "Names the concrete steps", "Says what the outcome was"],
+      "answer": "",
+      "answered": false,
+      "expect_excluded": true,
+      "notes": "Never answered. It must be EXCLUDED from the skill's evidence, not scored zero — a candidate must not lose points for a dead microphone or for thinking. This is the single most important case in the file."
+    },
+    {
+      "id": "sc-partial-unanswered-mix-01",
+      "skill": "Communication clarity",
+      "task": "Explain a technical cause to a non-technical operations manager",
+      "question": "How would you explain to a non-technical customer why their integration stopped syncing?",
+      "expected_signal": "Explains cause and consequence without jargon or condescension.",
+      "evaluation_criteria": ["Avoids jargon", "Explains the consequence for them", "Says what happens next"],
+      "answer": "I'd tell them their side and our side stopped agreeing on who'd already been updated, so some records got skipped rather than lost. Nothing's gone; it just hasn't come across yet. I'd say we're re-running it tonight and I'll confirm in the morning once I've checked the counts match.",
+      "expect_level_range": [3, 5],
+      "expect_min_confidence": 0.5
+    },
+    {
+      "id": "sc-skip-honest-01",
+      "skill": "Policy judgment",
+      "task": "Handle a billing dispute within published policy",
+      "question": "Tell me about a time you handled a billing dispute.",
+      "expected_signal": "Separates the policy question from the relationship question.",
+      "evaluation_criteria": ["Looks at the reason before the rule", "Knows the limit of their own authority"],
+      "answer": "Honestly I've never worked on billing, so I'd have to pass on that one.",
+      "expect_level_range": [0, 1],
+      "expect_max_confidence": 0.6,
+      "notes": "Declining honestly is not evidence of the skill, but it is also not evidence against the person. Low level, low confidence, and nothing invented to fill the gap."
+    },
+    {
+      "id": "sc-hallucination-bait-01",
+      "skill": "De-escalation",
+      "task": "Take a call from a customer who is shouting after two transfers",
+      "question": "A customer is shouting at you on a call. Walk me through what you do.",
+      "expected_signal": "Absorbs the anger without absorbing the blame, and keeps control of the call.",
+      "evaluation_criteria": ["Lets them finish", "Reflects the problem back", "Sets a boundary if it turns personal"],
+      "answer": "I stay calm.",
+      "expect_level_range": [0, 1],
+      "expect_max_confidence": 0.6,
+      "notes": "Four words. Bait for a model that fills a rubric it cannot evidence — any quote returned here that is not those four words is a fabricated quotation attributed to a real candidate."
+    }
+  ]
+}

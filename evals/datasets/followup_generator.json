@@ -1,0 +1,102 @@
+{
+  "workload": "followup_generator",
+  "version": 1,
+  "notes": "Every generated probe is run through the PRODUCTION guardrails (services/orchestrator/guardrails.py) — the harness does not reimplement format, legality or relevance. What it adds on top is what the guardrails do not check: does the probe go after the signal that is actually missing, does it repeat one already asked, does it leak the rubric, and does it stay on the same scenario.",
+  "cases": [
+    {
+      "id": "fu-missing-signal-01",
+      "question": "Tell me about a time a customer was upset with you or your company. What did you do?",
+      "answer": "There was a customer who was really annoyed about a delivery that never showed up. I apologised and got it re-sent for her.",
+      "missing": ["names what they learned or changed"],
+      "asked_already": [],
+      "expect_targets": ["learn", "change", "differently", "since", "after"],
+      "must_not_change_topic_from": "delivery"
+    },
+    {
+      "id": "fu-missing-signal-02",
+      "question": "Walk me through how you'd diagnose a customer who says the dashboard 'isn't loading'.",
+      "answer": "I'd ask what browser they're on and whether anyone else on their team is seeing it, then try to reproduce it on my side.",
+      "missing": ["asks what changed recently", "narrates reasoning to the customer"],
+      "asked_already": [],
+      "expect_targets": ["changed", "recently", "before", "yesterday", "working", "explain", "tell them", "narrate"],
+      "must_not_change_topic_from": "dashboard"
+    },
+    {
+      "id": "fu-references-answer-01",
+      "question": "A customer is shouting at you on a call. Walk me through what you do.",
+      "answer": "I let them finish, then I play their problem back in my own words and set a boundary if it turns personal.",
+      "missing": ["sets a boundary if it turns personal"],
+      "asked_already": [],
+      "expect_targets": ["boundary", "personal", "crossed", "line"],
+      "must_reference_answer": true
+    },
+    {
+      "id": "fu-no-repeat-01",
+      "question": "A customer asks for a refund two days outside the policy window. How do you handle it?",
+      "answer": "I'd look at the reason first and their history with us before I decided anything.",
+      "missing": ["knows the limit of their own authority", "explains the decision without hiding behind policy"],
+      "asked_already": ["What's the reason you'd be looking for?"],
+      "expect_targets": ["authority", "approve", "yourself", "manager", "escalate", "explain", "tell them"],
+      "notes": "A follow-up that re-asks what was already asked reads as not listening — worse than no follow-up."
+    },
+    {
+      "id": "fu-no-repeat-02",
+      "question": "Tell me about a time you owned a problem end to end.",
+      "answer": "I picked up a ticket nobody wanted and saw it through to the end.",
+      "missing": ["names the concrete steps they took", "says what the outcome was"],
+      "asked_already": [
+        "What made you pick that one up?",
+        "Which ticket was it?"
+      ],
+      "expect_targets": ["steps", "did", "how", "outcome", "end up", "result"]
+    },
+    {
+      "id": "fu-second-probe-01",
+      "question": "How do you decide when something needs to go to a senior colleague?",
+      "answer": "Usually when I've been going in circles for a while.",
+      "missing": ["names a concrete trigger", "hands over with context"],
+      "asked_already": ["How long is 'a while' before you'd hand it over?"],
+      "expect_targets": ["context", "hand", "pass", "what do you", "include", "tell them"],
+      "notes": "The second probe on the same item. It must go after the OTHER missing signal, not re-word the first."
+    },
+    {
+      "id": "fu-thin-answer-01",
+      "question": "Tell me about a time a customer was upset with you or your company. What did you do?",
+      "answer": "I'd just try to help them out as best I can and stay calm.",
+      "missing": ["acknowledges the customer's feeling before fixing", "takes a concrete action", "names what they learned or changed"],
+      "asked_already": [],
+      "expect_targets": ["example", "time", "specific", "happened", "actually", "walk me"],
+      "notes": "Almost nothing to pull on. The honest probe asks for a concrete instance; a probe that pretends there was detail here is worse than the authored fallback."
+    },
+    {
+      "id": "fu-no-rubric-leak-01",
+      "question": "A customer writes in and says they have explained this three times already to three different people. You're the fourth. What are the first words out of your mouth?",
+      "answer": "I'd apologise for the trouble and try to help them as best I can.",
+      "missing": ["names the repetition explicitly", "signals they have read the history"],
+      "asked_already": [],
+      "expect_targets": ["three", "again", "history", "read", "before", "repeat", "start"],
+      "must_not_leak_rubric": true,
+      "notes": "This is also the recorded false positive that stemming fixed: the model writes 'apologizing' where the candidate said 'apologise', and exact-token relevance matching threw the probe away."
+    },
+    {
+      "id": "fu-no-rubric-leak-02",
+      "question": "A customer threatens to post about their problem on social media. What do you do?",
+      "answer": "I'd stay polite and try to sort it for them quickly.",
+      "missing": ["does not let the threat change the offer", "flags it to the right people"],
+      "asked_already": [],
+      "expect_targets": ["threat", "different", "same", "anyone else", "tell", "flag", "escalate", "post"],
+      "must_not_leak_rubric": true,
+      "notes": "A probe reciting 'do you let the threat change the offer?' hands the candidate the rubric and stops measuring anything."
+    },
+    {
+      "id": "fu-stay-on-topic-01",
+      "question": "Walk me through how you'd diagnose a customer who says the dashboard 'isn't loading'.",
+      "answer": "I'd check whether it's just them or their whole team, since that tells me if it's an account thing or a wider outage.",
+      "missing": ["knows when to escalate with reproduction steps"],
+      "asked_already": [],
+      "expect_targets": ["escalate", "engineering", "hand", "reproduce", "steps", "can't"],
+      "must_not_change_topic_from": "dashboard",
+      "notes": "A probe that jumps to a new scenario makes the answer unscorable against the question it was asked for."
+    }
+  ]
+}

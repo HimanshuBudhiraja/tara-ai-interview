@@ -1,0 +1,1840 @@
+{
+  "depth_cfg_current": {
+    "shipped (trade_offs=probed)": {
+      "agreement": {
+        "mean": 0.665,
+        "min": 0.63,
+        "max": 0.674,
+        "stdev": 0.017
+      },
+      "repeatability": 0.87,
+      "cases_changed": 0,
+      "changed": []
+    },
+    "trade_offs=deep": {
+      "agreement": {
+        "mean": 0.709,
+        "min": 0.674,
+        "max": 0.739,
+        "stdev": 0.022
+      },
+      "repeatability": 0.913,
+      "cases_changed": 8,
+      "changed": [
+        {
+          "case_id": "dd-probed-04",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-03",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-long-02",
+          "axis": "length",
+          "expected": "direct",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-01",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-03",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-contra-02",
+          "axis": "contradiction",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-stt-01",
+          "axis": "stt",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deepdeep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        }
+      ]
+    },
+    "trade_offs=deep if corroborated": {
+      "agreement": {
+        "mean": 0.722,
+        "min": 0.696,
+        "max": 0.739,
+        "stdev": 0.016
+      },
+      "repeatability": 0.891,
+      "cases_changed": 7,
+      "changed": [
+        {
+          "case_id": "dd-probed-04",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-03",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-01",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-03",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-contra-02",
+          "axis": "contradiction",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-stt-01",
+          "axis": "stt",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deepdeep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        }
+      ]
+    },
+    "deep tier needs two strong deep items": {
+      "agreement": {
+        "mean": 0.587,
+        "min": 0.565,
+        "max": 0.63,
+        "stdev": 0.024
+      },
+      "repeatability": 0.87,
+      "cases_changed": 18,
+      "changed": [
+        {
+          "case_id": "dd-probed-03",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-01",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-02",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-04",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-05",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "deep_probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-06",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-01",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-01",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-probed-01",
+          "axis": "independence",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "direct",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "direct",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-level-junior",
+          "axis": "level",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-level-mid",
+          "axis": "level",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        }
+      ]
+    }
+  },
+  "depth_cfg_reverted": {
+    "shipped (trade_offs=probed)": {
+      "agreement": {
+        "mean": 0.743,
+        "min": 0.696,
+        "max": 0.783,
+        "stdev": 0.032
+      },
+      "repeatability": 0.783,
+      "cases_changed": 0,
+      "changed": []
+    },
+    "trade_offs=deep": {
+      "agreement": {
+        "mean": 0.791,
+        "min": 0.739,
+        "max": 0.826,
+        "stdev": 0.029
+      },
+      "repeatability": 0.761,
+      "cases_changed": 9,
+      "changed": [
+        {
+          "case_id": "dd-direct-02",
+          "axis": "direct",
+          "expected": "direct",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-probed-04",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-03",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-05",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-long-02",
+          "axis": "length",
+          "expected": "direct",
+          "was": [
+            "probed",
+            "direct",
+            "probed",
+            "probed",
+            "direct"
+          ],
+          "now": [
+            "deep_probed",
+            "direct",
+            "deep_probed",
+            "deep_probed",
+            "direct"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-03",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-contra-02",
+          "axis": "contradiction",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-stt-01",
+          "axis": "stt",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deepdeep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        }
+      ]
+    },
+    "trade_offs=deep if corroborated": {
+      "agreement": {
+        "mean": 0.791,
+        "min": 0.739,
+        "max": 0.826,
+        "stdev": 0.029
+      },
+      "repeatability": 0.761,
+      "cases_changed": 8,
+      "changed": [
+        {
+          "case_id": "dd-direct-02",
+          "axis": "direct",
+          "expected": "direct",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-probed-04",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-03",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-05",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-03",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-contra-02",
+          "axis": "contradiction",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-stt-01",
+          "axis": "stt",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deepdeep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        }
+      ]
+    },
+    "deep tier needs two strong deep items": {
+      "agreement": {
+        "mean": 0.626,
+        "min": 0.609,
+        "max": 0.63,
+        "stdev": 0.009
+      },
+      "repeatability": 0.87,
+      "cases_changed": 20,
+      "changed": [
+        {
+          "case_id": "dd-probed-01",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-probed-03",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-02",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-04",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-06",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-01",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-02",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-01",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-probed-01",
+          "axis": "independence",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "deep_probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-level-junior",
+          "axis": "level",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-level-mid",
+          "axis": "level",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        }
+      ]
+    }
+  },
+  "depth_cfg_rubric_v1": {
+    "shipped (trade_offs=probed)": {
+      "agreement": {
+        "mean": 0.665,
+        "min": 0.652,
+        "max": 0.674,
+        "stdev": 0.011
+      },
+      "repeatability": 0.739,
+      "cases_changed": 0,
+      "changed": []
+    },
+    "trade_offs=deep": {
+      "agreement": {
+        "mean": 0.743,
+        "min": 0.696,
+        "max": 0.804,
+        "stdev": 0.037
+      },
+      "repeatability": 0.696,
+      "cases_changed": 11,
+      "changed": [
+        {
+          "case_id": "dd-direct-02",
+          "axis": "direct",
+          "expected": "direct",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-probed-04",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-03",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-long-02",
+          "axis": "length",
+          "expected": "direct",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-01",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-01",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-03",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-contra-02",
+          "axis": "contradiction",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-stt-01",
+          "axis": "stt",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deepdeep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ]
+        }
+      ]
+    },
+    "trade_offs=deep if corroborated": {
+      "agreement": {
+        "mean": 0.743,
+        "min": 0.696,
+        "max": 0.804,
+        "stdev": 0.037
+      },
+      "repeatability": 0.696,
+      "cases_changed": 10,
+      "changed": [
+        {
+          "case_id": "dd-direct-02",
+          "axis": "direct",
+          "expected": "direct",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-probed-04",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-03",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-01",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-01",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deep-03",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-contra-02",
+          "axis": "contradiction",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-stt-01",
+          "axis": "stt",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deepdeep-02",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed"
+          ]
+        }
+      ]
+    },
+    "deep tier needs two strong deep items": {
+      "agreement": {
+        "mean": 0.557,
+        "min": 0.522,
+        "max": 0.587,
+        "stdev": 0.022
+      },
+      "repeatability": 0.848,
+      "cases_changed": 13,
+      "changed": [
+        {
+          "case_id": "dd-probed-03",
+          "axis": "probed",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-01",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-02",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-04",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-deep-06",
+          "axis": "deep",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-01",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-len-short-02",
+          "axis": "length",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-level-mid",
+          "axis": "level",
+          "expected": "probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-level-senior",
+          "axis": "level",
+          "expected": "probed",
+          "was": [
+            "probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-stt-01",
+          "axis": "stt",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "probed",
+            "probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-stt-02",
+          "axis": "stt",
+          "expected": "deep_probed",
+          "was": [
+            "probed",
+            "deep_probed",
+            "probed",
+            "direct",
+            "probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "direct",
+            "probed"
+          ]
+        },
+        {
+          "case_id": "dd-indep-deepdeep-01",
+          "axis": "independence",
+          "expected": "deep_probed",
+          "was": [
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed",
+            "deep_probed"
+          ],
+          "now": [
+            "probed",
+            "probed",
+            "probed",
+            "probed",
+            "probed"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,750 @@
+{
+  "session_id": "dc9e15e9707e4b2e84e7ad1c4541c39a",
+  "runs": [
+    {
+      "evaluation_id": "ev_84a85a9518b5",
+      "attempt": 1,
+      "snapshot_checksum": "5793af20e8281f90",
+      "engine_version": "deep_evidence_v2",
+      "model": "openai/gpt-4.1-mini",
+      "score": 112,
+      "max_score": 150,
+      "percentage": 74.7,
+      "rating": "Good",
+      "coverage": 100.0,
+      "recommendation": "Proceed to next round",
+      "any_severe": false,
+      "severe_skills": [],
+      "evidence_items": 30,
+      "latency_ms": 48522,
+      "skills": [
+        {
+          "skill_name": "Customer empathy",
+          "discussion_status": "discussed",
+          "score": 21,
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "De-escalation",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Troubleshooting",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "deep_probed",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Policy judgment",
+          "discussion_status": "discussed",
+          "score": 17,
+          "criteria": {
+            "Accuracy": 3,
+            "Depth": 3,
+            "Clarity": 4,
+            "Problem-Solving": 3,
+            "Communication": 4
+          },
+          "min_criterion": 3,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed"
+        },
+        {
+          "skill_name": "Communication clarity",
+          "discussion_status": "discussed",
+          "score": 14,
+          "criteria": {
+            "Accuracy": 3,
+            "Depth": 2,
+            "Clarity": 4,
+            "Problem-Solving": 2,
+            "Communication": 3
+          },
+          "min_criterion": 2,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct"
+        },
+        {
+          "skill_name": "Process ownership",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        }
+      ],
+      "wall_sec": 0.0
+    },
+    {
+      "evaluation_id": "ev_ab614d09864f",
+      "attempt": 2,
+      "snapshot_checksum": "5793af20e8281f90",
+      "engine_version": "deep_evidence_v2",
+      "model": "openai/gpt-4.1-mini",
+      "score": 114,
+      "max_score": 150,
+      "percentage": 76.0,
+      "rating": "Good",
+      "coverage": 100.0,
+      "recommendation": "Needs further evaluation",
+      "any_severe": true,
+      "severe_skills": [
+        "Communication clarity"
+      ],
+      "evidence_items": 30,
+      "latency_ms": 46677,
+      "skills": [
+        {
+          "skill_name": "Customer empathy",
+          "discussion_status": "discussed",
+          "score": 21,
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "De-escalation",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Troubleshooting",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "deep_probed",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Policy judgment",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed"
+        },
+        {
+          "skill_name": "Communication clarity",
+          "discussion_status": "discussed",
+          "score": 13,
+          "criteria": {
+            "Accuracy": 3,
+            "Depth": 1,
+            "Clarity": 4,
+            "Problem-Solving": 2,
+            "Communication": 3
+          },
+          "min_criterion": 1,
+          "severe": true,
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct"
+        },
+        {
+          "skill_name": "Process ownership",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        }
+      ],
+      "wall_sec": 46.8
+    },
+    {
+      "evaluation_id": "ev_06f127159f24",
+      "attempt": 3,
+      "snapshot_checksum": "5793af20e8281f90",
+      "engine_version": "deep_evidence_v2",
+      "model": "openai/gpt-4.1-mini",
+      "score": 112,
+      "max_score": 150,
+      "percentage": 74.7,
+      "rating": "Good",
+      "coverage": 100.0,
+      "recommendation": "Proceed to next round",
+      "any_severe": false,
+      "severe_skills": [],
+      "evidence_items": 30,
+      "latency_ms": 43681,
+      "skills": [
+        {
+          "skill_name": "Customer empathy",
+          "discussion_status": "discussed",
+          "score": 21,
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "De-escalation",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Troubleshooting",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "deep_probed",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Policy judgment",
+          "discussion_status": "discussed",
+          "score": 15,
+          "criteria": {
+            "Accuracy": 3,
+            "Depth": 3,
+            "Clarity": 3,
+            "Problem-Solving": 3,
+            "Communication": 3
+          },
+          "min_criterion": 3,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed"
+        },
+        {
+          "skill_name": "Communication clarity",
+          "discussion_status": "discussed",
+          "score": 16,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 2,
+            "Clarity": 4,
+            "Problem-Solving": 2,
+            "Communication": 4
+          },
+          "min_criterion": 2,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct"
+        },
+        {
+          "skill_name": "Process ownership",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed"
+        }
+      ],
+      "wall_sec": 43.8
+    },
+    {
+      "evaluation_id": "ev_c66e4edfa603",
+      "attempt": 4,
+      "snapshot_checksum": "5793af20e8281f90",
+      "engine_version": "deep_evidence_v2",
+      "model": "openai/gpt-4.1-mini",
+      "score": 115,
+      "max_score": 150,
+      "percentage": 76.7,
+      "rating": "Good",
+      "coverage": 100.0,
+      "recommendation": "Needs further evaluation",
+      "any_severe": true,
+      "severe_skills": [
+        "Communication clarity"
+      ],
+      "evidence_items": 31,
+      "latency_ms": 49536,
+      "skills": [
+        {
+          "skill_name": "Customer empathy",
+          "discussion_status": "discussed",
+          "score": 21,
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "De-escalation",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Troubleshooting",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "deep_probed",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Policy judgment",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed"
+        },
+        {
+          "skill_name": "Communication clarity",
+          "discussion_status": "discussed",
+          "score": 14,
+          "criteria": {
+            "Accuracy": 3,
+            "Depth": 1,
+            "Clarity": 4,
+            "Problem-Solving": 2,
+            "Communication": 4
+          },
+          "min_criterion": 1,
+          "severe": true,
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct"
+        },
+        {
+          "skill_name": "Process ownership",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        }
+      ],
+      "wall_sec": 49.7
+    },
+    {
+      "evaluation_id": "ev_b9efd09d2206",
+      "attempt": 5,
+      "snapshot_checksum": "5793af20e8281f90",
+      "engine_version": "deep_evidence_v2",
+      "model": "openai/gpt-4.1-mini",
+      "score": 115,
+      "max_score": 150,
+      "percentage": 76.7,
+      "rating": "Good",
+      "coverage": 100.0,
+      "recommendation": "Needs further evaluation",
+      "any_severe": true,
+      "severe_skills": [
+        "Communication clarity"
+      ],
+      "evidence_items": 31,
+      "latency_ms": 49810,
+      "skills": [
+        {
+          "skill_name": "Customer empathy",
+          "discussion_status": "discussed",
+          "score": 21,
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "De-escalation",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Troubleshooting",
+          "discussion_status": "discussed",
+          "score": 20,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 4,
+          "severe": false,
+          "depth_reached": "deep_probed",
+          "depth_demonstrated": "probed"
+        },
+        {
+          "skill_name": "Policy judgment",
+          "discussion_status": "discussed",
+          "score": 19,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 3,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 3,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed"
+        },
+        {
+          "skill_name": "Communication clarity",
+          "discussion_status": "discussed",
+          "score": 16,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 1,
+            "Clarity": 4,
+            "Problem-Solving": 3,
+            "Communication": 4
+          },
+          "min_criterion": 1,
+          "severe": true,
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct"
+        },
+        {
+          "skill_name": "Process ownership",
+          "discussion_status": "discussed",
+          "score": 19,
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 3,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "min_criterion": 3,
+          "severe": false,
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed"
+        }
+      ],
+      "wall_sec": 50.0
+    }
+  ],
+  "verdict": {
+    "runs": 5,
+    "score_percentages": [
+      74.7,
+      76.0,
+      74.7,
+      76.7,
+      76.7
+    ],
+    "score_spread_pp": 2.0,
+    "score_stdev_pp": 0.902,
+    "ratings": [
+      "Good"
+    ],
+    "recommendations": [
+      "Needs further evaluation",
+      "Proceed to next round"
+    ],
+    "recommendation_flipped": true,
+    "any_severe_values": [
+      false,
+      true
+    ],
+    "severe_flag_moved": true,
+    "criterion_moves": [
+      {
+        "skill": "Policy judgment",
+        "criterion": "Accuracy",
+        "values": [
+          3,
+          4,
+          3,
+          4,
+          4
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Policy judgment",
+        "criterion": "Depth",
+        "values": [
+          3,
+          4,
+          3,
+          4,
+          3
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Policy judgment",
+        "criterion": "Clarity",
+        "values": [
+          4,
+          4,
+          3,
+          4,
+          4
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Policy judgment",
+        "criterion": "Problem-Solving",
+        "values": [
+          3,
+          4,
+          3,
+          4,
+          4
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Policy judgment",
+        "criterion": "Communication",
+        "values": [
+          4,
+          4,
+          3,
+          4,
+          4
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Communication clarity",
+        "criterion": "Accuracy",
+        "values": [
+          3,
+          3,
+          4,
+          3,
+          4
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Communication clarity",
+        "criterion": "Depth",
+        "values": [
+          2,
+          1,
+          2,
+          1,
+          1
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Communication clarity",
+        "criterion": "Problem-Solving",
+        "values": [
+          2,
+          2,
+          2,
+          2,
+          3
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Communication clarity",
+        "criterion": "Communication",
+        "values": [
+          3,
+          3,
+          4,
+          4,
+          4
+        ],
+        "spread": 1
+      },
+      {
+        "skill": "Process ownership",
+        "criterion": "Depth",
+        "values": [
+          4,
+          4,
+          4,
+          4,
+          3
+        ],
+        "spread": 1
+      }
+    ],
+    "max_criterion_move": 1,
+    "discussion_status_moves": [],
+    "depth_demonstrated_moves": [
+      {
+        "skill": "Process ownership",
+        "values": [
+          "deep_probed",
+          "probed"
+        ]
+      }
+    ],
+    "classification": "boundary_instability"
+  }
+}

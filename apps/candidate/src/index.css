@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-base text-gray-900 antialiased;
+    /* Inter's disambiguated forms — the l/1/I confusion costs real time in a
+       table of ids and counts. */
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------------------------------------------------------------- icons --
+     One stroke weight across the whole product. Lucide ships at 2px, which
+     reads heavy next to 13-14px text; 1.5px sits properly with it. Setting it
+     globally is the only way to stop the weight drifting as components get
+     added by different hands. */
+  .lucide {
+    stroke-width: 1.5;
+    flex-shrink: 0;
+  }
+  /* Small icons need a touch more weight or they disappear at 12-14px. */
+  .lucide[width="12"],
+  .lucide[width="14"],
+  .lucide.h-3,
+  .lucide.h-3\.5 {
+    stroke-width: 1.75;
+  }
+
+  /* --------------------------------------------------------------- focus --
+     Visible everywhere and keyboard-only, so the ring never fires on a mouse
+     click but is always there for anyone tabbing. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500/50 ring-offset-1 ring-offset-surface;
+  }
+
+  ::selection {
+    @apply bg-brand-100 text-brand-900;
+  }
+
+  /* Inputs inherit the type scale rather than the browser's 16px default. */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Restrained scrollbars — visible when there's overflow, invisible otherwise. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme("colors.gray.300") transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-md border-[3px] border-solid border-transparent bg-gray-300 bg-clip-content;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+}
+
+@layer components {
+  /* ---------------------------------------------------------------- cards --
+     A hairline border does the separating; the shadow only lifts it off the
+     canvas. Stacking both heavily is what makes an interface feel like a
+     marketing page. */
+  .card {
+    @apply rounded-lg border border-gray-200 bg-surface shadow-xs;
+  }
+  .card-flat {
+    @apply rounded-lg border border-gray-200 bg-surface;
+  }
+
+  /* --------------------------------------------------------------- labels --
+     The metadata voice: small, uppercase, tracked, muted. Used for field
+     labels, table headers, and KPI captions so they read as one register. */
+  .label {
+    @apply text-2xs font-semibold uppercase tracking-wider text-gray-400;
+  }
+  .meta {
+    @apply text-xs text-gray-500;
+  }
+
+  /* ---------------------------------------------------------------- input -- */
+  .field {
+    @apply h-9 w-full rounded-md border border-gray-300 bg-surface px-3 text-base text-gray-900
+           shadow-xs transition placeholder:text-gray-400
+           hover:border-gray-400
+           focus:border-brand-400 focus:shadow-focus focus:outline-none focus:ring-0
+           disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400;
+  }
+  .field-textarea {
+    @apply w-full rounded-md border border-gray-300 bg-surface px-3 py-2 text-base text-gray-900
+           shadow-xs transition placeholder:text-gray-400
+           hover:border-gray-400
+           focus:border-brand-400 focus:shadow-focus focus:outline-none focus:ring-0
+           disabled:cursor-not-allowed disabled:bg-gray-50;
+  }
+  .field-select {
+    @apply h-8 rounded-md border border-gray-300 bg-surface px-2 pr-7 text-sm text-gray-700 shadow-xs
+           transition hover:border-gray-400
+           focus:border-brand-400 focus:shadow-focus focus:outline-none;
+    /* A single consistent chevron rather than each platform's own control. */
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 14px;
+  }
+
+  /* ---------------------------------------------------------------- table -- */
+  .table-head {
+    @apply border-b border-gray-200 bg-gray-25 text-2xs font-semibold uppercase tracking-wider text-gray-400;
+  }
+  .table-row {
+    @apply border-b border-gray-100 transition-colors last:border-0 hover:bg-gray-25;
+  }
+
+  /* ------------------------------------------------------------- emphasis --
+     The one place gradient is allowed to fill a surface: the brand mark and the
+     voice orb. Everywhere else it's a hairline accent or nothing. */
+  .brand-gradient {
+    background-image: linear-gradient(135deg, theme("colors.brand.400"), theme("colors.brand.600"));
+  }
+  /* A 1px top highlight on dark surfaces — depth without a glass effect. */
+  .rule-accent {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      theme("colors.gray.200") 20%,
+      theme("colors.gray.200") 80%,
+      transparent
+    );
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* The orb and the mic meter are the only motion in the product, and both are
+   decorative. Anyone who has asked the OS to stop moving things gets a static
+   interface that still tells them whose turn it is. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

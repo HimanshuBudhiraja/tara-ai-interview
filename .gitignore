@@ -1,0 +1,12 @@
+.env
+.venv/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+.pytest_cache/
+
+# Runtime state: sessions, audit trails, invitations, published versions.
+# Authored question banks live in content/ and ARE checked in.
+data/

@@ -1,0 +1,27 @@
+{
+  "config": "evals/models.yaml",
+  "started_at": 1788709686.0636349,
+  "finished_at": 1788709686.486764,
+  "results": [
+    {
+      "workload": "scoring",
+      "model": "openai/gpt-4.1-mini",
+      "test_case_id": "sc-strong-01",
+      "success": false,
+      "latency_ms": 418,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "raw_output": null,
+      "parsed_output": null,
+      "validation_errors": [
+        "403: {\"error\":{\"message\":\"Key limit exceeded (total limit). Manage it using https://openrouter.ai/workspaces/default/keys/27fbb0355999cd448e0ee8564e7d467b354925cdce90861f98b9b69e525e8a59\",\"code\":403}}"
+      ],
+      "transport_failure": false,
+      "retries": 0,
+      "checks": {},
+      "score": 0.0,
+      "notes": [],
+      "cost_usd": 0.0
+    }
+  ]
+}

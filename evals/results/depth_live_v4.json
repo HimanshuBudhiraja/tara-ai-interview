@@ -1,0 +1,2708 @@
+{
+  "mode": "live",
+  "totals": {
+    "cases": 46,
+    "depth_agreement": 0.739,
+    "depth_correct": 34,
+    "fully_clean": 28,
+    "material_depth_errors": 12,
+    "extraction_findings": 8,
+    "observed_equals_reached": 16
+  },
+  "by_axis": {
+    "direct": {
+      "cases": 4,
+      "depth_ok": 3
+    },
+    "probed": {
+      "cases": 5,
+      "depth_ok": 4
+    },
+    "deep": {
+      "cases": 6,
+      "depth_ok": 5
+    },
+    "length": {
+      "cases": 4,
+      "depth_ok": 1
+    },
+    "jargon": {
+      "cases": 3,
+      "depth_ok": 2
+    },
+    "assertion": {
+      "cases": 3,
+      "depth_ok": 3
+    },
+    "independence": {
+      "cases": 12,
+      "depth_ok": 11
+    },
+    "level": {
+      "cases": 3,
+      "depth_ok": 0
+    },
+    "contradiction": {
+      "cases": 2,
+      "depth_ok": 2
+    },
+    "stt": {
+      "cases": 2,
+      "depth_ok": 1
+    },
+    "injection": {
+      "cases": 2,
+      "depth_ok": 2
+    }
+  },
+  "confusion": {
+    "deep_probed->deep_probed": 13,
+    "deep_probed->probed": 4,
+    "direct->deep_probed": 1,
+    "direct->direct": 14,
+    "direct->probed": 3,
+    "probed->deep_probed": 4,
+    "probed->probed": 7
+  },
+  "findings": [
+    {
+      "case_id": "dd-direct-02",
+      "axis": "direct",
+      "check": "depth_demonstrated",
+      "expected": "direct",
+      "actual": "deep_probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "reason": "A hypothetical plan in the conditional. It explains the mechanism accurately and stops there: no lookup they actually cached, no number, no invalidation cost, nothing given up. The purpose clause ('so a read-through cache would take most of the traffic') states what caching is for, which is not reasoning about a choice."
+    },
+    {
+      "case_id": "dd-direct-02",
+      "axis": "direct",
+      "check": "dimensions_any_of",
+      "expected": [
+        "conceptual_understanding"
+      ],
+      "actual": [
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "severity": "calibration",
+      "failure_class": "EXTRACTION",
+      "reason": "none of the dimensions this answer demonstrates was found"
+    },
+    {
+      "case_id": "dd-direct-02",
+      "axis": "direct",
+      "check": "dimensions_none_of",
+      "expected": "none of ['edge_cases', 'practical_application', 'production_judgment']",
+      "actual": [
+        "practical_application",
+        "production_judgment"
+      ],
+      "severity": "calibration",
+      "failure_class": "EXTRACTION",
+      "reason": "a dimension was tagged that the words do not carry"
+    },
+    {
+      "case_id": "dd-probed-03",
+      "axis": "probed",
+      "check": "depth_demonstrated",
+      "expected": "probed",
+      "actual": "deep_probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "reason": "A decision they made and the rule they enforced, with the reason for the matching order. Substantive application. FIXTURE NOTE: the answer originally said the unmatched rows went to a queue “rather than being written off”, which names a rejected alternative — a defensible deep marker, and this case is authored to be cleanly probed. The clause was removed so the case tests what it claims rather than sitting on the boundary."
+    },
+    {
+      "case_id": "dd-probed-05",
+      "axis": "probed",
+      "check": "dimensions_none_of",
+      "expected": "none of ['production_judgment']",
+      "actual": [
+        "production_judgment"
+      ],
+      "severity": "calibration",
+      "failure_class": "EXTRACTION",
+      "reason": "a dimension was tagged that the words do not carry"
+    },
+    {
+      "case_id": "dd-deep-03",
+      "axis": "deep",
+      "check": "depth_demonstrated",
+      "expected": "deep_probed",
+      "actual": "probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "trade_offs"
+      ],
+      "reason": "A trade-off with the cost named on both sides — full sampling is unaffordable, error traces are the population you need — and an operational consequence of not having the propagated id. Deep, in a single direct answer, which is why this case exists."
+    },
+    {
+      "case_id": "dd-len-long-01",
+      "axis": "length",
+      "check": "depth_demonstrated",
+      "expected": "direct",
+      "actual": "probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "conceptual_understanding",
+        "production_judgment",
+        "reasoning"
+      ],
+      "reason": "One hundred and eighty words that define idempotency twice, explain why payments matter, and never say what they would build or what they have built. Length is not depth: this is the same finding as the short definition in dd-direct-01, at eight times the word count."
+    },
+    {
+      "case_id": "dd-len-long-01",
+      "axis": "length",
+      "check": "dimensions_none_of",
+      "expected": "none of ['edge_cases', 'practical_application', 'production_judgment', 'trade_offs']",
+      "actual": [
+        "production_judgment"
+      ],
+      "severity": "calibration",
+      "failure_class": "EXTRACTION",
+      "reason": "a dimension was tagged that the words do not carry"
+    },
+    {
+      "case_id": "dd-len-long-02",
+      "axis": "length",
+      "check": "depth_demonstrated",
+      "expected": "direct",
+      "actual": "probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "conceptual_understanding",
+        "reasoning",
+        "trade_offs"
+      ],
+      "reason": "Says 'trade-off' three times and names none. Mentioning that a topic involves trade-offs is not weighing one, and this is the case that keeps the word from being a marker on its own."
+    },
+    {
+      "case_id": "dd-len-long-02",
+      "axis": "length",
+      "check": "dimensions_none_of",
+      "expected": "none of ['practical_application', 'production_judgment', 'trade_offs']",
+      "actual": [
+        "trade_offs"
+      ],
+      "severity": "calibration",
+      "failure_class": "EXTRACTION",
+      "reason": "a dimension was tagged that the words do not carry"
+    },
+    {
+      "case_id": "dd-len-long-02",
+      "axis": "length",
+      "check": "criterion:Depth",
+      "expected": "1-2",
+      "actual": 3,
+      "severity": "calibration",
+      "failure_class": "SCORING"
+    },
+    {
+      "case_id": "dd-len-short-01",
+      "axis": "length",
+      "check": "depth_demonstrated",
+      "expected": "deep_probed",
+      "actual": "probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "practical_application",
+        "reasoning",
+        "trade_offs"
+      ],
+      "reason": "Forty words. An alternative weighed, the thing given up named (staleness for a TTL), and the compensation stated. Concise and deep — the pair to dd-len-long-02, which is long and direct."
+    },
+    {
+      "case_id": "dd-jargon-01",
+      "axis": "jargon",
+      "check": "depth_demonstrated",
+      "expected": "direct",
+      "actual": "probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "reasoning"
+      ],
+      "reason": "Eleven technologies and eleven patterns, and not one why, when, cost or failure mode. Terminology is conceptual vocabulary at best; naming a tool is not applying it, and a list is not an architecture."
+    },
+    {
+      "case_id": "dd-jargon-01",
+      "axis": "jargon",
+      "check": "dimensions_none_of",
+      "expected": "none of ['edge_cases', 'practical_application', 'production_judgment', 'trade_offs']",
+      "actual": [
+        "practical_application"
+      ],
+      "severity": "calibration",
+      "failure_class": "EXTRACTION",
+      "reason": "a dimension was tagged that the words do not carry"
+    },
+    {
+      "case_id": "dd-jargon-01",
+      "axis": "jargon",
+      "check": "criterion:Depth",
+      "expected": "1-2",
+      "actual": 3,
+      "severity": "calibration",
+      "failure_class": "SCORING"
+    },
+    {
+      "case_id": "dd-indep-shallow-01",
+      "axis": "independence",
+      "check": "discussion_status",
+      "expected": "discussed",
+      "actual": "mentioned",
+      "severity": "critical",
+      "failure_class": "SCORING"
+    },
+    {
+      "case_id": "dd-indep-shallow-02",
+      "axis": "independence",
+      "check": "discussion_status",
+      "expected": "discussed",
+      "actual": "mentioned",
+      "severity": "critical",
+      "failure_class": "SCORING"
+    },
+    {
+      "case_id": "dd-indep-shallow-03",
+      "axis": "independence",
+      "check": "discussion_status",
+      "expected": "discussed",
+      "actual": "mentioned",
+      "severity": "critical",
+      "failure_class": "SCORING"
+    },
+    {
+      "case_id": "dd-indep-deep-03",
+      "axis": "independence",
+      "check": "depth_demonstrated",
+      "expected": "deep_probed",
+      "actual": "probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "reasoning",
+        "trade_offs"
+      ],
+      "reason": "A framing decision with the alternative and its cost, and a named consequence of the wrong framing. Deep depth for a communication skill, which contains no architecture at all — the case exists so the deep tier cannot quietly require system design."
+    },
+    {
+      "case_id": "dd-level-junior",
+      "axis": "level",
+      "check": "depth_demonstrated",
+      "expected": "probed",
+      "actual": "deep_probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "practical_application",
+        "production_judgment"
+      ],
+      "reason": "For a junior the same answer is a genuine worked example: they cached something specific, chose a TTL, handled invalidation and checked the result. The evidence kind is practical application, which places it at probed. What changes with level is the SCORE against expectation, not what the candidate demonstrated."
+    },
+    {
+      "case_id": "dd-level-mid",
+      "axis": "level",
+      "check": "depth_demonstrated",
+      "expected": "probed",
+      "actual": "deep_probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "practical_application",
+        "production_judgment"
+      ],
+      "reason": "Identical answer at mid level. The demonstrated depth is the same observation about the same words — practical application, no trade-off, no failure mode — so the label does not move; the criteria are judged against a higher expectation."
+    },
+    {
+      "case_id": "dd-level-senior",
+      "axis": "level",
+      "check": "depth_demonstrated",
+      "expected": "probed",
+      "actual": "deep_probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "practical_application",
+        "production_judgment"
+      ],
+      "reason": "Identical answer at senior level. Still practical application and still probed: the words did not change, so the demonstrated depth cannot. A senior answering at this level is a scoring finding, and the criteria are where it appears."
+    },
+    {
+      "case_id": "dd-contra-02",
+      "axis": "contradiction",
+      "check": "dimensions_none_of",
+      "expected": "none of ['production_judgment']",
+      "actual": [
+        "production_judgment"
+      ],
+      "severity": "calibration",
+      "failure_class": "EXTRACTION",
+      "reason": "a dimension was tagged that the words do not carry"
+    },
+    {
+      "case_id": "dd-stt-01",
+      "axis": "stt",
+      "check": "depth_demonstrated",
+      "expected": "deep_probed",
+      "actual": "probed",
+      "severity": "critical",
+      "failure_class": "DEPTH",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "trade_offs"
+      ],
+      "reason": "The same substance as dd-deep-03 with duplicated words, no punctuation and a missing apostrophe. Transcription damage is not the candidate's fault and must not convert deep evidence into direct."
+    },
+    {
+      "case_id": "dd-indep-probeddirect-01",
+      "axis": "independence",
+      "check": "dimensions_none_of",
+      "expected": "none of ['production_judgment', 'reasoning', 'trade_offs']",
+      "actual": [
+        "reasoning"
+      ],
+      "severity": "calibration",
+      "failure_class": "EXTRACTION",
+      "reason": "a dimension was tagged that the words do not carry"
+    }
+  ],
+  "cases": {
+    "dd-direct-01": {
+      "axis": "direct",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "if the same request arrives twice you only charge once"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "You attach a key to the request and the server uses that key to recognise a repeat"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 3,
+        "Depth": 3,
+        "Clarity": 4,
+        "Problem-Solving": 2,
+        "Communication": 4
+      },
+      "score": 16,
+      "discussion_status": "discussed",
+      "latency_ms": 6299,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-direct-02": {
+      "axis": "direct",
+      "expected_depth": "direct",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "I'd cache the lookups that repeat"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "Pricing doesn't change very often"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "a read-through cache with a short TTL in front of the service would take most of the traffic, and a miss just goes throu"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 6135,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-direct-03": {
+      "axis": "direct",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Logs for the detail, metrics for the trend, traces to follow a request across services"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We use structured logging and a dashboard for the metrics"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 3,
+        "Clarity": 4,
+        "Problem-Solving": 3,
+        "Communication": 4
+      },
+      "score": 18,
+      "discussion_status": "discussed",
+      "latency_ms": 3841,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-direct-04": {
+      "axis": "direct",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "You look at the columns in the WHERE clause and the ones you sort by, and you put an index across them in that order"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "A composite index can serve a query that filters on the first column and sorts on the second"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 3,
+        "Clarity": 4,
+        "Problem-Solving": 3,
+        "Communication": 4
+      },
+      "score": 18,
+      "discussion_status": "discussed",
+      "latency_ms": 5559,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-probed-01": {
+      "axis": "probed",
+      "expected_depth": "probed",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "we derive the key from the order id and the attempt's amount"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "we write an intent row on that key in the same transaction that returns the response"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "When the retry comes in we find the row and return the stored result instead of calling the provider"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "The unique index on that column is what enforces it"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 6756,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-probed-02": {
+      "axis": "probed",
+      "expected_depth": "probed",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "First I check whether it is the query or the load — same query, same parameters, run it directly and compare"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "Then I pull the plan and look for a sequential scan where there used to be an index scan"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "Last time this happened the statistics were stale after a bulk import, so the planner had stopped believing the index ex"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 6415,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-probed-03": {
+      "axis": "probed",
+      "expected_depth": "probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "We matched on the provider reference first because it is the only field both sides own"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "then on amount and date for the ones that missed"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "Anything still unmatched after two passes went to a queue with the reason attached"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "I made the reason a required field so nobody could close a row without saying why"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 11353,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-probed-04": {
+      "axis": "probed",
+      "expected_depth": "probed",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "reasoning",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "cache the lookups that repeat, and leave the long tail alone"
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "You can either cache the whole response or just the price components, and we went with the whole response because assemb"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 3,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 19,
+      "discussion_status": "discussed",
+      "latency_ms": 4849,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-probed-05": {
+      "axis": "probed",
+      "expected_depth": "probed",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "I showed them the two numbers that mattered: how many rows had to move and how long a batch took in staging"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "Then I gave them the choice — ship on time with the old table read-only, or take the two weeks and have one source of tr"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "They picked the two weeks once they could see the second option was not just engineers being careful"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 5082,
+      "error": "",
+      "passed": false,
+      "depth_ok": true
+    },
+    "dd-deep-01": {
+      "axis": "deep",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "edge_cases",
+        "practical_application",
+        "production_judgment"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "The key has to be derived from the order, not generated per attempt"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We write the intent row and the response in one transaction so a crash between them cannot leave a charge with no record"
+        },
+        {
+          "dimension": "edge_cases",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "the unique index rejected the second one, and the handler treated the constraint violation as a duplicate rather than an"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "because the alternative was a customer seeing a failure for a payment that had in fact gone through"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 5509,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-deep-02": {
+      "axis": "deep",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "reasoning",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We cached the assembled response for the forty hottest SKUs and left everything else uncached"
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "because the memory to hold the tail was worth more as headroom than as hit rate"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "a price edit takes up to the TTL to appear, so we added an explicit purge on the edit path and accepted that a bulk impo"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "An OOM in that cache is an outage in checkout, so the limit is set well below the pod's, and we alert on eviction rate r"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 5,
+        "Depth": 5,
+        "Clarity": 4,
+        "Problem-Solving": 5,
+        "Communication": 4
+      },
+      "score": 23,
+      "discussion_status": "discussed",
+      "latency_ms": 5916,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-deep-03": {
+      "axis": "deep",
+      "expected_depth": "deep_probed",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "a trace id that survives the hop into the provider"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "we propagate it into the idempotency key and log it on both sides"
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "We sample at one per cent normally but keep every trace that errored"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 4734,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-deep-04": {
+      "axis": "deep",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We held unmatched rows in a suspense account with an age, and escalated on age rather than amount"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "a small mismatch that has been open three weeks is a broken integration, and a large one from yesterday is usually a tim"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "writing it off is silent and chasing it is expensive"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "At month end the suspense balance is the number the finance team asks about, so it has to be explainable line by line"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "which is why the reason field is not free text"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 6297,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-deep-05": {
+      "axis": "deep",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "I bisect: same query and parameters directly against the replica to separate the query from the load, then the plan, the"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "The trap is fixing the plan with a hint, because it hides the reason and the next query with the same shape breaks the s"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "Last time the real cause was a bulk import leaving the statistics stale, and the fix that mattered was making ANALYZE pa"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "The fix that mattered was making ANALYZE part of the import rather than the index hint that made the symptom go away"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 5937,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-deep-06": {
+      "axis": "deep",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "edge_cases",
+        "practical_application",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "The bottleneck at ten times is not the service, it is the single write path to the provider"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "so the queue in front of it is what has to be right"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We shard the queue by merchant so one merchant's backlog cannot starve the others"
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "we accept out-of-order settlement within a merchant because the alternative — a global order — makes the whole thing ser"
+        },
+        {
+          "dimension": "edge_cases",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "The failure I would plan for is the provider slowing down rather than failing, because a slow dependency fills every wor"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 38147,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-len-long-01": {
+      "axis": "length",
+      "expected_depth": "direct",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "An idempotent operation is one that can be applied multiple times without changing the result beyond the first applicati"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "in a payments context that means a capture should only ever charge the customer once, no matter how many times the reque"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "Retries happen for all sorts of reasons — network timeouts, client bugs, users double-clicking — so you have to design f"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "The way this is usually done is with an idempotency key, which is a value that identifies the request so the server can "
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Most payment providers support this and it is considered a best practice across the industry"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "It is also worth saying that testing this properly matters, because a bug here is expensive"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 1,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 17,
+      "discussion_status": "discussed",
+      "latency_ms": 9018,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-len-long-02": {
+      "axis": "length",
+      "expected_depth": "direct",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "reasoning",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "Caching is a trade-off, and you always have to think about the trade-offs"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Cache invalidation is famously one of the two hard problems in computer science"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "you also have to think about consistency, because a cache is by definition a second copy of the data and second copies c"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "my approach would be to look at the data and the access patterns and then make a decision based on what I find"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 3,
+        "Clarity": 4,
+        "Problem-Solving": 3,
+        "Communication": 4
+      },
+      "score": 18,
+      "discussion_status": "discussed",
+      "latency_ms": 8383,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-len-short-01": {
+      "axis": "length",
+      "expected_depth": "deep_probed",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "reasoning",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "Cache the hot forty SKUs, nothing else"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "the memory buys more as headroom than as hit rate"
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "a price edit is stale for a TTL, which we bought back with a purge on the edit path"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 5555,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-len-short-02": {
+      "axis": "length",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Key off the order, not the attempt"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "write the intent and the response in one transaction"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "treat the unique-constraint violation as a duplicate, not an error"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "or the customer sees a failure for a payment that went through"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 7037,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-jargon-01": {
+      "axis": "jargon",
+      "expected_depth": "direct",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "Kafka for the log, CQRS with event sourcing so reads and writes scale independently"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "partial",
+          "strength": "moderate",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "Kubernetes with HPA for the workers"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Redis for the hot path"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "a service mesh for retries and circuit breaking"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 3,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 19,
+      "discussion_status": "discussed",
+      "latency_ms": 6923,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-jargon-02": {
+      "axis": "jargon",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Full observability stack: OpenTelemetry SDK, OTLP collector, Prometheus for metrics, Loki for logs, Tempo for traces, Gr"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 3,
+        "Clarity": 4,
+        "Problem-Solving": 2,
+        "Communication": 4
+      },
+      "score": 17,
+      "discussion_status": "discussed",
+      "latency_ms": 5587,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-jargon-03": {
+      "axis": "jargon",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Readiness and liveness probes"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "PodDisruptionBudgets"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "rolling update with maxSurge and maxUnavailable"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "resource requests and limits"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "HPA"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "topology spread constraints"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "PreStop hook"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Progressive delivery with Argo Rollouts if you want canaries"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 3,
+        "Clarity": 4,
+        "Problem-Solving": 3,
+        "Communication": 4
+      },
+      "score": 18,
+      "discussion_status": "discussed",
+      "latency_ms": 8684,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-assert-01": {
+      "axis": "assertion",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [],
+      "evidence": [],
+      "criteria": {
+        "Accuracy": 1,
+        "Depth": 1,
+        "Clarity": 1,
+        "Problem-Solving": 1,
+        "Communication": 1
+      },
+      "score": 5,
+      "discussion_status": "discussed",
+      "latency_ms": 5344,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-assert-02": {
+      "axis": "assertion",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [],
+      "evidence": [],
+      "criteria": {
+        "Accuracy": 1,
+        "Depth": 1,
+        "Clarity": 1,
+        "Problem-Solving": 1,
+        "Communication": 1
+      },
+      "score": 5,
+      "discussion_status": "discussed",
+      "latency_ms": 3236,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-assert-03": {
+      "axis": "assertion",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [],
+      "evidence": [],
+      "criteria": {
+        "Accuracy": 1,
+        "Depth": 1,
+        "Clarity": 1,
+        "Problem-Solving": 1,
+        "Communication": 1
+      },
+      "score": 5,
+      "discussion_status": "discussed",
+      "latency_ms": 7086,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-indep-shallow-01": {
+      "axis": "independence",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "deep_probed",
+      "observed_reached": "deep_probed",
+      "dimensions": [
+        "conceptual_understanding"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "You'd use an idempotency key."
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Accuracy",
+          "stage": "probed",
+          "quote": "You send it with the request and the provider handles it."
+        }
+      ],
+      "criteria": {
+        "Accuracy": 1,
+        "Depth": 0,
+        "Clarity": 1,
+        "Problem-Solving": 1,
+        "Communication": 1
+      },
+      "score": 4,
+      "discussion_status": "mentioned",
+      "latency_ms": 5218,
+      "error": "",
+      "passed": false,
+      "depth_ok": true
+    },
+    "dd-indep-shallow-02": {
+      "axis": "independence",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "deep_probed",
+      "observed_reached": "deep_probed",
+      "dimensions": [
+        "conceptual_understanding",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "I'd look at the dashboards."
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Problem-Solving",
+          "stage": "probed",
+          "quote": "Check if anything changed recently."
+        }
+      ],
+      "criteria": {
+        "Accuracy": 1,
+        "Depth": 1,
+        "Clarity": 1,
+        "Problem-Solving": 1,
+        "Communication": 1
+      },
+      "score": 5,
+      "discussion_status": "mentioned",
+      "latency_ms": 4912,
+      "error": "",
+      "passed": false,
+      "depth_ok": true
+    },
+    "dd-indep-shallow-03": {
+      "axis": "independence",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "deep_probed",
+      "observed_reached": "deep_probed",
+      "dimensions": [
+        "conceptual_understanding"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Cache the things that are read a lot."
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Accuracy",
+          "stage": "probed",
+          "quote": "You'd set a TTL on it."
+        }
+      ],
+      "criteria": {
+        "Accuracy": 1,
+        "Depth": 1,
+        "Clarity": 1,
+        "Problem-Solving": 1,
+        "Communication": 1
+      },
+      "score": 5,
+      "discussion_status": "mentioned",
+      "latency_ms": 8911,
+      "error": "",
+      "passed": false,
+      "depth_ok": true
+    },
+    "dd-indep-deep-01": {
+      "axis": "independence",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "if a deploy went out in the last hour I roll it back first and diagnose from the artefact, because a rollback is reversi"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "Then I check whether the failures are ours or the provider's, because those have different blast radiuses"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "The number I want in front of me is failures by merchant, since one merchant at a hundred per cent and everyone at zero "
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 7024,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-indep-deep-02": {
+      "axis": "independence",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "production_judgment",
+        "reasoning",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "From the plan and the selectivity, not the WHERE clause"
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "The column order that matters is the one that makes the first predicate selective"
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "an index on (status, created_at) is useless for a query filtering on status when ninety per cent of rows share a status"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "The cost I weigh is write amplification: every index is paid for on every insert"
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "I would rather have one composite index that serves three queries adequately than three that serve them perfectly"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 7302,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-indep-deep-03": {
+      "axis": "independence",
+      "expected_depth": "deep_probed",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "reasoning",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "I would lead with the thing they care about, which is that a customer's order history has to be right on the day we laun"
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "give them the two options with what each one costs: ship on time and the history is read-only for a month, or two weeks "
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "What I would not do is present it as a technical constraint, because then the conversation becomes whether they trust en"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 5,
+        "Communication": 4
+      },
+      "score": 21,
+      "discussion_status": "discussed",
+      "latency_ms": 5839,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-indep-probed-01": {
+      "axis": "independence",
+      "expected_depth": "probed",
+      "observed_depth": "probed",
+      "expected_reached": "probed",
+      "observed_reached": "probed",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Match on the provider reference, then amount and date for the leftovers."
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "On the last one I made the unmatched queue require a reason before a row could be closed"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 4710,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-indep-probed-02": {
+      "axis": "independence",
+      "expected_depth": "probed",
+      "observed_depth": "probed",
+      "expected_reached": "probed",
+      "observed_reached": "probed",
+      "dimensions": [
+        "conceptual_understanding",
+        "edge_cases",
+        "practical_application"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "I'd check whether the data grew or the query changed."
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "I'd run it on a copy with the same parameters and compare the plan to what it used to be."
+        },
+        {
+          "dimension": "edge_cases",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "Last time the plan had switched to a sequential scan after an import."
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 5222,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-level-junior": {
+      "axis": "level",
+      "expected_depth": "probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We cached the assembled price response with a five minute TTL and purged it on a price edit"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "I checked the hit rate afterwards and it was about eighty per cent, which was enough to take the load off the service"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 4702,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-level-mid": {
+      "axis": "level",
+      "expected_depth": "probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We cached the assembled price response with a five minute TTL and purged it on a price edit"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "I checked the hit rate afterwards and it was about eighty per cent, which was enough to take the load off the service"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 5055,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-level-senior": {
+      "axis": "level",
+      "expected_depth": "probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "practical_application",
+        "production_judgment"
+      ],
+      "evidence": [
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We cached the assembled price response with a five minute TTL and purged it on a price edit"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "I checked the hit rate afterwards and it was about eighty per cent, which was enough to take the load off the service"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 4787,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-contra-01": {
+      "axis": "contradiction",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "probed",
+      "observed_reached": "probed",
+      "dimensions": [
+        "conceptual_understanding",
+        "edge_cases",
+        "practical_application"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "contradicted",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "You generate a new key for each attempt so the provider can tell them apart."
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "probed",
+          "quote": "The key has to be stable for the order, or the retry is indistinguishable from new work."
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "We derive it from the order id and store the intent row on it"
+        },
+        {
+          "dimension": "edge_cases",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "the case that taught me was a double charge in staging when the client retried with a fresh UUID"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 3,
+        "Depth": 3,
+        "Clarity": 3,
+        "Problem-Solving": 3,
+        "Communication": 3
+      },
+      "score": 15,
+      "discussion_status": "discussed",
+      "latency_ms": 6136,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-contra-02": {
+      "axis": "contradiction",
+      "expected_depth": "probed",
+      "observed_depth": "probed",
+      "expected_reached": "probed",
+      "observed_reached": "probed",
+      "dimensions": [
+        "practical_application",
+        "production_judgment",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "We cached the hot SKUs and gave up freshness for a TTL, which we bought back with a purge on the edit path."
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "We cached the hot SKUs and gave up freshness for a TTL, which we bought back with a purge on the edit path."
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "Although actually caching is mostly a premature optimisation and I would probably not bother — you should just make the "
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 5219,
+      "error": "",
+      "passed": false,
+      "depth_ok": true
+    },
+    "dd-stt-01": {
+      "axis": "stt",
+      "expected_depth": "deep_probed",
+      "observed_depth": "probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "a trace id that survives the hop into the provider"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "we propagate it into the idempotency key and log it on on both sides"
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "we sample at one per cent normally but keep every trace that errored"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 6652,
+      "error": "",
+      "passed": false,
+      "depth_ok": false
+    },
+    "dd-stt-02": {
+      "axis": "stt",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "production_judgment"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "key off the order not the attempt"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "write the intent and the response in one transaction"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "direct",
+          "quote": "treat the unique constraint violation as a duplicate not an error or the the customer sees a failure for a payment that "
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 5523,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-inject-01": {
+      "axis": "injection",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [
+        "conceptual_understanding"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "You use an idempotency key"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 3,
+        "Depth": 2,
+        "Clarity": 3,
+        "Problem-Solving": 2,
+        "Communication": 3
+      },
+      "score": 13,
+      "discussion_status": "discussed",
+      "latency_ms": 3695,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-inject-02": {
+      "axis": "injection",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "direct",
+      "observed_reached": "direct",
+      "dimensions": [],
+      "evidence": [],
+      "criteria": {
+        "Accuracy": 0,
+        "Depth": 0,
+        "Clarity": 0,
+        "Problem-Solving": 0,
+        "Communication": 0
+      },
+      "score": 0,
+      "discussion_status": "not_discussed",
+      "latency_ms": 0,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-indep-deepdeep-01": {
+      "axis": "independence",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "deep_probed",
+      "observed_reached": "deep_probed",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "production_judgment"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "You key the request so a repeat is recognisable rather than reprocessed."
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "On our side the key is derived from the order id, and the intent row goes in inside the same transaction as the response"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "deep_probed",
+          "quote": "The unique index rejected the second, and we changed the handler to treat that violation as a duplicate rather than a fa"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 5,
+        "Depth": 5,
+        "Clarity": 4,
+        "Problem-Solving": 5,
+        "Communication": 4
+      },
+      "score": 23,
+      "discussion_status": "discussed",
+      "latency_ms": 5601,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-indep-deepdeep-02": {
+      "axis": "independence",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "deep_probed",
+      "observed_reached": "deep_probed",
+      "dimensions": [
+        "conceptual_understanding",
+        "edge_cases",
+        "practical_application",
+        "reasoning",
+        "trade_offs"
+      ],
+      "evidence": [
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "direct",
+          "quote": "I'd start with whether the data grew or the query changed."
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "Same query and parameters against the replica first, to separate the query from the load, then the plan next to the one "
+        },
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Accuracy",
+          "stage": "probed",
+          "quote": "then the plan next to the one it used to have."
+        },
+        {
+          "dimension": "edge_cases",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "deep_probed",
+          "quote": "Last time the plan had flipped to a sequential scan because a bulk import left the statistics stale."
+        },
+        {
+          "dimension": "trade_offs",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "deep_probed",
+          "quote": "The hint that would have fixed the symptom was the wrong fix — it hides the cause and the next query with that shape bre"
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "deep_probed",
+          "quote": "so ANALYZE went into the import instead."
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 5,
+        "Communication": 4
+      },
+      "score": 21,
+      "discussion_status": "discussed",
+      "latency_ms": 8596,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-indep-deepdeep-03": {
+      "axis": "independence",
+      "expected_depth": "deep_probed",
+      "observed_depth": "deep_probed",
+      "expected_reached": "deep_probed",
+      "observed_reached": "deep_probed",
+      "dimensions": [
+        "conceptual_understanding",
+        "practical_application",
+        "production_judgment",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Match on the provider reference first, then amount and date."
+        },
+        {
+          "dimension": "practical_application",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "probed",
+          "quote": "Unmatched rows went to a suspense account rather than being written off, with the reason as a required field."
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Problem-Solving",
+          "stage": "deep_probed",
+          "quote": "We escalated on age rather than amount, because a small mismatch open for three weeks is a broken integration and a larg"
+        },
+        {
+          "dimension": "production_judgment",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Depth",
+          "stage": "deep_probed",
+          "quote": "The constraint behind it is month end: the suspense balance is the number finance asks about, so it has to be explainabl"
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 4,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "score": 20,
+      "discussion_status": "discussed",
+      "latency_ms": 6656,
+      "error": "",
+      "passed": true,
+      "depth_ok": true
+    },
+    "dd-indep-probeddirect-01": {
+      "axis": "independence",
+      "expected_depth": "direct",
+      "observed_depth": "direct",
+      "expected_reached": "probed",
+      "observed_reached": "probed",
+      "dimensions": [
+        "conceptual_understanding",
+        "reasoning"
+      ],
+      "evidence": [
+        {
+          "dimension": "conceptual_understanding",
+          "type": "supported",
+          "strength": "strong",
+          "criterion": "Accuracy",
+          "stage": "direct",
+          "quote": "Logs, metrics and traces."
+        },
+        {
+          "dimension": "reasoning",
+          "type": "supported",
+          "strength": "moderate",
+          "criterion": "Problem-Solving",
+          "stage": "probed",
+          "quote": "Structured logs with a request id, metrics on a dashboard, and traces for the cross-service calls."
+        }
+      ],
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 3,
+        "Clarity": 3,
+        "Problem-Solving": 3,
+        "Communication": 3
+      },
+      "score": 16,
+      "discussion_status": "discussed",
+      "latency_ms": 4896,
+      "error": "",
+      "passed": false,
+      "depth_ok": true
+    }
+  },
+  "telemetry": {
+    "provider": "openrouter",
+    "configured_model": "openai/gpt-4.1-mini",
+    "resolved_model": "openai/gpt-4.1-mini",
+    "silent_model_fallback": false,
+    "calls": 544,
+    "prompt_tokens": 1242764,
+    "completion_tokens": 113836,
+    "latency_ms_total": 1800343,
+    "structured_modes": [
+      "json_schema"
+    ],
+    "schema_errors": 0
+  }
+}

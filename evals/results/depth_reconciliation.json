@@ -1,0 +1,176 @@
+{
+  "rubric": "DEPTH_CALIBRATION.md#3-authoritative-depth-rubric",
+  "reviewed": 21,
+  "changed": 1,
+  "ambiguous": 0,
+  "rows": [
+    {
+      "dataset": "gold",
+      "case_id": "dep-04-tradeoffs",
+      "previous": "probed",
+      "authoritative": "deep_probed",
+      "status": "GOLD_DATA_CONTRADICTION",
+      "why": "The label said probed and its own stated reason said 'Trade-off reasoning is the top of the Depth scale'. The answer weighs an alternative, names what was given up (up to sixty seconds of staleness), and says why the rejected option was rejected (the coupling was judged worse than the staleness). Competing considerations resolved with an explicit rationale is deep under the rubric. Resolved to deep_probed."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "acc-01-correct",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED",
+      "why": "Specifies the mechanism at implementation resolution for this problem — the key's derivation, the intent row inside the response transaction, the repeat path. Probed. Not deep: nothing goes wrong in it and nothing costs anything."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "len-01-short-excellent",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED",
+      "why": "Forty-two words carrying the same three commitments as acc-01. The rubric's probed test is resolution, not length."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "dep-02-conceptual",
+      "previous": "direct",
+      "authoritative": "direct",
+      "status": "CONFIRMED",
+      "why": "Names the pattern and predicts an effect ('would absorb most of the traffic'). No mechanism detail, no instance, no cost. A predicted benefit is not production judgement."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "cla-01-structured",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED_BOUNDARY",
+      "why": "Three ordered steps for this query, so probed. 'Adding an index the planner ignores just costs write throughput' is a cost mentioned to justify a step — reasoning — rather than a consequence that bounded a decision, so it does not reach deep."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "com-01-direct",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED_BOUNDARY",
+      "why": "Puts two options and their consequences in front of the stakeholder. The decision is theirs; the candidate accepts no consequence and gives up nothing, so it stops at probed."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "com-02-adequate",
+      "previous": "direct",
+      "authoritative": "direct",
+      "status": "CONFIRMED",
+      "why": "'The checking is the bit that takes the time' is an accurate explanation of the mechanism. A purpose clause does not lift direct."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "ps-02-basic-troubleshooting",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED",
+      "why": "Ordered troubleshooting with a verification step. 'Watch the error rate come down' checks the fix; it is not a consequence that changed what they did."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "dpt-01-direct-direct",
+      "previous": "direct",
+      "authoritative": "direct",
+      "status": "CONFIRMED",
+      "why": "'So you can find the failing requests afterwards' is a purpose clause."
+    },
+    {
+      "dataset": "gold",
+      "case_id": "dpt-02-direct-deep",
+      "previous": "deep_probed",
+      "authoritative": "deep_probed",
+      "status": "CONFIRMED",
+      "why": "The sampling decision is bounded by a named cost — full-rate retention of the population you most want is unaffordable — and the answer says what they did about it."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-len-short-01",
+      "previous": "deep_probed",
+      "authoritative": "deep_probed",
+      "status": "CONFIRMED_KNOWN_CAP",
+      "why": "A meaningful trade-off: the alternative is weighed, staleness is given up, and the purge on the edit path is what bought it back. Deep under the rubric. The implementation caps `trade_offs` at probed, so this case fails Mode A by design and is kept to keep the cap visible."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-deep-03",
+      "previous": "deep_probed",
+      "authoritative": "deep_probed",
+      "status": "CONFIRMED",
+      "why": "'The hundred per cent you actually want is exactly the population that is too expensive to keep at full rate' is a cost that bounded the sampling decision. The correct tag is production_judgment; a run that tags only trade_offs is an extraction false negative."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-indep-deep-03",
+      "previous": "deep_probed",
+      "authoritative": "deep_probed",
+      "status": "CONFIRMED",
+      "why": "Names the consequence of the wrong framing — the conversation becomes whether engineering is trusted — and says what they would not do because of it."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-indep-deepdeep-02",
+      "previous": "deep_probed",
+      "authoritative": "deep_probed",
+      "status": "CONFIRMED",
+      "why": "The hint that fixes the symptom is rejected because it hides the cause and the next query of that shape breaks the same way: a failure mode that changed the remedy."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-probed-04",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED",
+      "why": "Two options and a reason for the choice, with nothing given up. 'Some trade-offs' sits at probed."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-level-junior",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED",
+      "why": "A measured benefit ('the hit rate was eighty per cent, which was enough to take the load off') is a result they achieved: practical application, not production judgement. The label is identical at all three levels because the words are identical — level belongs to the criteria, not to what the evidence contains."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-level-mid",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED",
+      "why": "As dd-level-junior."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-level-senior",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED",
+      "why": "As dd-level-junior."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-direct-04",
+      "previous": "direct",
+      "authoritative": "direct",
+      "status": "CONFIRMED",
+      "why": "States the general rule for choosing an index rather than a design for this query. A correct general mechanism is direct."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-probed-01",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED_FIXTURE_REPAIRED",
+      "why": "Phase 17 removed a clause ('after we found two rows for one order in staging') that was a defensible edge case, so the case tests the probed tier it claims to test."
+    },
+    {
+      "dataset": "depth",
+      "case_id": "dd-probed-03",
+      "previous": "probed",
+      "authoritative": "probed",
+      "status": "CONFIRMED_FIXTURE_REPAIRED",
+      "why": "Phase 17 removed 'rather than being written off', a rejected alternative that put the case on the probed/deep boundary."
+    }
+  ]
+}

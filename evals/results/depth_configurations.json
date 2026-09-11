@@ -1,0 +1,126 @@
+{
+  "question": "Which prompt or derivation change makes `depth_demonstrated` agree with a reviewer more often, without regressing the gold benchmark? Each row is one live run of the 46-case depth suite; the gold-benchmark figures beside them in DEPTH_CALIBRATION.md come from separate full runs of `evals.benchmark --live`.",
+  "caveat": "One run per configuration. Two runs of the SHIPPED configuration gave 6 and 4 material errors on the gold benchmark, and 8 of 12 representative depth cases are label-stable across three identical runs — so differences of a few cases between configurations are inside the noise.",
+  "runs": [
+    {
+      "configuration": "baseline",
+      "what_changed": "pre-phase code",
+      "depth_suite_correct": 31,
+      "depth_suite_cases": 46,
+      "depth_suite_agreement": 0.674,
+      "by_axis": {
+        "assertion": "3/3",
+        "contradiction": "2/2",
+        "deep": "4/6",
+        "direct": "2/4",
+        "independence": "10/12",
+        "injection": "2/2",
+        "jargon": "2/3",
+        "length": "2/4",
+        "level": "0/3",
+        "probed": "4/5",
+        "stt": "0/2"
+      }
+    },
+    {
+      "configuration": "A+B+C+r2",
+      "what_changed": "trade_offs deep + strength rubric + 3 discriminators + withdrawal + dense clause",
+      "depth_suite_correct": 39,
+      "depth_suite_cases": 46,
+      "depth_suite_agreement": 0.848,
+      "by_axis": {
+        "assertion": "3/3",
+        "contradiction": "1/2",
+        "deep": "6/6",
+        "direct": "3/4",
+        "independence": "12/12",
+        "injection": "2/2",
+        "jargon": "3/3",
+        "length": "4/4",
+        "level": "0/3",
+        "probed": "3/5",
+        "stt": "2/2"
+      }
+    },
+    {
+      "configuration": "B+C(-PJ)+r2",
+      "what_changed": "as above, trade_offs reverted, PJ rewording removed",
+      "depth_suite_correct": 37,
+      "depth_suite_cases": 46,
+      "depth_suite_agreement": 0.804,
+      "by_axis": {
+        "assertion": "3/3",
+        "contradiction": "2/2",
+        "deep": "5/6",
+        "direct": "3/4",
+        "independence": "10/12",
+        "injection": "2/2",
+        "jargon": "3/3",
+        "length": "4/4",
+        "level": "0/3",
+        "probed": "3/5",
+        "stt": "2/2"
+      }
+    },
+    {
+      "configuration": "B(neutral)+C(-PJ)+r2",
+      "what_changed": "strength rubric made dimension-neutral",
+      "depth_suite_correct": 34,
+      "depth_suite_cases": 46,
+      "depth_suite_agreement": 0.739,
+      "by_axis": {
+        "assertion": "3/3",
+        "contradiction": "2/2",
+        "deep": "5/6",
+        "direct": "3/4",
+        "independence": "11/12",
+        "injection": "2/2",
+        "jargon": "2/3",
+        "length": "1/4",
+        "level": "0/3",
+        "probed": "4/5",
+        "stt": "1/2"
+      }
+    },
+    {
+      "configuration": "withdrawal only",
+      "what_changed": "prompt = pre-phase + the withdrawal rule (SHIPPED)",
+      "depth_suite_correct": 32,
+      "depth_suite_cases": 46,
+      "depth_suite_agreement": 0.696,
+      "by_axis": {
+        "assertion": "3/3",
+        "contradiction": "2/2",
+        "deep": "4/6",
+        "direct": "2/4",
+        "independence": "10/12",
+        "injection": "2/2",
+        "jargon": "3/3",
+        "length": "2/4",
+        "level": "0/3",
+        "probed": "4/5",
+        "stt": "0/2"
+      }
+    },
+    {
+      "configuration": "B+dense+withdrawal",
+      "what_changed": "strength rubric and dense-clause rule kept",
+      "depth_suite_correct": 33,
+      "depth_suite_cases": 46,
+      "depth_suite_agreement": 0.717,
+      "by_axis": {
+        "assertion": "3/3",
+        "contradiction": "2/2",
+        "deep": "4/6",
+        "direct": "2/4",
+        "independence": "10/12",
+        "injection": "2/2",
+        "jargon": "3/3",
+        "length": "2/4",
+        "level": "0/3",
+        "probed": "4/5",
+        "stt": "1/2"
+      }
+    }
+  ]
+}

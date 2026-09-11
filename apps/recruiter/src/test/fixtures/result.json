@@ -1,0 +1,458 @@
+{
+  "result_contract_version": "assessment_result_v1",
+  "evaluation": {
+    "evaluation_id": "ev_cf94ad4137e5",
+    "engine_version": "deep_evidence_v2",
+    "status": "completed",
+    "attempt": 1,
+    "superseded": false,
+    "snapshot_checksum": "5d617b5c34e35828",
+    "created_at": 1760000000.0,
+    "completed_at": 1760000000.0
+  },
+  "interview": {
+    "interview_id": "iv_fix",
+    "version": 1,
+    "title": "Senior Backend Engineer — payments screen",
+    "role_title": "Senior Backend Engineer, Payments",
+    "interview_depth": "medium",
+    "difficulty": "medium",
+    "recommended_duration_min": 20,
+    "experience_from": 4,
+    "experience_to": 7,
+    "experience_level": "Senior"
+  },
+  "session": {
+    "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+    "candidate_name": "Priya Sharma",
+    "phase": "complete",
+    "channel": "voice",
+    "started_at": 1759998600.0,
+    "completed_at": 1759999980.0,
+    "duration_sec": 1380,
+    "questions_asked": 3
+  },
+  "overall": {
+    "total_score": 33,
+    "max_score": 50,
+    "percentage": 66.0,
+    "overall_rating": "Good",
+    "recommendation": "Needs further evaluation",
+    "scored_over": "skills with substantive evidence (discussion_status = discussed)",
+    "skill_max_score": 25
+  },
+  "coverage": {
+    "skills_total": 4,
+    "skills_discussed": 2,
+    "skills_mentioned": 1,
+    "skills_not_discussed": 1,
+    "coverage_percentage": 50.0
+  },
+  "skills": [
+    {
+      "skill_id": "skl_idem",
+      "skill_name": "Idempotent design",
+      "priority": "high",
+      "expected_proficiency": 3,
+      "assessment_scope": "Designing capture and retry paths a duplicate request cannot double-charge.",
+      "discussion_status": "discussed",
+      "score": 12,
+      "max_score": 25,
+      "percentage": 48.0,
+      "criterion_ceiling": 5,
+      "counts_toward_overall_score": true,
+      "criteria": {
+        "Accuracy": 2,
+        "Depth": 2,
+        "Clarity": 3,
+        "Problem-Solving": 2,
+        "Communication": 3
+      },
+      "remarks": "The concept is named correctly and never developed. Two follow-ups produced no mechanism, no example and no failure mode.",
+      "depth": {
+        "depth_reached": "deep_probed",
+        "depth_demonstrated": "direct",
+        "dimensions_demonstrated": [
+          "conceptual_understanding"
+        ],
+        "dimensions_missing": [
+          "edge_cases",
+          "practical_application",
+          "production_judgment",
+          "reasoning",
+          "trade_offs"
+        ],
+        "evidence_confidence": "low"
+      },
+      "task_ids": [
+        "tsk_capture"
+      ],
+      "question_ids": [
+        "q_idem"
+      ],
+      "evidence_count": 3
+    },
+    {
+      "skill_id": "skl_recon",
+      "skill_name": "Reconciliation",
+      "priority": "high",
+      "expected_proficiency": 3,
+      "assessment_scope": "Reasoning about settlement files and resolving mismatches.",
+      "discussion_status": "discussed",
+      "score": 21,
+      "max_score": 25,
+      "percentage": 84.0,
+      "criterion_ceiling": 5,
+      "counts_toward_overall_score": true,
+      "criteria": {
+        "Accuracy": 4,
+        "Depth": 5,
+        "Clarity": 4,
+        "Problem-Solving": 4,
+        "Communication": 4
+      },
+      "remarks": "A concrete daily process, a matching key, and a deliberate choice to escalate unmatched rows rather than auto-resolve them.",
+      "depth": {
+        "depth_reached": "direct",
+        "depth_demonstrated": "deep_probed",
+        "dimensions_demonstrated": [
+          "production_judgment"
+        ],
+        "dimensions_missing": [
+          "conceptual_understanding",
+          "edge_cases",
+          "practical_application",
+          "reasoning",
+          "trade_offs"
+        ],
+        "evidence_confidence": "medium"
+      },
+      "task_ids": [
+        "tsk_recon"
+      ],
+      "question_ids": [
+        "q_recon"
+      ],
+      "evidence_count": 1
+    },
+    {
+      "skill_id": "skl_review",
+      "skill_name": "Design review",
+      "priority": "medium",
+      "expected_proficiency": 3,
+      "assessment_scope": "Reading a peer's design and naming the failure mode it misses.",
+      "discussion_status": "mentioned",
+      "score": 5,
+      "max_score": 25,
+      "percentage": 20.0,
+      "criterion_ceiling": 1,
+      "counts_toward_overall_score": false,
+      "criteria": {
+        "Accuracy": 1,
+        "Depth": 1,
+        "Clarity": 1,
+        "Problem-Solving": 1,
+        "Communication": 1
+      },
+      "remarks": "Barely answered.",
+      "depth": {
+        "depth_reached": "direct",
+        "depth_demonstrated": "direct",
+        "dimensions_demonstrated": [
+          "reasoning"
+        ],
+        "dimensions_missing": [
+          "conceptual_understanding",
+          "edge_cases",
+          "practical_application",
+          "production_judgment",
+          "trade_offs"
+        ],
+        "evidence_confidence": "low"
+      },
+      "task_ids": [
+        "tsk_review"
+      ],
+      "question_ids": [
+        "q_review"
+      ],
+      "evidence_count": 1
+    },
+    {
+      "skill_id": "skl_k8s",
+      "skill_name": "Kubernetes",
+      "priority": "low",
+      "expected_proficiency": 3,
+      "assessment_scope": "Operating services on Kubernetes: rollouts, probes, resource limits.",
+      "discussion_status": "not_discussed",
+      "score": 0,
+      "max_score": 25,
+      "percentage": 0.0,
+      "criterion_ceiling": 0,
+      "counts_toward_overall_score": false,
+      "criteria": {
+        "Accuracy": 0,
+        "Depth": 0,
+        "Clarity": 0,
+        "Problem-Solving": 0,
+        "Communication": 0
+      },
+      "remarks": "Not discussed in interview",
+      "depth": {
+        "depth_reached": "direct",
+        "depth_demonstrated": "direct",
+        "dimensions_demonstrated": [],
+        "dimensions_missing": [
+          "conceptual_understanding",
+          "practical_application",
+          "reasoning",
+          "trade_offs",
+          "edge_cases",
+          "production_judgment"
+        ],
+        "evidence_confidence": "insufficient"
+      },
+      "task_ids": [],
+      "question_ids": [],
+      "evidence_count": 0
+    }
+  ],
+  "questions": [
+    {
+      "question_id": "q_idem",
+      "question_text": "Walk me through designing payment capture so a retry cannot charge twice.",
+      "skill_id": "skl_idem",
+      "skill_name": "Idempotent design",
+      "task_ids": [
+        "tsk_capture"
+      ],
+      "task_id": "tsk_capture",
+      "difficulty": "medium",
+      "question_type": "task_based",
+      "answered": true,
+      "turns": [
+        {
+          "turn_id": "q_idem#0",
+          "stage": "direct",
+          "prompt": "Walk me through designing payment capture so a retry cannot charge twice.",
+          "answer": "You make it idempotent, so the same request can't be applied twice. That's the standard way to handle retries on a payment path.",
+          "excluded": false,
+          "excluded_reason": ""
+        },
+        {
+          "turn_id": "q_idem#1",
+          "stage": "probed",
+          "prompt": "What made you choose that?",
+          "answer": "Like I said, it's about making the operation idempotent so a retry is safe.",
+          "excluded": false,
+          "excluded_reason": ""
+        },
+        {
+          "turn_id": "q_idem#2",
+          "stage": "deep_probed",
+          "prompt": "How would you know it failed?",
+          "answer": "Just idempotency really. That's the concept that covers it.",
+          "excluded": false,
+          "excluded_reason": ""
+        }
+      ],
+      "probe_count": 2,
+      "depth_reached": "deep_probed",
+      "depth_demonstrated": "direct",
+      "evidence_count": 3
+    },
+    {
+      "question_id": "q_recon",
+      "question_text": "How would you reconcile our ledger against the provider's settlement file?",
+      "skill_id": "skl_recon",
+      "skill_name": "Reconciliation",
+      "task_ids": [
+        "tsk_recon"
+      ],
+      "task_id": "tsk_recon",
+      "difficulty": "medium",
+      "question_type": "task_based",
+      "answered": true,
+      "turns": [
+        {
+          "turn_id": "q_recon#0",
+          "stage": "direct",
+          "prompt": "How would you reconcile our ledger against the provider's settlement file?",
+          "answer": "We reconcile against the provider's settlement file every morning and match on their reference. Anything still unmatched after two cycles goes to a queue a person works, because auto-resolving a mismatch at our volume quietly hides the one case that actually cost a customer money.",
+          "excluded": false,
+          "excluded_reason": ""
+        }
+      ],
+      "probe_count": 0,
+      "depth_reached": "direct",
+      "depth_demonstrated": "deep_probed",
+      "evidence_count": 1
+    },
+    {
+      "question_id": "q_review",
+      "question_text": "Walk me through how you'd review a peer's design for a new payment method.",
+      "skill_id": "skl_review",
+      "skill_name": "Design review",
+      "task_ids": [
+        "tsk_review"
+      ],
+      "task_id": "tsk_review",
+      "difficulty": "medium",
+      "question_type": "task_based",
+      "answered": true,
+      "turns": [
+        {
+          "turn_id": "q_review#0",
+          "stage": "direct",
+          "prompt": "Walk me through how you'd review a peer's design for a new payment method.",
+          "answer": "I'd read it and comment.",
+          "excluded": false,
+          "excluded_reason": ""
+        }
+      ],
+      "probe_count": 0,
+      "depth_reached": "direct",
+      "depth_demonstrated": "direct",
+      "evidence_count": 1
+    }
+  ],
+  "evidence": [
+    {
+      "skill_id": "skl_idem",
+      "skill_name": "Idempotent design",
+      "question_id": "q_idem",
+      "question_text": "Walk me through designing payment capture so a retry cannot charge twice.",
+      "task_id": "tsk_capture",
+      "turn_id": "q_idem#0",
+      "stage": "direct",
+      "dimension": "conceptual_understanding",
+      "evidence_type": "supported",
+      "evidence_strength": "moderate",
+      "supports_criterion": "Depth",
+      "candidate_quote": "You make it idempotent, so the same request can't be applied twice"
+    },
+    {
+      "skill_id": "skl_idem",
+      "skill_name": "Idempotent design",
+      "question_id": "q_idem",
+      "question_text": "Walk me through designing payment capture so a retry cannot charge twice.",
+      "task_id": "tsk_capture",
+      "turn_id": "q_idem#1",
+      "stage": "probed",
+      "dimension": "conceptual_understanding",
+      "evidence_type": "contradicted",
+      "evidence_strength": "moderate",
+      "supports_criterion": "Depth",
+      "candidate_quote": "Like I said, it's about making the operation idempotent so a retry is safe"
+    },
+    {
+      "skill_id": "skl_idem",
+      "skill_name": "Idempotent design",
+      "question_id": "q_idem",
+      "question_text": "Walk me through designing payment capture so a retry cannot charge twice.",
+      "task_id": "tsk_capture",
+      "turn_id": "q_idem#2",
+      "stage": "deep_probed",
+      "dimension": "conceptual_understanding",
+      "evidence_type": "supported",
+      "evidence_strength": "moderate",
+      "supports_criterion": "Depth",
+      "candidate_quote": "Just idempotency really"
+    },
+    {
+      "skill_id": "skl_recon",
+      "skill_name": "Reconciliation",
+      "question_id": "q_recon",
+      "question_text": "How would you reconcile our ledger against the provider's settlement file?",
+      "task_id": "tsk_recon",
+      "turn_id": "q_recon#0",
+      "stage": "direct",
+      "dimension": "production_judgment",
+      "evidence_type": "supported",
+      "evidence_strength": "strong",
+      "supports_criterion": "Depth",
+      "candidate_quote": "We reconcile against the provider's settlement file every morning and match on their reference"
+    },
+    {
+      "skill_id": "skl_review",
+      "skill_name": "Design review",
+      "question_id": "q_review",
+      "question_text": "Walk me through how you'd review a peer's design for a new payment method.",
+      "task_id": "tsk_review",
+      "turn_id": "q_review#0",
+      "stage": "direct",
+      "dimension": "reasoning",
+      "evidence_type": "supported",
+      "evidence_strength": "moderate",
+      "supports_criterion": "Depth",
+      "candidate_quote": "I'd read it and comment"
+    }
+  ],
+  "summary": {
+    "strengths": [
+      "Reconciliation: A concrete daily process, a matching key, and a deliberate choice to escalate unmatched rows rather than auto-resolve them."
+    ],
+    "areas_for_improvement": [
+      "Idempotent design: scored 12/25 — below what this role expects. The concept is named correctly and never developed."
+    ],
+    "recommendation": "Needs further evaluation",
+    "recommendation_explaination": "The picture is uneven: the candidate showed what the role expects on Reconciliation, but the evidence on Idempotent design did not reach the same bar. A further conversation focused on the weaker areas would settle it.",
+    "recommendation_explanation": "The picture is uneven: the candidate showed what the role expects on Reconciliation, but the evidence on Idempotent design did not reach the same bar. A further conversation focused on the weaker areas would settle it.",
+    "recommendation_boundary": {
+      "at_boundary": true,
+      "reasons": [
+        "1 of 2 discussed skills meet the bar, within one skill of the majority the recommendation turns on"
+      ],
+      "skills": [],
+      "skills_meeting_bar": 1,
+      "skills_discussed": 2
+    }
+  },
+  "scales": {
+    "criteria": [
+      "Accuracy",
+      "Depth",
+      "Clarity",
+      "Problem-Solving",
+      "Communication"
+    ],
+    "criterion_max": 5,
+    "skill_max_score": 25,
+    "rating_bands": [
+      "Poor <40",
+      "Average 40-59",
+      "Good 60-79",
+      "Excellent >=80",
+      "Not rated (nothing discussed)"
+    ],
+    "recommendations": [
+      "Not suitable for this role",
+      "Needs further evaluation",
+      "Proceed to next round"
+    ],
+    "interview_depth_scale": [
+      "short",
+      "medium",
+      "deep"
+    ],
+    "probe_stage_scale": [
+      "direct",
+      "probed",
+      "deep_probed"
+    ],
+    "evidence_dimensions": [
+      "conceptual_understanding",
+      "practical_application",
+      "reasoning",
+      "trade_offs",
+      "edge_cases",
+      "production_judgment"
+    ]
+  },
+  "integrity": {
+    "validated_evidence": 5,
+    "quarantined_evidence": 0,
+    "constraints_applied": 0,
+    "repairs": 0
+  }
+}

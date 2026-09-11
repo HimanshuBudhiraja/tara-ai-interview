@@ -1,0 +1,56 @@
+{
+  "mode": "deterministic",
+  "cases_checked": 47,
+  "recommendation_cases": [
+    {
+      "case_id": "rec-01-majority-not-discussed",
+      "expected": "Needs further evaluation",
+      "actual": "Needs further evaluation",
+      "passed": true,
+      "reason": "Most of the role was never asked about. Excellent evidence on the one skill that was covered cannot stand in for the two that were not — and the gap is in the interview, not the candidate.",
+      "explanation_is_qualitative": true
+    },
+    {
+      "case_id": "rec-02-majority-at-the-bar",
+      "expected": "Proceed to next round",
+      "actual": "Proceed to next round",
+      "passed": true,
+      "reason": "A majority of discussed skills meet the bar and no criterion anywhere is at or below 1, so nothing severe is being averaged away.",
+      "explanation_is_qualitative": true
+    },
+    {
+      "case_id": "rec-03-mixed",
+      "expected": "Needs further evaluation",
+      "actual": "Needs further evaluation",
+      "passed": true,
+      "reason": "One strong skill and one below the bar, with neither in the majority. Uneven is its own answer, not a rounding of the two.",
+      "explanation_is_qualitative": true
+    },
+    {
+      "case_id": "rec-04-majority-below-the-bar",
+      "expected": "Not suitable for this role",
+      "actual": "Not suitable for this role",
+      "passed": true,
+      "reason": "Most of what was discussed stayed below what the role expects. The one strong skill does not carry the other two.",
+      "explanation_is_qualitative": true
+    },
+    {
+      "case_id": "rec-05-nothing-discussed",
+      "expected": "Needs further evaluation",
+      "actual": "Needs further evaluation",
+      "passed": true,
+      "reason": "The interview established nothing at all. There is no finding about the candidate to report either way.",
+      "explanation_is_qualitative": true
+    },
+    {
+      "case_id": "rec-06-severe-weakness-blocks-proceed",
+      "expected": "Needs further evaluation",
+      "actual": "Needs further evaluation",
+      "passed": true,
+      "reason": "A majority meet the bar, but one criterion sits at 1. A single severe weakness must stop a Proceed rather than being outvoted — this is the `any_severe` guard, and it is the rule most likely to be lost in a refactor.",
+      "explanation_is_qualitative": true
+    }
+  ],
+  "findings": [],
+  "passed": true
+}

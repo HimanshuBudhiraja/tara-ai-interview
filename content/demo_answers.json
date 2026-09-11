@@ -1,0 +1,66 @@
+{
+  "_note": "Presenter teleprompter lines for the voice demo (?demo=1). Deliberately SHORT — someone reads these aloud under pressure, so two or three sentences is the ceiling. Written to be substantive enough that Tara advances rather than probing forever, except csr-emp-01 which is intentionally thin so the demo shows a follow-up on the very first question.",
+  "answers": {
+    "csr-emp-01": {
+      "read": "I always try to be really empathetic and put myself in the customer's shoes.",
+      "note": "Deliberately thin — Tara should follow up here. That's the moment to point at."
+    },
+    "csr-emp-02": {
+      "read": "I'd say: three times is three times too many, I've got your history open here so you don't need to start again. The frustration by then is about not being heard, not the original fault.",
+      "note": "Substantive — Tara should acknowledge and move on."
+    },
+    "csr-esc-01": {
+      "read": "I let them finish completely, without interrupting, and I take notes so I'm not just waiting for my turn. When there's a gap I come in low and slow and play their problem back in my own words.",
+      "note": "Substantive."
+    },
+    "csr-esc-02": {
+      "read": "I'd say absolutely, I'll get you to my lead, give me sixty seconds to try one thing first so they're not starting from zero. If they say no and repeat it, I transfer.",
+      "note": "Substantive."
+    },
+    "csr-esc-03": {
+      "read": "I wouldn't let it change what I offer, or it's unfair to everyone who didn't threaten. I'd flag it to my lead the same hour and get on with fixing the actual problem.",
+      "note": "Substantive."
+    },
+    "csr-tro-01": {
+      "read": "I'd start with what changed — was it working yesterday. Then browser and device, then the exact wording on screen, then whether it's just them or the whole team.",
+      "note": "Substantive."
+    },
+    "csr-tro-02": {
+      "read": "Plainly and early: this one's on us, and I'm not going to have it fixed today. No timeline I can't keep, and I'd tell them exactly when I'll next update them.",
+      "note": "Substantive."
+    },
+    "csr-tro-03": {
+      "read": "I say so out loud — I don't want to guess at this, give me a few minutes. Then I check our docs and past tickets, and after about ten minutes I ask the team.",
+      "note": "Substantive."
+    },
+    "csr-pol-01": {
+      "read": "I'd look at the reason first. Two days outside with a good explanation and a long history, I'd approve it if it's within my authority — and if it isn't, I'd put it to my lead today with a recommendation.",
+      "note": "Substantive."
+    },
+    "csr-pol-02": {
+      "read": "I'd flag it the same morning. My lead first so nobody's blindsided, then the customer within the hour — here's what's actually true, and here's what I'm doing about it.",
+      "note": "Substantive."
+    },
+    "csr-cla-01": {
+      "read": "The browser keeps a copy of the site so it loads faster — like a photocopy on your desk instead of walking to the filing cabinet. Sometimes the real file changes and you're still reading the old copy.",
+      "note": "Substantive. Good one to land — it shows Tara handling an explanation, not a scenario."
+    },
+    "csr-cla-02": {
+      "read": "The no goes first, in the first line, because burying it wastes their time. Then one sentence of the real reason, then the nearest thing we can actually do.",
+      "note": "Substantive."
+    },
+    "csr-own-01": {
+      "read": "The blocked small account first — they can't work at all, and impact beats account size. The two angry ones get a holding note within ten minutes so they're not sitting in silence.",
+      "note": "Substantive."
+    },
+    "csr-own-02": {
+      "read": "I moved a billing dispute to our finance lead. I wrote up what the customer wants, what I'd checked, and what I'd promised, then told the customer her name and chased it two days later.",
+      "note": "Substantive."
+    }
+  },
+  "probe_replies": [
+    "Concretely, I'd say something like: I can see this has cost you a whole morning, so let me fix the access first and explain the rest afterwards.",
+    "Because it tells me whether I'm dealing with one person's setup or something broader, and that changes who I involve and how urgently.",
+    "I'd check back with them afterwards to make sure it actually held, rather than assuming it landed."
+  ]
+}

@@ -1,0 +1,805 @@
+{
+  "mode": "derivation",
+  "totals": {
+    "cases": 46,
+    "passed": 45,
+    "agreement": 0.978
+  },
+  "findings": [
+    {
+      "case_id": "dd-len-short-01",
+      "axis": "length",
+      "expected": "deep_probed",
+      "actual": "probed",
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ],
+      "reason": "the derivation disagrees with the authored labels — this is a rule defect, not a model one"
+    }
+  ],
+  "cases": {
+    "dd-direct-01": {
+      "axis": "direct",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-direct-02": {
+      "axis": "direct",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-direct-03": {
+      "axis": "direct",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-direct-04": {
+      "axis": "direct",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-probed-01": {
+      "axis": "probed",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-probed-02": {
+      "axis": "probed",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-probed-03": {
+      "axis": "probed",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-probed-04": {
+      "axis": "probed",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-probed-05": {
+      "axis": "probed",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-deep-01": {
+      "axis": "deep",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "edge_cases",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-deep-02": {
+      "axis": "deep",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-deep-03": {
+      "axis": "deep",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-deep-04": {
+      "axis": "deep",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-deep-05": {
+      "axis": "deep",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "edge_cases",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-deep-06": {
+      "axis": "deep",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "edge_cases",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-len-long-01": {
+      "axis": "length",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-len-long-02": {
+      "axis": "length",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-len-short-01": {
+      "axis": "length",
+      "expected": "deep_probed",
+      "actual": "probed",
+      "passed": false,
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-len-short-02": {
+      "axis": "length",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "edge_cases",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-jargon-01": {
+      "axis": "jargon",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-jargon-02": {
+      "axis": "jargon",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-jargon-03": {
+      "axis": "jargon",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-assert-01": {
+      "axis": "assertion",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": []
+    },
+    "dd-assert-02": {
+      "axis": "assertion",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": []
+    },
+    "dd-assert-03": {
+      "axis": "assertion",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": []
+    },
+    "dd-indep-shallow-01": {
+      "axis": "independence",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-shallow-02": {
+      "axis": "independence",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-shallow-03": {
+      "axis": "independence",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "weak",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-deep-01": {
+      "axis": "independence",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-deep-02": {
+      "axis": "independence",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-deep-03": {
+      "axis": "independence",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-probed-01": {
+      "axis": "independence",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-probed-02": {
+      "axis": "independence",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-level-junior": {
+      "axis": "level",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-level-mid": {
+      "axis": "level",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-level-senior": {
+      "axis": "level",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-contra-01": {
+      "axis": "contradiction",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "contradicted"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "edge_cases",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-contra-02": {
+      "axis": "contradiction",
+      "expected": "probed",
+      "actual": "probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "moderate",
+          "evidence_type": "contradicted"
+        }
+      ]
+    },
+    "dd-stt-01": {
+      "axis": "stt",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-stt-02": {
+      "axis": "stt",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "edge_cases",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-inject-01": {
+      "axis": "injection",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-inject-02": {
+      "axis": "injection",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": []
+    },
+    "dd-indep-deepdeep-01": {
+      "axis": "independence",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "edge_cases",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-deepdeep-02": {
+      "axis": "independence",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "edge_cases",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "reasoning",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-deepdeep-03": {
+      "axis": "independence",
+      "expected": "deep_probed",
+      "actual": "deep_probed",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "moderate",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "practical_application",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "trade_offs",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        },
+        {
+          "depth_dimension": "production_judgment",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    },
+    "dd-indep-probeddirect-01": {
+      "axis": "independence",
+      "expected": "direct",
+      "actual": "direct",
+      "passed": true,
+      "gold_evidence": [
+        {
+          "depth_dimension": "conceptual_understanding",
+          "evidence_strength": "strong",
+          "evidence_type": "supported"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "workload": "answer_classifier",
+  "version": 1,
+  "notes": "Every case uses a real question from the authored CSR pool and a candidate turn of the kind the runtime actually meets. The contract is the production one and is not changed here: intent, depth, covered, missing, affect, quote. 'affect' is never graded against a quality expectation — it exists to pick an acknowledgement and must not move depth.",
+  "cases": [
+    {
+      "id": "ac-answer-substantive-01",
+      "question": "Tell me about a time a customer was upset with you or your company. What did you do?",
+      "looking_for": ["acknowledges the customer's feeling before fixing", "takes a concrete action", "names what they learned or changed"],
+      "answer": "Last winter a customer called about a failed renewal and she was near tears — her whole team was locked out mid-shift. I said I could hear it had landed badly, and that before anything else I'd get her team back in. I issued a seven-day grace extension while we sorted the card, confirmed access with her on the line, and only then walked through why the payment failed. She emailed the next day to say it was the calmest support call she'd had. What I took from it was that the order matters: access first, explanation second.",
+      "expect": {"intent": "answer", "depth": "substantive"},
+      "expect_covers_at_least": 2
+    },
+    {
+      "id": "ac-answer-substantive-02",
+      "question": "A customer writes in and says they have explained this three times already to three different people. You're the fourth. What are the first words out of your mouth?",
+      "looking_for": ["names the repetition explicitly", "signals they have read the history", "avoids making the customer start over"],
+      "answer": "Something like: 'Three times is three times too many — I've got your history open here so you don't need to start again.' Naming it matters because by that point the frustration is about not being heard, not the original fault. And I read the thread before I speak, so I'm not the fourth person asking the same opening question.",
+      "expect": {"intent": "answer", "depth": "substantive"},
+      "expect_covers_at_least": 2
+    },
+    {
+      "id": "ac-answer-partial-01",
+      "question": "Walk me through how you'd diagnose a customer who says the dashboard 'isn't loading'.",
+      "looking_for": ["asks what changed recently", "narrows environment: browser, device, account scope", "narrates reasoning to the customer", "knows when to escalate with reproduction steps"],
+      "answer": "I'd ask them a few questions to narrow it down — what browser they're on, whether it's happening for everyone on the team. Then I'd try to reproduce it myself and see what I get.",
+      "expect": {"intent": "answer", "depth": "partial"},
+      "expect_misses_at_least": 1
+    },
+    {
+      "id": "ac-answer-partial-02",
+      "question": "A customer asks for a refund two days outside the policy window. How do you handle it?",
+      "looking_for": ["looks at the reason before the rule", "knows the limit of their own authority", "explains the decision without hiding behind policy"],
+      "answer": "I'd look at their account history and how long they've been with us, and if it seemed reasonable I'd try to get it approved. If I couldn't approve it myself I'd take it to my manager.",
+      "expect": {"intent": "answer", "depth": "partial"}
+    },
+    {
+      "id": "ac-answer-thin-01",
+      "question": "Tell me about a time a customer was upset with you or your company. What did you do?",
+      "looking_for": ["acknowledges the customer's feeling before fixing", "takes a concrete action", "names what they learned or changed"],
+      "answer": "I'd just try to help them out as best I can and stay calm.",
+      "expect": {"intent": "answer", "depth": "thin"}
+    },
+    {
+      "id": "ac-answer-thin-02",
+      "question": "How do you decide when something needs to go to a senior colleague?",
+      "looking_for": ["names a concrete trigger", "attempts something first where appropriate", "hands over with context"],
+      "answer": "When it's too difficult for me.",
+      "expect": {"intent": "answer", "depth": "thin"},
+      "notes": "Six words. The runtime also has a hard MIN_ANSWER_CHARS floor, but the classifier should independently read this as thin."
+    },
+    {
+      "id": "ac-answer-thin-03-long-but-empty",
+      "question": "Walk me through how you'd diagnose a customer who says the dashboard 'isn't loading'.",
+      "looking_for": ["asks what changed recently", "narrows environment: browser, device, account scope", "narrates reasoning to the customer", "knows when to escalate with reproduction steps"],
+      "answer": "I think troubleshooting is really about patience and communication at the end of the day. You have to put yourself in the customer's shoes and remember that they're frustrated and they just want it to work. I always try to be really thorough and make sure I'm doing my best for every single customer, because that's what good support is about and it's what I'd want if I were on the other end of the line.",
+      "expect": {"intent": "answer", "depth": "thin"},
+      "notes": "The important case. Long, fluent, warm, and contains no diagnostic content at all. A classifier that reads length as depth fails here, and the interview stops probing exactly the candidate who most needs it."
+    },
+    {
+      "id": "ac-repeat-01",
+      "question": "A customer is shouting at you on a call. Walk me through what you do.",
+      "looking_for": ["lets them finish", "reflects the problem back", "sets a boundary if it turns personal"],
+      "answer": "Sorry, could you say that again? You cut out for a second.",
+      "expect": {"intent": "repeat"}
+    },
+    {
+      "id": "ac-repeat-02",
+      "question": "How do you decide when something needs to go to a senior colleague?",
+      "looking_for": ["names a concrete trigger"],
+      "answer": "I didn't catch that last bit — one more time?",
+      "expect": {"intent": "repeat"}
+    },
+    {
+      "id": "ac-clarify-01",
+      "question": "A customer asks for a refund two days outside the policy window. How do you handle it?",
+      "looking_for": ["looks at the reason before the rule"],
+      "answer": "What do you mean exactly — do you want to know what I'd say to them, or whether I'd approve it?",
+      "expect": {"intent": "clarify"},
+      "notes": "Asking what the question is after is not a failure to answer it, and must not burn the item."
+    },
+    {
+      "id": "ac-clarify-02",
+      "question": "Tell me about a time you owned a problem end to end.",
+      "looking_for": ["takes responsibility without being asked"],
+      "answer": "Sorry, I'm not sure what you're looking for there.",
+      "expect": {"intent": "clarify"}
+    },
+    {
+      "id": "ac-skip-01",
+      "question": "Tell me about a time you handled a billing dispute.",
+      "looking_for": ["separates the policy question from the relationship question"],
+      "answer": "Honestly I've never worked on billing, so I'd have to pass on that one.",
+      "expect": {"intent": "skip"},
+      "notes": "Declining honestly is different from failing. The runtime acknowledges and advances; it does not probe."
+    },
+    {
+      "id": "ac-meta-01",
+      "question": "Walk me through how you'd diagnose a customer who says the dashboard 'isn't loading'.",
+      "looking_for": ["asks what changed recently"],
+      "answer": "Sorry — how many more questions are there? I've got a call at four.",
+      "expect": {"intent": "meta"},
+      "notes": "About the interview, not the question. Answering it and re-asking is the correct behaviour."
+    },
+    {
+      "id": "ac-silence-01",
+      "question": "A customer is shouting at you on a call. Walk me through what you do.",
+      "looking_for": ["lets them finish"],
+      "answer": "",
+      "expect": {"intent": "silence", "depth": "thin"},
+      "notes": "Silence is never an answer. From the server it is indistinguishable from a dead microphone."
+    },
+    {
+      "id": "ac-irrelevant-01",
+      "question": "How do you decide when something needs to go to a senior colleague?",
+      "looking_for": ["names a concrete trigger", "attempts something first where appropriate", "hands over with context"],
+      "answer": "I'm really strong on Excel and I picked up SQL last year, so I can pull my own reports rather than waiting on the data team.",
+      "expect": {"intent": "answer", "depth": "thin"},
+      "expect_covers_at_most": 0,
+      "notes": "On-topic-sounding, genuinely off-question. `covered` must stay empty — a classifier that credits fluency here hands the candidate signal they did not evidence."
+    }
+  ]
+}

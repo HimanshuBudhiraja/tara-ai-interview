@@ -1,0 +1,186 @@
+{
+  "runs_per_configuration": 5,
+  "cases": 46,
+  "rows": [
+    {
+      "configuration": "depth_cfg_current",
+      "agreement": {
+        "mean": 0.665,
+        "min": 0.63,
+        "max": 0.674,
+        "stdev": 0.017
+      },
+      "material_errors": {
+        "mean": 15.4,
+        "min": 15.0,
+        "max": 17.0,
+        "stdev": 0.8
+      },
+      "repeatability": 0.87,
+      "pairwise": 0.928,
+      "per_class": {
+        "direct": {
+          "support": 90,
+          "predicted": 77,
+          "precision": 0.909,
+          "recall": 0.778
+        },
+        "probed": {
+          "support": 55,
+          "predicted": 80,
+          "precision": 0.4,
+          "recall": 0.582
+        },
+        "deep_probed": {
+          "support": 85,
+          "predicted": 73,
+          "precision": 0.699,
+          "recall": 0.6
+        }
+      },
+      "neutrality": {
+        "length_neutrality": 0.45,
+        "jargon_neutrality": 0.667,
+        "self_assertion_neutrality": 1.0,
+        "stt_robustness": 0.1,
+        "injection_robustness": 1.0,
+        "contradiction_handling": 0.8
+      },
+      "taxonomy": {
+        "EXTRACTION_FALSE_POSITIVE": 9,
+        "EXTRACTION_FALSE_NEGATIVE": 8,
+        "DERIVATION_RULE_ERROR": 1,
+        "MODEL_VARIANCE": 1
+      },
+      "confusion": {
+        "direct->direct": 70,
+        "direct->probed": 20,
+        "probed->direct": 1,
+        "probed->probed": 32,
+        "probed->deep_probed": 22,
+        "deep_probed->direct": 6,
+        "deep_probed->probed": 28,
+        "deep_probed->deep_probed": 51
+      }
+    },
+    {
+      "configuration": "depth_cfg_reverted",
+      "agreement": {
+        "mean": 0.743,
+        "min": 0.696,
+        "max": 0.783,
+        "stdev": 0.032
+      },
+      "material_errors": {
+        "mean": 11.8,
+        "min": 10.0,
+        "max": 14.0,
+        "stdev": 1.47
+      },
+      "repeatability": 0.783,
+      "pairwise": 0.891,
+      "per_class": {
+        "direct": {
+          "support": 90,
+          "predicted": 78,
+          "precision": 1.0,
+          "recall": 0.867
+        },
+        "probed": {
+          "support": 55,
+          "predicted": 64,
+          "precision": 0.469,
+          "recall": 0.545
+        },
+        "deep_probed": {
+          "support": 85,
+          "predicted": 88,
+          "precision": 0.716,
+          "recall": 0.741
+        }
+      },
+      "neutrality": {
+        "length_neutrality": 0.8,
+        "jargon_neutrality": 0.8,
+        "self_assertion_neutrality": 1.0,
+        "stt_robustness": 0.8,
+        "injection_robustness": 1.0,
+        "contradiction_handling": 0.7
+      },
+      "taxonomy": {
+        "EXTRACTION_FALSE_POSITIVE": 11,
+        "EXTRACTION_FALSE_NEGATIVE": 5,
+        "DERIVATION_RULE_ERROR": 1
+      },
+      "confusion": {
+        "direct->direct": 78,
+        "direct->probed": 12,
+        "probed->probed": 30,
+        "probed->deep_probed": 25,
+        "deep_probed->probed": 22,
+        "deep_probed->deep_probed": 63
+      }
+    },
+    {
+      "configuration": "depth_cfg_rubric_v1",
+      "agreement": {
+        "mean": 0.665,
+        "min": 0.652,
+        "max": 0.674,
+        "stdev": 0.011
+      },
+      "material_errors": {
+        "mean": 15.4,
+        "min": 15.0,
+        "max": 16.0,
+        "stdev": 0.49
+      },
+      "repeatability": 0.739,
+      "pairwise": 0.863,
+      "per_class": {
+        "direct": {
+          "support": 90,
+          "predicted": 77,
+          "precision": 0.909,
+          "recall": 0.778
+        },
+        "probed": {
+          "support": 55,
+          "predicted": 108,
+          "precision": 0.417,
+          "recall": 0.818
+        },
+        "deep_probed": {
+          "support": 85,
+          "predicted": 45,
+          "precision": 0.844,
+          "recall": 0.447
+        }
+      },
+      "neutrality": {
+        "length_neutrality": 0.25,
+        "jargon_neutrality": 0.933,
+        "self_assertion_neutrality": 1.0,
+        "stt_robustness": 0.4,
+        "injection_robustness": 1.0,
+        "contradiction_handling": 0.5
+      },
+      "taxonomy": {
+        "EXTRACTION_FALSE_POSITIVE": 8,
+        "EXTRACTION_FALSE_NEGATIVE": 12,
+        "DERIVATION_RULE_ERROR": 1,
+        "MODEL_VARIANCE": 1
+      },
+      "confusion": {
+        "direct->direct": 70,
+        "direct->probed": 20,
+        "probed->direct": 3,
+        "probed->probed": 45,
+        "probed->deep_probed": 7,
+        "deep_probed->direct": 4,
+        "deep_probed->probed": 43,
+        "deep_probed->deep_probed": 38
+      }
+    }
+  ]
+}

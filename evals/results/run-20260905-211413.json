@@ -1,0 +1,73 @@
+{
+  "config": "evals/models.yaml",
+  "started_at": 1788623049.4650838,
+  "finished_at": 1788623053.557819,
+  "results": [
+    {
+      "workload": "answer_classifier",
+      "model": "openai/gpt-4.1-mini",
+      "test_case_id": "ac-answer-thin-03-long-but-empty",
+      "success": true,
+      "latency_ms": 2584,
+      "input_tokens": 647,
+      "output_tokens": 66,
+      "raw_output": "{\"intent\":\"answer\",\"depth\":\"thin\",\"covered\":[],\"missing\":[\"asks what changed recently\",\"narrows environment: browser, device, account scope\",\"narrates reasoning to the customer\",\"knows when to escalate with reproduction steps\"],\"affect\":\"neutral\",\"quote\":\"troubleshooting is really about patience and communication\"}",
+      "parsed_output": {
+        "intent": "answer",
+        "depth": "thin",
+        "covered": [],
+        "missing": [
+          "asks what changed recently",
+          "narrows environment: browser, device, account scope",
+          "narrates reasoning to the customer",
+          "knows when to escalate with reproduction steps"
+        ],
+        "affect": "neutral",
+        "quote": "troubleshooting is really about patience and communication"
+      },
+      "validation_errors": [],
+      "checks": {
+        "intent": true,
+        "depth": true,
+        "covered_are_real_cues": true,
+        "missing_are_real_cues": true,
+        "affect_in_contract": true
+      },
+      "score": 1.0,
+      "notes": [],
+      "cost_usd": 0.0003644
+    },
+    {
+      "workload": "answer_classifier",
+      "model": "openai/gpt-4.1-mini",
+      "test_case_id": "ac-silence-01",
+      "success": true,
+      "latency_ms": 1500,
+      "input_tokens": 534,
+      "output_tokens": 30,
+      "raw_output": "{\"intent\":\"silence\",\"depth\":\"thin\",\"covered\":[],\"missing\":[\"lets them finish\"],\"affect\":\"neutral\",\"quote\":\"\"}",
+      "parsed_output": {
+        "intent": "silence",
+        "depth": "thin",
+        "covered": [],
+        "missing": [
+          "lets them finish"
+        ],
+        "affect": "neutral",
+        "quote": ""
+      },
+      "validation_errors": [],
+      "checks": {
+        "intent": true,
+        "depth": true,
+        "covered_are_real_cues": true,
+        "missing_are_real_cues": true,
+        "affect_in_contract": true,
+        "silence_covers_nothing": true
+      },
+      "score": 1.0,
+      "notes": [],
+      "cost_usd": 0.0002616
+    }
+  ]
+}

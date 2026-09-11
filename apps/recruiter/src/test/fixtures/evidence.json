@@ -1,0 +1,90 @@
+{
+  "evaluation_id": "ev_cf94ad4137e5",
+  "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+  "interview_version": 1,
+  "evaluation_engine_version": "deep_evidence_v2",
+  "status": "completed",
+  "evidence": [
+    {
+      "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+      "skill_id": "skl_idem",
+      "skill_name": "Idempotent design",
+      "task_id": "tsk_capture",
+      "question_id": "q_idem",
+      "question_text": "Walk me through designing payment capture so a retry cannot charge twice.",
+      "turn_id": "q_idem#0",
+      "depth_stage": "direct",
+      "depth_dimension": "conceptual_understanding",
+      "evidence_type": "supported",
+      "evidence_strength": "moderate",
+      "supports_criterion": "Depth",
+      "candidate_quote": "You make it idempotent, so the same request can't be applied twice"
+    },
+    {
+      "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+      "skill_id": "skl_idem",
+      "skill_name": "Idempotent design",
+      "task_id": "tsk_capture",
+      "question_id": "q_idem",
+      "question_text": "Walk me through designing payment capture so a retry cannot charge twice.",
+      "turn_id": "q_idem#1",
+      "depth_stage": "probed",
+      "depth_dimension": "conceptual_understanding",
+      "evidence_type": "contradicted",
+      "evidence_strength": "moderate",
+      "supports_criterion": "Depth",
+      "candidate_quote": "Like I said, it's about making the operation idempotent so a retry is safe"
+    },
+    {
+      "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+      "skill_id": "skl_idem",
+      "skill_name": "Idempotent design",
+      "task_id": "tsk_capture",
+      "question_id": "q_idem",
+      "question_text": "Walk me through designing payment capture so a retry cannot charge twice.",
+      "turn_id": "q_idem#2",
+      "depth_stage": "deep_probed",
+      "depth_dimension": "conceptual_understanding",
+      "evidence_type": "supported",
+      "evidence_strength": "moderate",
+      "supports_criterion": "Depth",
+      "candidate_quote": "Just idempotency really"
+    },
+    {
+      "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+      "skill_id": "skl_recon",
+      "skill_name": "Reconciliation",
+      "task_id": "tsk_recon",
+      "question_id": "q_recon",
+      "question_text": "How would you reconcile our ledger against the provider's settlement file?",
+      "turn_id": "q_recon#0",
+      "depth_stage": "direct",
+      "depth_dimension": "production_judgment",
+      "evidence_type": "supported",
+      "evidence_strength": "strong",
+      "supports_criterion": "Depth",
+      "candidate_quote": "We reconcile against the provider's settlement file every morning and match on their reference"
+    },
+    {
+      "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+      "skill_id": "skl_review",
+      "skill_name": "Design review",
+      "task_id": "tsk_review",
+      "question_id": "q_review",
+      "question_text": "Walk me through how you'd review a peer's design for a new payment method.",
+      "turn_id": "q_review#0",
+      "depth_stage": "direct",
+      "depth_dimension": "reasoning",
+      "evidence_type": "supported",
+      "evidence_strength": "moderate",
+      "supports_criterion": "Depth",
+      "candidate_quote": "I'd read it and comment"
+    }
+  ],
+  "quarantined": [
+    {
+      "reason": "quote is not in the transcript",
+      "skill_id": "skl_idem"
+    }
+  ]
+}

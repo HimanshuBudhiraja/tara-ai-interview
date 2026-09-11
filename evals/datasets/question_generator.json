@@ -1,0 +1,89 @@
+{
+  "workload": "question_generator",
+  "version": 1,
+  "notes": "Five skill/task inputs across difficulties. The output must be usable by the runtime unchanged — every generated question is turned into a QuestionSpec and validated against the Phase-0 contract, so 'good question' includes 'has an authored fallback probe and a clarify line', because those are what stop a rejected follow-up becoming silence.",
+  "cases": [
+    {
+      "id": "qg-deescalation-hard-01",
+      "role_title": "Customer Support Representative",
+      "difficulty": "hard",
+      "questions_per_skill": 2,
+      "skills": [
+        {"id": "deescalation", "name": "De-escalation", "priority": "high", "proficiency_target": 3,
+         "assessment_scope": "Holding a line under pressure without either capitulating or escalating the conflict.",
+         "question_bank": "deescalation"}
+      ],
+      "tasks": [
+        {"id": "t1", "description": "Take a call from a customer who is shouting about a repeated failure and has already been transferred twice", "outcome": "The customer leaves with the problem owned and a named next step."}
+      ],
+      "expect": {"targets_skill": "De-escalation", "expect_grounded_in_task": true}
+    },
+    {
+      "id": "qg-troubleshooting-medium-01",
+      "role_title": "Customer Support Representative",
+      "difficulty": "medium",
+      "questions_per_skill": 2,
+      "skills": [
+        {"id": "troubleshooting", "name": "Troubleshooting", "priority": "high", "proficiency_target": 3,
+         "assessment_scope": "Narrowing a vague report to a cause, and knowing when to stop guessing.",
+         "question_bank": "troubleshooting"}
+      ],
+      "tasks": [
+        {"id": "t1", "description": "Diagnose a customer report of 'the dashboard isn't loading' with no error message and no reproduction steps", "outcome": "Issues are escalated with enough context that nobody has to start again."}
+      ],
+      "expect": {"targets_skill": "Troubleshooting", "expect_grounded_in_task": true}
+    },
+    {
+      "id": "qg-easy-warmup-01",
+      "role_title": "Customer Support Representative",
+      "difficulty": "easy",
+      "questions_per_skill": 2,
+      "skills": [
+        {"id": "empathy", "name": "Customer empathy", "priority": "high", "proficiency_target": 2,
+         "assessment_scope": "Reading how a customer feels and acting on it before explaining.",
+         "question_bank": "empathy"}
+      ],
+      "tasks": [
+        {"id": "t1", "description": "Handle a customer whose team was locked out mid-shift by a failed renewal", "outcome": "Customers leave with their problem solved and their time respected."}
+      ],
+      "expect": {"targets_skill": "Customer empathy", "expect_grounded_in_task": true},
+      "notes": "The opening question a candidate meets. It must be answerable by someone who is nervous and has not warmed up yet — an 'easy' question that is actually a hard scenario is how an interview loses a good candidate in the first ninety seconds."
+    },
+    {
+      "id": "qg-multi-skill-01",
+      "role_title": "Support Team Lead",
+      "difficulty": "medium",
+      "questions_per_skill": 1,
+      "skills": [
+        {"id": "coaching", "name": "Coaching", "priority": "high", "proficiency_target": 3,
+         "assessment_scope": "Improving someone else's performance through specific, early feedback.",
+         "question_bank": "coaching"},
+        {"id": "prioritisation", "name": "Queue prioritisation", "priority": "medium", "proficiency_target": 3,
+         "assessment_scope": "Deciding what waits when everything is urgent.",
+         "question_bank": "prioritisation"}
+      ],
+      "tasks": [
+        {"id": "t1", "description": "Coach an agent through their first hard escalation and give feedback afterwards", "outcome": "Agents handle harder work over time without the lead taking it over."},
+        {"id": "t2", "description": "Rebalance the queue during a backlog when first response time is slipping", "outcome": "The queue stays inside its response target on the tickets that matter most."}
+      ],
+      "expect": {"targets_skills": ["Coaching", "Queue prioritisation"], "expect_grounded_in_task": true},
+      "notes": "Two skills, two tasks. Each question must map to exactly one skill — a question that assesses both cannot be scored against either."
+    },
+    {
+      "id": "qg-technical-01",
+      "role_title": "Senior Backend Engineer",
+      "difficulty": "hard",
+      "questions_per_skill": 2,
+      "skills": [
+        {"id": "correctness", "name": "Designing for correctness under failure", "priority": "high", "proficiency_target": 4,
+         "assessment_scope": "Reasoning about partial failure, idempotency and the cost asymmetry between error types.",
+         "question_bank": "correctness"}
+      ],
+      "tasks": [
+        {"id": "t1", "description": "Design idempotent payment capture so a retried request cannot double-charge a customer", "outcome": "No customer is charged twice, and no successful payment is silently lost."}
+      ],
+      "expect": {"targets_skill": "Designing for correctness under failure", "expect_grounded_in_task": true},
+      "notes": "Spoken aloud, not read. A question a candidate has to hold four clauses of in their head is a memory test."
+    }
+  ]
+}

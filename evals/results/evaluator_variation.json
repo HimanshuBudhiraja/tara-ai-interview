@@ -1,0 +1,833 @@
+{
+  "mode": "variation",
+  "variants": [
+    "baseline",
+    "reworded",
+    "stt",
+    "question_reworded"
+  ],
+  "cases": {
+    "acc-01-correct": {
+      "comparable": true,
+      "runs": 4,
+      "scores": [
+        20,
+        20,
+        17,
+        20
+      ],
+      "score_spread": 3,
+      "criterion_drift": {
+        "Accuracy": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        },
+        "Depth": {
+          "values": [
+            4,
+            4,
+            3,
+            4
+          ],
+          "spread": 1
+        },
+        "Clarity": {
+          "values": [
+            4,
+            4,
+            3,
+            4
+          ],
+          "spread": 1
+        },
+        "Problem-Solving": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        },
+        "Communication": {
+          "values": [
+            4,
+            4,
+            3,
+            4
+          ],
+          "spread": 1
+        }
+      },
+      "stable": {
+        "discussion_status": true,
+        "depth_reached": true,
+        "depth_demonstrated": true
+      },
+      "material_instability": [],
+      "verdicts": [
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 3,
+            "Clarity": 3,
+            "Problem-Solving": 4,
+            "Communication": 3
+          },
+          "score": 17,
+          "in_authored_range": true,
+          "evidence_items": 2,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        }
+      ],
+      "by_variant": {
+        "baseline": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "reworded": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "stt": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 3,
+            "Clarity": 3,
+            "Problem-Solving": 4,
+            "Communication": 3
+          },
+          "score": 17,
+          "in_authored_range": true,
+          "evidence_items": 2,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "question_reworded": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        }
+      }
+    },
+    "dep-04-tradeoffs": {
+      "comparable": true,
+      "runs": 4,
+      "scores": [
+        22,
+        22,
+        20,
+        21
+      ],
+      "score_spread": 2,
+      "criterion_drift": {
+        "Accuracy": {
+          "values": [
+            5,
+            5,
+            4,
+            4
+          ],
+          "spread": 1
+        },
+        "Depth": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        },
+        "Clarity": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        },
+        "Problem-Solving": {
+          "values": [
+            5,
+            5,
+            4,
+            5
+          ],
+          "spread": 1
+        },
+        "Communication": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        }
+      },
+      "stable": {
+        "discussion_status": true,
+        "depth_reached": true,
+        "depth_demonstrated": true
+      },
+      "material_instability": [],
+      "verdicts": [
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 5,
+            "Communication": 4
+          },
+          "score": 22,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 5,
+            "Communication": 4
+          },
+          "score": 22,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 5,
+            "Communication": 4
+          },
+          "score": 21,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        }
+      ],
+      "by_variant": {
+        "baseline": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 5,
+            "Communication": 4
+          },
+          "score": 22,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "reworded": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 5,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 5,
+            "Communication": 4
+          },
+          "score": 22,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "stt": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "question_reworded": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 5,
+            "Communication": 4
+          },
+          "score": 21,
+          "in_authored_range": true,
+          "evidence_items": 3,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        }
+      }
+    },
+    "ps-03-structured-diagnosis": {
+      "comparable": true,
+      "runs": 4,
+      "scores": [
+        21,
+        20,
+        20,
+        20
+      ],
+      "score_spread": 1,
+      "criterion_drift": {
+        "Accuracy": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        },
+        "Depth": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        },
+        "Clarity": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        },
+        "Problem-Solving": {
+          "values": [
+            5,
+            4,
+            4,
+            4
+          ],
+          "spread": 1
+        },
+        "Communication": {
+          "values": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "spread": 0
+        }
+      },
+      "stable": {
+        "discussion_status": true,
+        "depth_reached": true,
+        "depth_demonstrated": false
+      },
+      "material_instability": [
+        "depth_demonstrated varied: ['deep_probed', 'probed']"
+      ],
+      "verdicts": [
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 5,
+            "Communication": 4
+          },
+          "score": 21,
+          "in_authored_range": true,
+          "evidence_items": 5,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 4,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 5,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 5,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        }
+      ],
+      "by_variant": {
+        "baseline": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 5,
+            "Communication": 4
+          },
+          "score": 21,
+          "in_authored_range": true,
+          "evidence_items": 5,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "reworded": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 4,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "stt": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 5,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "question_reworded": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "deep_probed",
+          "criteria": {
+            "Accuracy": 4,
+            "Depth": 4,
+            "Clarity": 4,
+            "Problem-Solving": 4,
+            "Communication": 4
+          },
+          "score": 20,
+          "in_authored_range": true,
+          "evidence_items": 5,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        }
+      }
+    },
+    "clm-01-bare-claim": {
+      "comparable": true,
+      "runs": 4,
+      "scores": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "score_spread": 0,
+      "criterion_drift": {
+        "Accuracy": {
+          "values": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "spread": 0
+        },
+        "Depth": {
+          "values": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "spread": 0
+        },
+        "Clarity": {
+          "values": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "spread": 0
+        },
+        "Problem-Solving": {
+          "values": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "spread": 0
+        },
+        "Communication": {
+          "values": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "spread": 0
+        }
+      },
+      "stable": {
+        "discussion_status": true,
+        "depth_reached": true,
+        "depth_demonstrated": true
+      },
+      "material_instability": [],
+      "verdicts": [
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct",
+          "criteria": {
+            "Accuracy": 1,
+            "Depth": 1,
+            "Clarity": 1,
+            "Problem-Solving": 1,
+            "Communication": 1
+          },
+          "score": 5,
+          "in_authored_range": true,
+          "evidence_items": 0,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct",
+          "criteria": {
+            "Accuracy": 1,
+            "Depth": 1,
+            "Clarity": 1,
+            "Problem-Solving": 1,
+            "Communication": 1
+          },
+          "score": 5,
+          "in_authored_range": true,
+          "evidence_items": 0,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct",
+          "criteria": {
+            "Accuracy": 1,
+            "Depth": 1,
+            "Clarity": 1,
+            "Problem-Solving": 1,
+            "Communication": 1
+          },
+          "score": 5,
+          "in_authored_range": true,
+          "evidence_items": 0,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct",
+          "criteria": {
+            "Accuracy": 1,
+            "Depth": 1,
+            "Clarity": 1,
+            "Problem-Solving": 1,
+            "Communication": 1
+          },
+          "score": 5,
+          "in_authored_range": true,
+          "evidence_items": 0,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        }
+      ],
+      "by_variant": {
+        "baseline": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct",
+          "criteria": {
+            "Accuracy": 1,
+            "Depth": 1,
+            "Clarity": 1,
+            "Problem-Solving": 1,
+            "Communication": 1
+          },
+          "score": 5,
+          "in_authored_range": true,
+          "evidence_items": 0,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "reworded": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct",
+          "criteria": {
+            "Accuracy": 1,
+            "Depth": 1,
+            "Clarity": 1,
+            "Problem-Solving": 1,
+            "Communication": 1
+          },
+          "score": 5,
+          "in_authored_range": true,
+          "evidence_items": 0,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "stt": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct",
+          "criteria": {
+            "Accuracy": 1,
+            "Depth": 1,
+            "Clarity": 1,
+            "Problem-Solving": 1,
+            "Communication": 1
+          },
+          "score": 5,
+          "in_authored_range": true,
+          "evidence_items": 0,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        },
+        "question_reworded": {
+          "discussion_status": "discussed",
+          "depth_reached": "direct",
+          "depth_demonstrated": "direct",
+          "criteria": {
+            "Accuracy": 1,
+            "Depth": 1,
+            "Clarity": 1,
+            "Problem-Solving": 1,
+            "Communication": 1
+          },
+          "score": 5,
+          "in_authored_range": true,
+          "evidence_items": 0,
+          "quotes_all_real": true,
+          "criteria_all_canonical": true
+        }
+      }
+    }
+  },
+  "brittle": [
+    "ps-03-structured-diagnosis"
+  ],
+  "robust_case_count": 3
+}

@@ -1,0 +1,60 @@
+# Local development stack.
+#
+# `docker compose up api` is enough to run the whole product: storage is
+# file-backed and the AI degrades to a deterministic mock, so nothing here is
+# required for the thing to work. Postgres and Redis are in the `infra` profile
+# because they are where the product is going, not where it is — starting a
+# database nothing reads yet is infrastructure theatre.
+#
+#   docker compose up api                        the product
+#   docker compose --profile infra up            + postgres and redis
+#
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Sessions, audit trails, invitations and published versions survive a
+      # restart. A candidate mid-interview must not lose their place because
+      # someone redeployed.
+      - ./data:/app/data
+    environment:
+      # In a container the API and both bundles share an origin, so the
+      # wildcard that dev needs is not needed here.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8000}
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["infra"]
+    environment:
+      POSTGRES_USER: tara
+      POSTGRES_PASSWORD: tara
+      POSTGRES_DB: tara
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # The target durable schema. Applied on first boot of a fresh volume so
+      # the shape is real and reviewable — see packages/types/schema.sql for
+      # what is and is not wired up yet.
+      - ./packages/types/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tara"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["infra"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:

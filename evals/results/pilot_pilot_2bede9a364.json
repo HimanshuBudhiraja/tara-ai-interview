@@ -1,0 +1,260 @@
+{
+  "pilot_run": {
+    "pilot_run_id": "pilot_2bede9a364",
+    "label": "baseline — three personas on the current implementation",
+    "notes": "Phase 16 §5 baseline",
+    "engine_version": "deep_evidence_v2",
+    "configured_model": "openai/gpt-4.1-mini",
+    "started_at": 1788930741.532671,
+    "stopped_at": 1788931685.9563,
+    "created_by": "recruiter",
+    "active": false
+  },
+  "pilot_run_id": "pilot_2bede9a364",
+  "engine_version": "deep_evidence_v2",
+  "candidate_experience": {
+    "attempted": 3,
+    "completed": 3,
+    "completion_rate": 1.0,
+    "dropped": 0,
+    "drop_off_rate": 0.0,
+    "system_check_reported": 3,
+    "system_check_failed": 0,
+    "system_check_failure_rate": 0.0,
+    "system_check_chose_text": 3,
+    "rejoins": 0,
+    "rejoin_rate": 0.0,
+    "repeats": 4,
+    "clarifications": 5,
+    "skips": 0,
+    "silences": 3,
+    "answered_items": 24,
+    "repeat_rate_per_item": 0.167,
+    "clarify_rate_per_item": 0.208,
+    "skip_rate_per_item": 0.0,
+    "flagged_turns": 0,
+    "runtime_errors": 0,
+    "duration_sec": {
+      "n": 3,
+      "mean": 48.572,
+      "median": 57.738,
+      "p95": null,
+      "max": 68.902
+    }
+  },
+  "evaluation_quality": {
+    "requested": 7,
+    "current": 3,
+    "completed": 7,
+    "failed": 0,
+    "completion_rate": 1.0,
+    "failure_rate": 0.0,
+    "failures_by_stage": {},
+    "failures_by_kind": {},
+    "evidence_items": {
+      "n": 7,
+      "mean": 25.0,
+      "median": 30.0,
+      "p95": null,
+      "max": 31.0
+    },
+    "evidence_untraceable": 0,
+    "evidence_checked": 175,
+    "evidence_traceability_rate": 1.0,
+    "quarantined": {
+      "n": 7,
+      "mean": 0.0,
+      "median": 0.0,
+      "p95": null,
+      "max": 0.0
+    },
+    "quarantine_rate": 0.0,
+    "zero_evidence_evaluations": 0,
+    "repairs": {
+      "n": 7,
+      "mean": 0.0,
+      "median": 0.0,
+      "p95": null,
+      "max": 0.0
+    },
+    "constraints_applied": {
+      "n": 7,
+      "mean": 3.429,
+      "median": 2.0,
+      "p95": null,
+      "max": 16.0
+    },
+    "coverage_percentage": {
+      "n": 7,
+      "mean": 88.1,
+      "median": 100.0,
+      "p95": null,
+      "max": 100.0
+    },
+    "score_percentage": {
+      "n": 7,
+      "mean": 66.971,
+      "median": 74.7,
+      "p95": null,
+      "max": 76.7
+    },
+    "recommendation_distribution": {
+      "Proceed to next round": 2,
+      "Needs further evaluation": 4,
+      "Not suitable for this role": 1
+    }
+  },
+  "stability": {
+    "sessions_evaluated_more_than_once": 1,
+    "recommendation_flips": 1,
+    "instability_rate": 1.0,
+    "score_spread_pp": {
+      "n": 1,
+      "mean": 2.0,
+      "median": 2.0,
+      "p95": null,
+      "max": 2.0
+    },
+    "flips": [
+      {
+        "session_id": "dc9e15e9707e4b2e84e7ad1c4541c39a",
+        "snapshot_checksum": "5793af20e8281f90",
+        "engine_version": "deep_evidence_v2",
+        "runs": 5,
+        "recommendations": [
+          "Needs further evaluation",
+          "Proceed to next round"
+        ],
+        "score_percentages": [
+          74.7,
+          76.0,
+          74.7,
+          76.7,
+          76.7
+        ],
+        "score_spread_pp": 2.0,
+        "class": "boundary_instability"
+      }
+    ]
+  },
+  "human_review": {
+    "reviewed": 0,
+    "agree": 0,
+    "disagree": 0,
+    "needs_review": 0,
+    "agreement_rate": 0.0,
+    "disagreement_rate": 0.0,
+    "recommendation_stated": 0,
+    "recommendation_agreement_rate": 0.0,
+    "reasons": {},
+    "reviewers": 0
+  },
+  "cost_and_latency": {
+    "evaluations": 7,
+    "model_calls": {
+      "n": 7,
+      "mean": 13.857,
+      "median": 14.0,
+      "p95": null,
+      "max": 14.0
+    },
+    "prompt_tokens": {
+      "n": 7,
+      "mean": 29454.857,
+      "median": 30069.0,
+      "p95": null,
+      "max": 30194.0
+    },
+    "completion_tokens": {
+      "n": 7,
+      "mean": 2914.286,
+      "median": 3357.0,
+      "p95": null,
+      "max": 3441.0
+    },
+    "evaluation_latency_sec": {
+      "n": 7,
+      "mean": 42.38,
+      "median": 46.677,
+      "p95": null,
+      "max": 49.81
+    },
+    "evaluation_cost_usd": {
+      "n": 7,
+      "mean": 0.016,
+      "median": 0.017,
+      "p95": null,
+      "max": 0.018
+    },
+    "evaluation_stage_sec": {
+      "evidence_extraction": {
+        "n": 7,
+        "mean": 27.193,
+        "median": 32.042,
+        "p95": null,
+        "max": 34.208
+      },
+      "result_assembly": {
+        "n": 7,
+        "mean": 0.013,
+        "median": 0.013,
+        "p95": null,
+        "max": 0.017
+      },
+      "skill_assessment": {
+        "n": 7,
+        "mean": 15.253,
+        "median": 15.214,
+        "p95": null,
+        "max": 17.521
+      }
+    },
+    "runtime_calls_per_interview": {
+      "n": 3,
+      "mean": 32.0,
+      "median": 40.0,
+      "p95": null,
+      "max": 44.0
+    },
+    "runtime_latency_sec": {
+      "n": 3,
+      "mean": 47.806,
+      "median": 56.871,
+      "p95": null,
+      "max": 67.833
+    },
+    "runtime_cost_usd": {
+      "n": 3,
+      "mean": 0.013,
+      "median": 0.016,
+      "p95": null,
+      "max": 0.018
+    },
+    "interview_total_cost_usd": 0.029,
+    "slowest_single_call_ms": 5975,
+    "provider_error_rate": 0.0,
+    "unpriced_models": []
+  },
+  "thresholds": {
+    "evaluation_failure_rate": 0.1,
+    "interview_completion_rate": 0.8,
+    "evaluation_latency_p95_sec": 120.0,
+    "provider_error_rate": 0.05,
+    "evidence_quarantine_rate": 0.1,
+    "zero_evidence_rate": 0.1,
+    "recommendation_instability_rate": 0.0,
+    "reviewer_disagreement_rate": 0.3
+  },
+  "alerts": [
+    {
+      "key": "recommendation_instability",
+      "severity": "quality",
+      "observed": 1,
+      "threshold": 0.0,
+      "detail": "identical frozen input produced different recommendations",
+      "subjects": [
+        "dc9e15e9707e4b2e84e7ad1c4541c39a"
+      ]
+    }
+  ]
+}

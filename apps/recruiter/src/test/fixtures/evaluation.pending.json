@@ -1,0 +1,33 @@
+{
+  "evaluation_id": "ev_cf94ad4137e5",
+  "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+  "interview_id": "iv_fix",
+  "interview_version": 1,
+  "evaluation_engine_version": "deep_evidence_v2",
+  "status": "pending",
+  "attempt": 1,
+  "superseded": false,
+  "snapshot_checksum": "5d617b5c34e35828",
+  "created_at": 1760000000.0,
+  "updated_at": 1760000000.0,
+  "completed_at": 1760000000.0,
+  "interview": {
+    "interview_id": "iv_fix",
+    "version": 1,
+    "title": "Senior Backend Engineer — payments screen",
+    "role_title": "Senior Backend Engineer, Payments",
+    "interview_depth": "medium",
+    "difficulty": "medium",
+    "recommended_duration_min": 20,
+    "experience_from": 4,
+    "experience_to": 7
+  },
+  "session": {
+    "candidate_name": "Priya Sharma",
+    "phase": "complete",
+    "channel": "voice",
+    "started_at": 1759998600.0,
+    "completed_at": 1759999980.0,
+    "questions_asked": 3
+  }
+}

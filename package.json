@@ -1,0 +1,17 @@
+{
+  "name": "tara-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tara AI Interview — recruiter and candidate experiences on one backend",
+  "workspaces": [
+    "apps/candidate",
+    "apps/recruiter",
+    "packages/ui"
+  ],
+  "scripts": {
+    "dev:candidate": "npm run dev --workspace @tara/candidate",
+    "dev:recruiter": "npm run dev --workspace @tara/recruiter",
+    "build": "npm run build --workspace @tara/candidate && npm run build --workspace @tara/recruiter",
+    "typecheck": "npm run --workspace @tara/candidate build -- --noEmit || true"
+  }
+}

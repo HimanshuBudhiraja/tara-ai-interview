@@ -1,0 +1,73 @@
+{
+  "config": "evals/models.yaml",
+  "started_at": 1788708792.288147,
+  "finished_at": 1788708797.829559,
+  "results": [
+    {
+      "workload": "answer_classifier",
+      "model": "openai/gpt-4.1-mini",
+      "test_case_id": "ac-clarify-01",
+      "success": true,
+      "latency_ms": 3163,
+      "input_tokens": 563,
+      "output_tokens": 49,
+      "raw_output": "{\"intent\":\"clarify\",\"depth\":\"thin\",\"covered\":[],\"missing\":[\"looks at the reason before the rule\"],\"affect\":\"neutral\",\"quote\":\"What do you mean exactly — do you want to know what I'd say to them\"}",
+      "parsed_output": {
+        "intent": "clarify",
+        "depth": "thin",
+        "covered": [],
+        "missing": [
+          "looks at the reason before the rule"
+        ],
+        "affect": "neutral",
+        "quote": "What do you mean exactly — do you want to know what I'd say to them"
+      },
+      "validation_errors": [],
+      "transport_failure": false,
+      "retries": 0,
+      "checks": {
+        "intent": true,
+        "covered_are_real_cues": true,
+        "missing_are_real_cues": true,
+        "affect_in_contract": true
+      },
+      "score": 1.0,
+      "notes": [],
+      "cost_usd": 0.0003036
+    },
+    {
+      "workload": "answer_classifier",
+      "model": "openai/gpt-4.1-mini",
+      "test_case_id": "ac-silence-01",
+      "success": true,
+      "latency_ms": 2345,
+      "input_tokens": 534,
+      "output_tokens": 30,
+      "raw_output": "{\"intent\":\"silence\",\"depth\":\"thin\",\"covered\":[],\"missing\":[\"lets them finish\"],\"affect\":\"neutral\",\"quote\":\"\"}",
+      "parsed_output": {
+        "intent": "silence",
+        "depth": "thin",
+        "covered": [],
+        "missing": [
+          "lets them finish"
+        ],
+        "affect": "neutral",
+        "quote": ""
+      },
+      "validation_errors": [],
+      "transport_failure": false,
+      "retries": 0,
+      "checks": {
+        "intent": true,
+        "depth": true,
+        "covered_are_real_cues": true,
+        "missing_are_real_cues": true,
+        "affect_in_contract": true,
+        "silence_covers_nothing": true
+      },
+      "score": 1.0,
+      "notes": [],
+      "cost_usd": 0.0002616
+    }
+  ]
+}

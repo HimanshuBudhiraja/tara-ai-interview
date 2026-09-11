@@ -1,0 +1,27 @@
+[project]
+name = "tara-platform"
+version = "0.1.0"
+description = "Tara AI Interview — recruiter and candidate experiences on one backend"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "httpx>=0.27",
+    "pydantic>=2.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+# Tests that need a running server are opt-in: `pytest -m server`.
+markers = [
+    "server: needs the API running on localhost:8000",
+    # Opt in with `-m live`. These spend real tokens on the configured provider,
+    # so they are never part of a default run — a test suite that quietly bills
+    # an account is a test suite people stop running.
+    "live: calls the real model provider and costs money",
+]
+addopts = "-m 'not server and not live'"

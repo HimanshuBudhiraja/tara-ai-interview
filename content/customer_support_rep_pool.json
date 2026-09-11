@@ -1,0 +1,397 @@
+{
+  "role": "customer_support_rep",
+  "role_title": "Customer Support Representative",
+  "language": "en",
+  "source": "fixed pool — authored, NOT generated. TARA conducts; it does not author questions.",
+  "competencies": [
+    {
+      "id": "empathy",
+      "label": "Customer empathy",
+      "weight": 0.18,
+      "min_items": 2
+    },
+    {
+      "id": "deescalation",
+      "label": "De-escalation",
+      "weight": 0.2,
+      "min_items": 2
+    },
+    {
+      "id": "troubleshoot",
+      "label": "Troubleshooting",
+      "weight": 0.18,
+      "min_items": 2
+    },
+    {
+      "id": "policy",
+      "label": "Policy judgment",
+      "weight": 0.16,
+      "min_items": 2
+    },
+    {
+      "id": "clarity",
+      "label": "Communication clarity",
+      "weight": 0.14,
+      "min_items": 1
+    },
+    {
+      "id": "ownership",
+      "label": "Process ownership",
+      "weight": 0.14,
+      "min_items": 1
+    }
+  ],
+  "items": [
+    {
+      "id": "csr-emp-01",
+      "type": "open_ended",
+      "competency": "empathy",
+      "difficulty": "easy",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "To start, tell me about a time you helped a customer who was clearly having a bad day. What did you actually say to them?",
+      "probe_eligible": true,
+      "time_estimate_sec": 90,
+      "probe_bank": [
+        "What was it in their words or tone that told you they were upset?",
+        "How did they respond right after you said that?",
+        "Looking back, would you open that conversation any differently today?"
+      ],
+      "looking_for": [
+        "names a concrete situation",
+        "quotes or paraphrases what they said",
+        "reads the customer's state before solving",
+        "outcome for the customer"
+      ],
+      "clarify": "I'm after a real moment, not a philosophy — one customer, one occasion, and as close as you can get to the words you actually used."
+    },
+    {
+      "id": "csr-emp-02",
+      "type": "situational",
+      "competency": "empathy",
+      "difficulty": "medium",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "A customer writes in and says: \"I've explained this three times already to three different people.\" You're the fourth. What are the first words out of your mouth, and why those words?",
+      "probe_eligible": true,
+      "time_estimate_sec": 90,
+      "probe_bank": [
+        "How would you acknowledge that they've already repeated themselves, without it sounding scripted?",
+        "What do you do next, before you ask them anything at all?",
+        "How much of the history do you read first, and how much do you ask them to repeat?"
+      ],
+      "looking_for": [
+        "acknowledges the repeated effort",
+        "does not make the customer start over",
+        "takes ownership of the thread",
+        "explains the reasoning, not just the line"
+      ],
+      "clarify": "I mean literally the opening line you'd type or say, and then why you chose to open that way rather than another."
+    },
+    {
+      "id": "csr-esc-01",
+      "type": "situational",
+      "competency": "deescalation",
+      "difficulty": "medium",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "A customer is shouting at you on a call. They're not swearing at you personally, but they're loud and they keep talking over you. Walk me through what you do, minute by minute.",
+      "probe_eligible": true,
+      "time_estimate_sec": 120,
+      "probe_bank": [
+        "At what point do you actually start talking again, and what's the first thing you say?",
+        "What if the interruptions keep going after that — what changes?",
+        "How do you tell the difference between someone venting and someone who needs you to stop and act?"
+      ],
+      "looking_for": [
+        "lets them finish before problem-solving",
+        "stays regulated",
+        "specific verbal moves, not just 'stay calm'",
+        "knows when to escalate or set a boundary"
+      ],
+      "clarify": "Walk me through it as it happens — what you do while they're still shouting, what you say first when there's a gap, and what you do if it keeps going."
+    },
+    {
+      "id": "csr-esc-02",
+      "type": "situational",
+      "competency": "deescalation",
+      "difficulty": "hard",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "A customer demands to speak to your manager, immediately, before you've had a chance to say anything. Company policy says you should attempt one resolution first. What do you do?",
+      "probe_eligible": true,
+      "time_estimate_sec": 120,
+      "probe_bank": [
+        "How do you make that attempt without it feeling like you're blocking them?",
+        "What's your line if they refuse and repeat the demand?",
+        "Is there a point where you'd escalate straight away regardless of the policy? What would that look like?"
+      ],
+      "looking_for": [
+        "respects the customer's request",
+        "attempts resolution without stonewalling",
+        "handles the tension between policy and the customer",
+        "knows when the policy should bend"
+      ],
+      "clarify": "The tension is that they want your manager now and the policy wants you to try first. I'm asking how you handle that tension, in your own words to the customer."
+    },
+    {
+      "id": "csr-tro-01",
+      "type": "open_ended",
+      "competency": "troubleshoot",
+      "difficulty": "medium",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "A customer says the app \"just isn't working.\" That's all you have. How do you get from that to something you can actually act on?",
+      "probe_eligible": true,
+      "time_estimate_sec": 120,
+      "probe_bank": [
+        "What's your very first question to them, and why that one first?",
+        "How do you ask those questions without it feeling like an interrogation?",
+        "What would make you stop troubleshooting and hand it to engineering?"
+      ],
+      "looking_for": [
+        "narrows systematically",
+        "asks for reproduction steps / error text / recent change",
+        "checks the obvious before the exotic",
+        "keeps the customer with them while diagnosing"
+      ],
+      "clarify": "You've got one vague sentence and nothing else. What do you ask, in what order, and why that order?"
+    },
+    {
+      "id": "csr-tro-02",
+      "type": "situational",
+      "competency": "troubleshoot",
+      "difficulty": "hard",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "You've been on with a customer for twenty minutes and you now realise the problem is on our side and it can't be fixed today. How do you tell them?",
+      "probe_eligible": true,
+      "time_estimate_sec": 120,
+      "probe_bank": [
+        "Do you tell them it's our fault outright, or soften it? Talk me through that choice.",
+        "What do you commit to before you end the call?",
+        "How do you handle it if they ask for a timeline you genuinely don't have?"
+      ],
+      "looking_for": [
+        "tells them plainly and early",
+        "doesn't over-promise a fix date",
+        "offers a concrete next step or workaround",
+        "owns the follow-up"
+      ],
+      "clarify": "I'm interested in how you deliver bad news you're responsible for — what you say, how early, and what you commit to before the call ends."
+    },
+    {
+      "id": "csr-pol-01",
+      "type": "situational",
+      "competency": "policy",
+      "difficulty": "medium",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "A customer is asking for a refund that falls two days outside our refund window. They're polite, they're a long-time customer, and they have a reasonable explanation. What do you do?",
+      "probe_eligible": true,
+      "time_estimate_sec": 120,
+      "probe_bank": [
+        "If you can't approve it yourself, what exactly do you say to them in the meantime?",
+        "What would you put in the note to whoever can approve it?",
+        "Would your answer change if they weren't a long-time customer? Should it?"
+      ],
+      "looking_for": [
+        "knows the limits of their own authority",
+        "escalates with a recommendation, not a shrug",
+        "explains policy without hiding behind it",
+        "consistent and fair reasoning"
+      ],
+      "clarify": "The policy says no, the situation says maybe. I want to know what you'd actually do, including what you'd say to the customer while it's unresolved."
+    },
+    {
+      "id": "csr-pol-02",
+      "type": "situational",
+      "competency": "policy",
+      "difficulty": "hard",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "You realise you gave a customer wrong information yesterday and they've already acted on it. Nobody else knows. What happens next?",
+      "probe_eligible": true,
+      "time_estimate_sec": 120,
+      "probe_bank": [
+        "Who do you tell first — the customer or your team lead? Why that order?",
+        "How do you open that conversation with the customer?",
+        "What do you do so it doesn't happen again?"
+      ],
+      "looking_for": [
+        "raises it proactively",
+        "corrects it with the customer directly",
+        "no blame-shifting or quiet burial",
+        "puts something in place to prevent a repeat"
+      ],
+      "clarify": "The mistake is yours and nobody has noticed. I'm asking what you do about that — who you tell, in what order, and what you say."
+    },
+    {
+      "id": "csr-cla-01",
+      "type": "open_ended",
+      "competency": "clarity",
+      "difficulty": "easy",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "Explain to me — as if I'm a customer with no technical background — why clearing a browser cache sometimes fixes a problem.",
+      "probe_eligible": true,
+      "time_estimate_sec": 90,
+      "probe_bank": [
+        "Try that again in two sentences, for someone in a hurry.",
+        "What would you say if they asked whether they'll lose anything by doing it?",
+        "How would you check they actually followed you?"
+      ],
+      "looking_for": [
+        "plain language, no jargon",
+        "a usable analogy",
+        "short enough to hold",
+        "checks for understanding"
+      ],
+      "clarify": "Explain it out loud to me as though I'm the customer — plain words, no jargon, the way you'd really say it on a call."
+    },
+    {
+      "id": "csr-own-01",
+      "type": "situational",
+      "competency": "ownership",
+      "difficulty": "medium",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "You've got eight open tickets. Two customers are angry, one is a large account with a routine question, and one is a small account whose problem is completely blocking their work. How do you order your day?",
+      "probe_eligible": true,
+      "time_estimate_sec": 120,
+      "probe_bank": [
+        "What do you send to the ones who have to wait?",
+        "Does the size of the account change your order? Be honest.",
+        "What would make you drop everything and re-order mid-morning?"
+      ],
+      "looking_for": [
+        "impact over volume or noise",
+        "sets expectations with the ones who wait",
+        "reasoning is explicit and defensible",
+        "re-prioritises as things change"
+      ],
+      "clarify": "Give me your actual order for those four, and the reasoning behind it — what you do first, second, and what you send to the ones who wait."
+    },
+    {
+      "id": "csr-own-02",
+      "type": "open_ended",
+      "competency": "ownership",
+      "difficulty": "medium",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "Tell me about a time you had to hand a customer's problem to someone else. What did you do to make sure it didn't get dropped?",
+      "probe_eligible": true,
+      "time_estimate_sec": 90,
+      "probe_bank": [
+        "What did you actually write in the handover?",
+        "Did you follow up? How did you know it landed?",
+        "What would you do differently if the same handover happened tomorrow?"
+      ],
+      "looking_for": [
+        "warm handover, not a throw-over-the-wall",
+        "context passed on",
+        "closes the loop with the customer",
+        "verifies the outcome"
+      ],
+      "clarify": "One handover you actually did. What you passed on, how, and what you did afterwards to check it hadn't been dropped."
+    },
+    {
+      "id": "csr-esc-03",
+      "type": "situational",
+      "competency": "deescalation",
+      "difficulty": "hard",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "A customer says they're going to post about this on social media and tag the company. What do you do with that?",
+      "probe_eligible": true,
+      "time_estimate_sec": 120,
+      "probe_bank": [
+        "Does it change what you offer them? Should it?",
+        "Do you tell anyone internally? Who, and when?",
+        "How do you respond to them in the moment without sounding defensive?"
+      ],
+      "looking_for": [
+        "doesn't panic or capitulate",
+        "treats the underlying problem as the real issue",
+        "flags it internally",
+        "stays consistent with what any customer would get"
+      ],
+      "clarify": "I'm asking two things: what you say back to them in the moment, and what, if anything, you do differently because they mentioned going public."
+    },
+    {
+      "id": "csr-tro-03",
+      "type": "open_ended",
+      "competency": "troubleshoot",
+      "difficulty": "easy",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "When you hit something you genuinely don't know the answer to, what's your process?",
+      "probe_eligible": true,
+      "time_estimate_sec": 90,
+      "probe_bank": [
+        "What do you say to the customer while you're figuring it out?",
+        "How long do you dig before you ask someone?",
+        "What do you do with the answer once you have it?"
+      ],
+      "looking_for": [
+        "says 'I don't know' to the customer honestly",
+        "has a real search/escalation path",
+        "time-boxes the digging",
+        "captures the answer for next time"
+      ],
+      "clarify": "Your actual habit when you're stuck — where you look, how long you spend, who you ask, and what you do with the answer afterwards."
+    },
+    {
+      "id": "csr-cla-02",
+      "type": "situational",
+      "competency": "clarity",
+      "difficulty": "medium",
+      "modality": [
+        "voice",
+        "text"
+      ],
+      "prompt": "You need to tell a customer 'no' — the thing they want isn't something we can do, now or later. How do you write that message?",
+      "probe_eligible": true,
+      "time_estimate_sec": 90,
+      "probe_bank": [
+        "Where in the message does the 'no' go — top or bottom? Why?",
+        "What do you offer instead, if anything?",
+        "How do you keep it short without it reading as cold?"
+      ],
+      "looking_for": [
+        "clear and early no",
+        "reason given without excessive hedging",
+        "offers an alternative where one exists",
+        "respectful tone"
+      ],
+      "clarify": "I'm after the shape of the message: where the no goes, how much reason you give, and what you offer instead."
+    }
+  ],
+  "closing": "Thanks for taking the time today — the team will be in touch about next steps."
+}

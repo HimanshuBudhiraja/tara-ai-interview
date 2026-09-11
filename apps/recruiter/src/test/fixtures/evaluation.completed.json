@@ -1,0 +1,173 @@
+{
+  "evaluation_id": "ev_cf94ad4137e5",
+  "session_id": "ac0d248ab325469cabee2a3260fe7f5d",
+  "interview_id": "iv_fix",
+  "interview_version": 1,
+  "evaluation_engine_version": "deep_evidence_v2",
+  "status": "completed",
+  "attempt": 1,
+  "superseded": false,
+  "snapshot_checksum": "5d617b5c34e35828",
+  "created_at": 1760000000.0,
+  "updated_at": 1760000000.0,
+  "completed_at": 1760000000.0,
+  "interview": {
+    "interview_id": "iv_fix",
+    "version": 1,
+    "title": "Senior Backend Engineer — payments screen",
+    "role_title": "Senior Backend Engineer, Payments",
+    "interview_depth": "medium",
+    "difficulty": "medium",
+    "recommended_duration_min": 20,
+    "experience_from": 4,
+    "experience_to": 7
+  },
+  "session": {
+    "candidate_name": "Priya Sharma",
+    "phase": "complete",
+    "channel": "voice",
+    "started_at": 1759998600.0,
+    "completed_at": 1759999980.0,
+    "questions_asked": 3
+  },
+  "candidate_details": {
+    "name": "Priya Sharma",
+    "job_role": "Senior Backend Engineer, Payments",
+    "experience_level": "Senior",
+    "total_score": 33,
+    "overall_rating": "Good"
+  },
+  "skill_assessment": [
+    {
+      "skill_name": "Idempotent design",
+      "discussion_status": "discussed",
+      "score": 12,
+      "remarks": "The concept is named correctly and never developed. Two follow-ups produced no mechanism, no example and no failure mode.",
+      "Accuracy": 2,
+      "Depth": 2,
+      "Clarity": 3,
+      "Problem-Solving": 2,
+      "Communication": 3,
+      "depth_evaluation": {
+        "depth_reached": "deep_probed",
+        "depth_demonstrated": "direct",
+        "dimensions_demonstrated": [
+          "conceptual_understanding"
+        ],
+        "dimensions_missing": [
+          "edge_cases",
+          "practical_application",
+          "production_judgment",
+          "reasoning",
+          "trade_offs"
+        ],
+        "evidence_confidence": "low"
+      }
+    },
+    {
+      "skill_name": "Reconciliation",
+      "discussion_status": "discussed",
+      "score": 21,
+      "remarks": "A concrete daily process, a matching key, and a deliberate choice to escalate unmatched rows rather than auto-resolve them.",
+      "Accuracy": 4,
+      "Depth": 5,
+      "Clarity": 4,
+      "Problem-Solving": 4,
+      "Communication": 4,
+      "depth_evaluation": {
+        "depth_reached": "direct",
+        "depth_demonstrated": "deep_probed",
+        "dimensions_demonstrated": [
+          "production_judgment"
+        ],
+        "dimensions_missing": [
+          "conceptual_understanding",
+          "edge_cases",
+          "practical_application",
+          "reasoning",
+          "trade_offs"
+        ],
+        "evidence_confidence": "medium"
+      }
+    },
+    {
+      "skill_name": "Design review",
+      "discussion_status": "mentioned",
+      "score": 5,
+      "remarks": "Barely answered.",
+      "Accuracy": 1,
+      "Depth": 1,
+      "Clarity": 1,
+      "Problem-Solving": 1,
+      "Communication": 1,
+      "depth_evaluation": {
+        "depth_reached": "direct",
+        "depth_demonstrated": "direct",
+        "dimensions_demonstrated": [
+          "reasoning"
+        ],
+        "dimensions_missing": [
+          "conceptual_understanding",
+          "edge_cases",
+          "practical_application",
+          "production_judgment",
+          "trade_offs"
+        ],
+        "evidence_confidence": "low"
+      }
+    },
+    {
+      "skill_name": "Kubernetes",
+      "discussion_status": "not_discussed",
+      "score": 0,
+      "remarks": "Not discussed in interview",
+      "Accuracy": 0,
+      "Depth": 0,
+      "Clarity": 0,
+      "Problem-Solving": 0,
+      "Communication": 0,
+      "depth_evaluation": {
+        "depth_reached": "direct",
+        "depth_demonstrated": "direct",
+        "dimensions_demonstrated": [],
+        "dimensions_missing": [
+          "conceptual_understanding",
+          "practical_application",
+          "reasoning",
+          "trade_offs",
+          "edge_cases",
+          "production_judgment"
+        ],
+        "evidence_confidence": "insufficient"
+      }
+    }
+  ],
+  "strengths_and_improvement_areas": {
+    "strengths": [
+      "Reconciliation: A concrete daily process, a matching key, and a deliberate choice to escalate unmatched rows rather than auto-resolve them."
+    ],
+    "areas_for_improvement": [
+      "Idempotent design: scored 12/25 — below what this role expects. The concept is named correctly and never developed."
+    ]
+  },
+  "recommendation": "Needs further evaluation",
+  "recommendation_explaination": "The picture is uneven: the candidate showed what the role expects on Reconciliation, but the evidence on Idempotent design did not reach the same bar. A further conversation focused on the weaker areas would settle it.",
+  "maximum_possible_score": 50,
+  "percentage": 66.0,
+  "evidence": {
+    "validated_items": 5,
+    "quarantined_items": 0,
+    "constraints_applied": 0,
+    "repairs": 0
+  },
+  "engine": {
+    "engine_version": "deep_evidence_v2",
+    "provider": "none",
+    "configured_model": "openai/gpt-4.1-mini",
+    "resolved_model": "",
+    "calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "latency_ms": 0
+  }
+}
