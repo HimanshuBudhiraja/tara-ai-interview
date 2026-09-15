@@ -220,6 +220,26 @@ async def _startup() -> None:
         invite = invites.ensure_demo_invite(
             default.id, published.version if published else 0
         )
+    else:
+        # Production REVOKES it rather than merely not creating it.
+        #
+        # Not creating it was never enough: the invitation lives in the data
+        # directory, so a deployment that ran once in development — or was
+        # promoted from a dev volume — carries a usable, never-expiring,
+        # well-known credential for a real interview forever afterwards, and
+        # switching TARA_ENV later does nothing about the row already on disk.
+        # This is a real deployment that hit exactly that.
+        #
+        # `/api/invite/demo` already refuses to serve it on a public host, so
+        # this is the second of two independent measures rather than the only
+        # one — and it is the one that makes the state on disk match the
+        # posture, instead of leaving a live credential that something else
+        # happens to be standing in front of.
+        stale = invites.get(config.DEMO_TOKEN)
+        if stale is not None and stale.effective_status not in ("revoked", "expired"):
+            invites.revoke(config.DEMO_TOKEN)
+            print("[boot] revoked the well-known 'demo' invitation "
+                  "(production)", flush=True)
     print(f"[boot] role      : {pool.role_title} ({len(pool.items)} authored items)", flush=True)
     print(f"[boot] ai        : {get_llm().name}", flush=True)
     print(f"[boot] interview : {default.title} @ v{published.version if published else '—'}",

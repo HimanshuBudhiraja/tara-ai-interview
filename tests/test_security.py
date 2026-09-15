@@ -1294,3 +1294,29 @@ def test_a_public_demo_deployment_can_opt_in(data_dir, monkeypatch):
     with TestClient(app) as c:
         response = c.get(f"/api/invite/{config.DEMO_TOKEN}")
     assert response.status_code == 200
+
+
+def test_production_boot_revokes_a_stale_demo_invitation(data_dir, monkeypatch):
+    """Not creating it was never enough.
+
+    The invitation lives in the data directory, so a deployment promoted from a
+    dev volume carries a usable, never-expiring, well-known credential forever
+    afterwards — and switching TARA_ENV later does nothing about the row
+    already on disk. A real deployment hit exactly that.
+    """
+    from fastapi.testclient import TestClient
+
+    from services import config
+    from services.data import invites
+
+    invites.ensure_demo_invite("iv_default", 1)
+    assert invites.get(config.DEMO_TOKEN).effective_status not in ("revoked", "expired")
+
+    monkeypatch.setattr(config, "is_production", lambda: True)
+
+    from services.api.app import app
+
+    with TestClient(app):
+        pass
+
+    assert invites.get(config.DEMO_TOKEN).effective_status == "revoked"
