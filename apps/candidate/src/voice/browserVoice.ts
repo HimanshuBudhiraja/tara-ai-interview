@@ -42,6 +42,26 @@ const END_OF_TURN_MS = 2200;
 /** How long we wait for the candidate to say anything at all. */
 const NOTHING_SAID_MS = 15000;
 
+/**
+ * Punctuation the synthesiser will actually pause on.
+ *
+ * Speech engines run sentences together, which is the other half of why they
+ * sound robotic — a real interviewer leaves a beat after a question so you
+ * can start thinking. Commas and full stops already produce a short pause;
+ * doubling the break after sentence-final punctuation and after the greeting's
+ * paragraph split turns a flat paragraph into something with a rhythm.
+ *
+ * Done with punctuation rather than SSML on purpose: the Web Speech API
+ * ignores SSML in most browsers, so a `<break>` tag would be read aloud.
+ */
+function breathe(text: string): string {
+  return text
+    .replace(/\n{2,}/g, " … ")
+    .replace(/([.?!])\s+/g, "$1 … ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export class BrowserVoiceChannel implements VoiceChannel {
   readonly name = "browser-speech";
   readonly supported: boolean;
@@ -70,12 +90,30 @@ export class BrowserVoiceChannel implements VoiceChannel {
     const choose = () => {
       const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.startsWith("en"));
       if (!voices.length) return;
-      // Prefer a natural-sounding local voice; these names are the good ones
-      // across macOS and Chrome, in descending order of how human they sound.
-      const preferred = ["Samantha", "Google UK English Female", "Google US English", "Karen", "Moira"];
+
+      // Tara is female, so the voice is chosen female-first and the fallback
+      // is filtered rather than left to chance. The old fallback took the
+      // first voice the browser offered, which on Windows is "Microsoft
+      // David" — a male voice, and one of the most synthetic ones shipped.
+      const named = [
+        "Samantha",                    // macOS, the most natural of the local set
+        "Google UK English Female",    // Chrome, network — noticeably more human
+        "Google US English",           // Chrome, network, female
+        "Microsoft Aria Online (Natural) - English (United States)",
+        "Microsoft Jenny Online (Natural) - English (United States)",
+        "Microsoft Zira - English (United States)",
+        "Karen", "Moira", "Tessa",     // macOS regional, all female
+      ];
+      const MALE = /\b(david|mark|daniel|alex|fred|george|james|guy|tom|rishi|oliver|ryan)\b/i;
+
       this.voice =
-        preferred.map((n) => voices.find((v) => v.name === n)).find(Boolean) ??
-        voices.find((v) => v.localService) ??
+        named.map((n) => voices.find((v) => v.name === n)).find(Boolean) ??
+        // "Natural"/"Online" voices are neural and sound markedly less robotic
+        // than the local formant synths, so they are preferred over a local
+        // voice — the reverse of what this used to do.
+        voices.find((v) => /natural|online/i.test(v.name) && !MALE.test(v.name)) ??
+        voices.find((v) => /female/i.test(v.name)) ??
+        voices.find((v) => !MALE.test(v.name)) ??
         voices[0];
     };
     choose();
@@ -90,12 +128,18 @@ export class BrowserVoiceChannel implements VoiceChannel {
     window.speechSynthesis.cancel();
 
     return new Promise<void>((resolve) => {
-      const u = new SpeechSynthesisUtterance(text);
+      const u = new SpeechSynthesisUtterance(breathe(text));
       u.lang = this.lang;
       if (this.voice) u.voice = this.voice;
-      // Slightly under default: interview questions land better a little slower.
-      u.rate = 0.98;
-      u.pitch = 1.0;
+      // An interviewer who talks at reading speed sounds like a recording.
+      // 0.88 is about the pace of someone thinking about what they are
+      // asking; at 0.98 candidates reported being rushed, and a question you
+      // half-heard is a question you answer badly for no good reason.
+      u.rate = 0.88;
+      // A touch above neutral. Flat pitch is most of what makes synthesised
+      // speech read as robotic, and the engines vary intonation more when
+      // they are not sitting exactly at 1.0.
+      u.pitch = 1.05;
 
       let settled = false;
       const finish = () => {

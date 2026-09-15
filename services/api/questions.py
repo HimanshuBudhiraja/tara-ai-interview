@@ -31,6 +31,7 @@ from services.assessment.validation import (
     validate_question_pool_coverage,
 )
 from services.data import audit, interviews, versions
+from services.api import progress
 from services.data.interviews import InterviewConfig
 
 router = APIRouter(tags=["questions"])
@@ -251,7 +252,10 @@ def _slots_below_floor(questions: list[QuestionSpec], plan: Blueprint) -> list[s
 
 
 async def write_questions(
-    cfg: InterviewConfig, *, only_slots: list[str] | None = None
+    cfg: InterviewConfig,
+    *,
+    only_slots: list[str] | None = None,
+    progress_token: str = "",
 ) -> tuple[int, Any]:
     """Fill the blueprint from the approved design. Returns (written, report).
 
@@ -275,9 +279,27 @@ async def write_questions(
         slots=len(only_slots or plan.slots), pool_size=plan.pool_size,
         stub=pool_service.stub_enabled(),
     )
+    # Real per-slot progress. `pool.generate` already calls back as each slot
+    # finishes, so the recruiter's screen can count actual questions written
+    # rather than animate a bar. The callback runs on the worker thread, and
+    # `progress.update` is lock-guarded and swallows an unknown token, so it
+    # cannot fail the generation it is describing.
+    slots_total = len(only_slots or plan.slots)
+    progress.update(
+        progress_token, stage="writing_questions", done=0, total=slots_total,
+        detail="Writing the questions",
+    )
+    written_slots = 0
+
+    def _slot_done(outcome: Any) -> None:
+        nonlocal written_slots
+        written_slots += 1
+        progress.update(progress_token, done=written_slots, total=slots_total)
+
     questions, report = await asyncio.to_thread(
         pool_service.generate, definition, plan,
         job_description=cfg.jd_text, only_slots=only_slots,
+        on_slot=_slot_done if progress_token else None,
     )
     if not questions:
         audit.product(

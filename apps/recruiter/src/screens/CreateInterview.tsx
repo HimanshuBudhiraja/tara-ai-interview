@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import {
   adminApi,
   FormError,
@@ -7,9 +7,10 @@ import {
   type FieldErrors,
   type FunnelStage,
   type GenerateInput,
+  type GenerationProgress,
 } from "../lib/adminApi";
 import { navigate } from "../lib/route";
-import { Button, Callout } from "@tara/ui/primitives";
+import { Button, Callout, Spinner } from "@tara/ui/primitives";
 import { Block, Steps } from "../components/Wizard";
 import { cn } from "../lib/cn";
 
@@ -42,6 +43,7 @@ export function CreateInterview() {
   const [form, setForm] = useState<GenerateInput>(EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [generating, setGenerating] = useState(false);
+  const [progressToken, setProgressToken] = useState("");
   const [failure, setFailure] = useState<{ message: string; id?: string } | null>(null);
   const [languages, setLanguages] = useState([{ code: "en", label: "English" }]);
   const [stages, setStages] = useState<FunnelStage[]>([]);
@@ -64,11 +66,18 @@ export function CreateInterview() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    // A throwaway id so the screen can ask the server what it is doing. Minted
+    // per attempt, not per screen: a retry after a failure is a new generation
+    // and must not read the previous one's board.
+    const token =
+      globalThis.crypto?.randomUUID?.() ??
+      `pg_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+    setProgressToken(token);
     setGenerating(true);
     setErrors({});
     setFailure(null);
     try {
-      const draft = await adminApi.generate(form);
+      const draft = await adminApi.generate({ ...form, progress_token: token });
       navigate({ name: "recommended", id: draft.id });
     } catch (err) {
       if (err instanceof FormError) {
@@ -83,10 +92,11 @@ export function CreateInterview() {
       }
     } finally {
       setGenerating(false);
+      setProgressToken("");
     }
   }
 
-  if (generating) return <Generating title={form.title} />;
+  if (generating) return <Generating title={form.title} token={progressToken} />;
 
   const chosenStage = stages.find((s) => s.id === form.funnel_stage);
 
@@ -323,23 +333,135 @@ function Field({
  * a bar that invents "Skills 83%" is a bar that stalls at 83% and makes a
  * working system look broken.
  */
-function Generating({ title }: { title: string }) {
+/** The three stages the server actually moves through, in order. */
+const STAGES = [
+  { id: "preparing", label: "Reading the job description" },
+  { id: "designing", label: "Working out the skills and tasks" },
+  { id: "writing_questions", label: "Writing the questions" },
+] as const;
+
+/**
+ * What the generation is doing, while it does it.
+ *
+ * This screen used to be a pulsing icon and a paragraph, which looks exactly
+ * the same at five seconds and at a hundred and fifty — so the one question a
+ * recruiter actually has ("is this working, or has it hung?") was the one
+ * thing it could not answer. Two and a half minutes of no feedback is how you
+ * train people to reload the page halfway through.
+ *
+ * Every number here is reported by the server and is something that has
+ * already happened: a stage entered, a question finished. There is no
+ * percentage and no bar that fills on a timer — a timed bar keeps filling
+ * while a hung request goes nowhere, which is precisely when it would be
+ * lying. When there is nothing to report the screen says so and keeps the
+ * elapsed clock running, which is honest and still reassuring.
+ */
+function Generating({ title, token }: { title: string; token: string }) {
+  const [progress, setProgress] = useState<GenerationProgress | null>(null);
+  // Client-side, so the clock keeps moving between polls rather than ticking
+  // once every two seconds.
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const started = Date.now();
+    const tick = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(tick);
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    let live = true;
+    const poll = async () => {
+      try {
+        const next = await adminApi.generationProgress(token);
+        // "unknown" means this worker has no record of the token — no news,
+        // not failure. Keep whatever was last known rather than flickering
+        // the screen back to its empty state.
+        if (live && next.stage !== "unknown") setProgress(next);
+      } catch {
+        // A failed poll is a failed poll. The generation is driven by the
+        // POST and is unaffected; showing an error here would be reporting a
+        // problem the recruiter does not have.
+      }
+    };
+    void poll();
+    const id = setInterval(poll, 2000);
+    return () => {
+      live = false;
+      clearInterval(id);
+    };
+  }, [token]);
+
+  const current = progress?.stage ?? "preparing";
+  const index = STAGES.findIndex((s) => s.id === current);
+  // `complete` and `failed` are past every stage.
+  const reached = index === -1 ? STAGES.length : index;
+
   return (
-    <div className="card grid place-items-center px-6 py-20 text-center">
-      <div className="brand-gradient grid h-10 w-10 animate-pulse place-items-center rounded-lg text-white">
-        <Sparkles className="h-5 w-5" />
+    <div className="card mx-auto max-w-lg px-6 py-12">
+      <div className="grid place-items-center text-center">
+        <div className="brand-gradient grid h-10 w-10 animate-pulse place-items-center rounded-lg text-white">
+          <Sparkles className="h-5 w-5" />
+        </div>
+        <p className="mt-4 text-md font-semibold text-gray-900">
+          Building your interview for {title || "this role"}
+        </p>
+        <p className="mt-1 max-w-[46ch] text-sm leading-relaxed text-gray-500">
+          You get a complete interview to review — skills, the tasks behind them, and a
+          question for each — rather than a list to act on.
+        </p>
       </div>
-      <p className="mt-4 text-md font-semibold text-gray-900">
-        Building your recommended interview…
-      </p>
-      <p className="mt-1 max-w-[54ch] text-sm leading-relaxed text-gray-500">
-        Tara is reading the job description for {title || "this role"}, working out the
-        skills it depends on and the tasks behind them, and then writing a question for
-        each. You get a complete interview to review rather than a list to act on.
-      </p>
-      <p className="mt-3 text-xs text-gray-400">
-        Usually under two minutes. Writing the questions is the slow part.
-      </p>
+
+      <ol className="mt-7 space-y-3">
+        {STAGES.map((stage, i) => {
+          const done = i < reached;
+          const active = i === reached;
+          return (
+            <li key={stage.id} className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "grid h-5 w-5 shrink-0 place-items-center rounded-full border text-2xs font-semibold transition-colors",
+                  done
+                    ? "border-success-200 bg-success-50 text-success-600"
+                    : active
+                      ? "border-brand-300 bg-brand-50 text-brand-600"
+                      : "border-gray-200 bg-gray-50 text-gray-300",
+                )}
+              >
+                {done ? <Check className="h-3 w-3" strokeWidth={3} /> : i + 1}
+              </span>
+              <span
+                className={cn(
+                  "text-sm transition-colors",
+                  done ? "text-gray-500" : active ? "font-medium text-gray-900" : "text-gray-400",
+                )}
+              >
+                {stage.label}
+              </span>
+              {/* The only real number on the screen: questions actually
+                  written, out of questions planned. Shown only once the
+                  server has reported a total, so it never renders "0 of 0". */}
+              {active && stage.id === "writing_questions" && (progress?.total ?? 0) > 0 && (
+                <span className="tabular ml-auto text-sm font-medium text-gray-500">
+                  {progress!.done} of {progress!.total}
+                </span>
+              )}
+              {active && <Spinner className="ml-auto h-3.5 w-3.5 shrink-0 text-gray-400" />}
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
+        <p className="text-xs text-gray-400">
+          {elapsed < 150
+            ? "Usually around two minutes. Writing the questions is the slow part."
+            : "Taking longer than usual. It is still running — nothing has been lost."}
+        </p>
+        <p className="tabular shrink-0 text-xs text-gray-400">
+          {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+        </p>
+      </div>
     </div>
   );
 }

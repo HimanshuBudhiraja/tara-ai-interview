@@ -57,6 +57,13 @@ export interface Invite {
   resumable: boolean;
   session_id: string | null;
   answered: number;
+  /**
+   * Which voice path this deployment can run: "retell" when the vendor is
+   * configured server-side, "browser" otherwise. A server fact, so it is
+   * served rather than sniffed — and "browser" is a working path, not a
+   * degraded one.
+   */
+  voice_mode: "retell" | "browser";
 }
 
 export interface TranscriptTurn {

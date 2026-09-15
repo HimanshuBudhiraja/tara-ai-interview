@@ -152,15 +152,35 @@ def meta_reply(text: str) -> str:
     return _META_REPLIES["default"]
 
 
-def greeting(name: str, role_title: str, question_count: int) -> str:
+def greeting(name: str, role_title: str) -> str:
+    """What Tara says before the first question.
+
+    Two things it deliberately does NOT do.
+
+    It does not say how many questions there are. A number turns a
+    conversation into a countdown: candidates start pacing themselves against
+    it, answer the fifth question with one eye on the sixth, and treat a
+    follow-up as falling behind. The number is also not honest — the interview
+    is adaptive, so a candidate who answers thinly gets more turns than one
+    who does not, and quoting a figure we then exceed reads as moving the
+    goalposts.
+
+    And it does not hand straight over to the first question. Greeting then
+    immediately interrogating is the thing that makes an automated interview
+    feel automated; a person eases in. The closing line is that easing-in, and
+    it is why `start` can still send the greeting and the first question as
+    one spoken block without it landing like an ambush.
+    """
     first = (name or "").strip().split(" ")[0]
     hello = f"Hi {first}, " if first else "Hello, "
     return (
-        f"{hello}I'm Tara. I'll be running your interview for the {role_title} role today. "
-        f"It's a conversation, not a test — I'll ask you around {question_count} questions about "
-        "real support situations, and I may follow up on things you say. "
-        "Answer in your own words, and take as long as you need. "
-        "If you'd like me to repeat anything, just ask."
+        f"{hello}I'm Tara, and I'll be talking with you about the {role_title} role today. "
+        "This is a conversation rather than a test. I'll ask about situations you've "
+        "handled, and I'll follow up on the things I'd like to hear more about — "
+        "that's me being interested, not you getting something wrong. "
+        "Answer in your own words, take whatever time you need, and if you'd like me "
+        "to repeat something or say it differently, just ask. "
+        "Let's start with something straightforward."
     )
 
 

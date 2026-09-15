@@ -45,6 +45,7 @@ from services.api import (  # noqa: E402
     publish,
     questions,
     recruiter,
+    retell,
 )
 from services.data import accounts, interviews, invites, versions  # noqa: E402
 from services.data import pilot as pilot_store  # noqa: E402
@@ -101,6 +102,11 @@ app.include_router(health.router)
 app.include_router(auth.router)
 
 app.include_router(candidate.router)
+# Voice transport. Candidate-scoped like the rest of the candidate surface —
+# NOT behind RECRUITER_GUARD — and mounted whether or not Retell is configured,
+# so the routes have one access class rather than a shape that depends on the
+# environment. `create_web_call` answers 503 when it is not configured.
+app.include_router(retell.router)
 
 # The design router is mounted FIRST because FastAPI matches in registration
 # order: `/interviews/generate` has to be reached before `/interviews/{id}`

@@ -38,17 +38,35 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   invite: (token: string) => request<Invite>(`/api/invite/${encodeURIComponent(token)}`),
 
-  start: (token: string, accommodations: Record<string, unknown>) =>
+  start: (
+    token: string,
+    accommodations: Record<string, unknown>,
+    preferredName = "",
+  ) =>
     request<{ session_id: string; resumed: boolean; reply: Reply }>("/api/session/start", {
       method: "POST",
       body: JSON.stringify({
         token,
         consent_recording: true,
         accommodations,
+        preferred_name: preferredName,
       }),
     }),
 
   session: (id: string) => request<SessionSnapshot>(`/api/session/${id}`),
+
+  /**
+   * Mint a Retell web call for this session.
+   *
+   * Returns only an access token — never the account's API key. The key stays
+   * on the server, which is the whole reason this is a round trip rather than
+   * the browser calling Retell directly.
+   */
+  startVoiceCall: (sessionId: string) =>
+    request<{ access_token: string; call_id: string }>(
+      `/api/session/${encodeURIComponent(sessionId)}/voice`,
+      { method: "POST" },
+    ),
 
   /** HTTP turn — used when the socket is unavailable, and by the test driver. */
   turn: (id: string, body: { said?: string; action?: "silence" | "repeat" | "end" }) =>

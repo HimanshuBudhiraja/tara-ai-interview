@@ -17,6 +17,7 @@
     "lucide-react": "^0.474.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "retell-client-js-sdk": "^3.0.1",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {

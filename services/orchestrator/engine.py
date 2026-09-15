@@ -166,11 +166,7 @@ class Orchestrator:
 
         state.phase = "greeting"
         pool, plan = self._context(state)
-        greeting = empathy.greeting(
-            state.candidate_name,
-            pool.role_title,
-            min(plan.budget, len(plan.allowed)),
-        )
+        greeting = empathy.greeting(state.spoken_name, pool.role_title)
         item = self._select_and_open(state)
         if item is None:  # empty pool — nothing to ask
             return self._close(state)
@@ -597,7 +593,7 @@ class Orchestrator:
                 "and someone from the team will be in touch."
             )
         else:
-            text = f"{lead} {empathy.closing(state.candidate_name, self._context(state)[0].closing)}".strip()
+            text = f"{lead} {empathy.closing(state.spoken_name, self._context(state)[0].closing)}".strip()
 
         state.phase = "complete"
         state.completed_at = time.time()

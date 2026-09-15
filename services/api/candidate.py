@@ -36,6 +36,7 @@ from packages.types.evaluation import CRITERIA
 from services import config
 from services.ai.brain import get_llm
 from services.assessment import runtime_adapter
+from services.api import retell as retell_api
 from services.data import audit, interviews, invites, pilot, versions
 from services.evaluation import analytics
 from services.data import sessions as store
@@ -80,6 +81,11 @@ class StartRequest(BaseModel):
     #: `SessionState.channel` still exists because a recruiter's own scripted
     #: test run of a draft is genuinely text — see `recruiter.test_run`.
     accommodations: dict[str, Any] = Field(default_factory=dict)
+    #: What Tara should call them. Address only — the invitation's
+    #: `candidate_name` stays the record, so this cannot be used to sit
+    #: someone else's interview under a different name. Trimmed and bounded
+    #: here because it is candidate-supplied text that ends up being spoken.
+    preferred_name: str = ""
 
 
 class PrecheckReport(BaseModel):
@@ -226,6 +232,11 @@ async def read_invite(
         # honouring is worse than no reassurance at all: `CRITERIA` is what the
         # evaluator scores, and `EXCLUSIONS` is what it is structurally
         # incapable of scoring, each paired with the mechanism that makes it so.
+        # Which voice path this deployment can actually run. Served rather than
+        # sniffed in the browser: whether Retell is configured is a server fact,
+        # and the candidate app must not have to guess (or carry a key to find
+        # out). "browser" is a working path, not a degraded one.
+        "voice_mode": "retell" if retell_api.enabled() else "browser",
         "assessed_on": list(CRITERIA),
         "not_assessed": [factor for factor, _mechanism in analytics.EXCLUSIONS],
         "role": invite.role,
@@ -339,6 +350,10 @@ async def start_session(
         _owning_organization(invite.interview_id))
     state.consent_recording = True
     state.accommodations = body.accommodations
+    # One line, letters and spaces — it is read aloud, so newlines and markup
+    # have nowhere sensible to go, and an unbounded string would let a
+    # candidate put a paragraph into Tara's mouth.
+    state.preferred_name = " ".join(body.preferred_name.split())[:40]
     state.channel = "voice"
 
     _grant(state, response)

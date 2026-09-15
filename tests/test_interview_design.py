@@ -1042,3 +1042,73 @@ def test_a_proficiency_outside_the_scale_is_refused(client, level):
     )
     assert response.status_code == 422
     assert interviews.get(draft["id"]).skill(skill["id"]).proficiency_target == before
+
+
+# --------------------------------------------------------------------------- #
+#  Generation progress
+#
+#  Two and a half minutes with no feedback is how a recruiter learns to reload
+#  the page halfway through a generation. These pin the contract the create
+#  screen polls.
+# --------------------------------------------------------------------------- #
+def test_progress_reports_the_stages_a_generation_actually_reached(client):
+    from services.api import progress
+
+    progress.clear()
+    token = "tok_progress_1"
+    response = client.post("/api/recruiter/interviews/generate", json={
+        **VALID_REQUEST, "progress_token": token,
+    })
+    assert response.status_code == 201, response.text
+
+    board = client.get(f"/api/recruiter/interviews/generate/progress/{token}").json()
+    assert board["stage"] == "complete"
+    assert board["interview_id"] == response.json()["id"]
+    # The detail is written for the recruiter, so it says what they got.
+    assert "question" in board["detail"]
+
+
+def test_an_unknown_token_is_no_news_rather_than_an_error(client):
+    """The generation is driven by the POST. A client that treated a missing
+    board as failure would abandon a run that is going perfectly well."""
+    from services.api import progress
+
+    progress.clear()
+    board = client.get("/api/recruiter/interviews/generate/progress/never-issued").json()
+    assert board["stage"] == "unknown"
+    assert board["interview_id"] == ""
+
+
+def test_a_progress_board_is_not_readable_by_another_organization(client, tenant):
+    """The token is a lookup key, not a capability."""
+    from services.api import progress
+
+    progress.clear()
+    progress.start("tok_other_org", "org_someone_else")
+    progress.update("tok_other_org", stage="designing", interview_id="iv_secret")
+
+    board = client.get("/api/recruiter/interviews/generate/progress/tok_other_org").json()
+    assert board["stage"] == "unknown", "leaked another tenant's generation"
+    assert board["interview_id"] == ""
+
+
+def test_a_published_interview_cannot_be_regenerated(client):
+    """Regenerating would leave the review screen describing something other
+    than the interview candidates are actually sitting."""
+    from services.data import interviews, versions
+
+    draft = _generate(client)
+    cfg = interviews.get(draft["id"])
+    # validate=False: this test is about the regenerate guard, not about what
+    # makes a definition publishable — the stub design has no question bank.
+    versions.publish(
+        cfg.id, interviews.build_definition(cfg), notes="live", validate=False,
+    )
+
+    response = client.post(f"/api/recruiter/interviews/{draft['id']}/regenerate")
+    assert response.status_code == 409
+    assert "published" in response.text.lower()
+
+    # And the design is untouched — a refused call changes nothing.
+    after = client.get(f"/api/recruiter/interviews/{draft['id']}/draft").json()
+    assert [s["id"] for s in after["skills"]] == [s["id"] for s in draft["skills"]]

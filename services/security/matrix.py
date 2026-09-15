@@ -177,6 +177,14 @@ DECLARED: dict[tuple[str, str], str] = {
     # ---- Candidate ----------------------------------------------------------
     ("GET", "/api/invite/{token}"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/invite/{token}/precheck"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/session/{session_id}/voice"): CANDIDATE_TOKEN_SCOPED,
+    # Retell connects INBOUND to this, so it is not a route a browser calls and
+    # there is no principal to check. It is safe only because the call id in
+    # the path resolves against a binding the server made when an authorised
+    # candidate minted the call; an unrecognised call id gets no session and
+    # therefore no interview. Classified INTERNAL_ONLY because that is what it
+    # is: a vendor callback, not a public API.
+    ("WS", "/llm-websocket/{call_id}"): INTERNAL_ONLY,
     ("POST", "/api/session/start"): CANDIDATE_TOKEN_SCOPED,
     ("GET", "/api/session/{session_id}"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/session/{session_id}/turn"): CANDIDATE_TOKEN_SCOPED,
@@ -191,6 +199,13 @@ DECLARED: dict[tuple[str, str], str] = {
     ("GET", "/api/recruiter/interviews"): RECRUITER_AUTHENTICATED,
     ("POST", "/api/recruiter/interviews"): RECRUITER_AUTHENTICATED,
     ("POST", "/api/recruiter/interviews/generate"): RECRUITER_AUTHENTICATED,
+    # Organization-scoped, not merely authenticated: the token in the path is a
+    # client-generated string, so it is a lookup key and not a capability. The
+    # handler compares the caller's organization against the one that started
+    # the generation, and a token belonging to another tenant reads exactly
+    # like one that was never issued.
+    ("GET", "/api/recruiter/interviews/generate/progress/{progress_token}"):
+        RECRUITER_ORGANIZATION_SCOPED,
     ("GET", "/api/recruiter/languages"): RECRUITER_AUTHENTICATED,
     # Shipped content, identical for every tenant — authenticated so it is not
     # part of the public surface, but nothing about it is organization-scoped.
@@ -285,12 +300,25 @@ HANDLER_ENFORCED: dict[tuple[str, str], str] = {
     ("POST", "/api/session/start"):
         "invites.can_start(token) before any session is minted; "
         "test_a_revoked_invitation_cannot_start_a_session",
+    ("POST", "/api/session/{session_id}/voice"):
+        "retell._session_belongs_to_caller — the same grant cookie or "
+        "invitation token every other candidate route accepts; "
+        "test_a_voice_call_cannot_be_minted_for_someone_elses_session",
+    ("WS", "/llm-websocket/{call_id}"):
+        "retell.session_for(call_id) — the call/session binding is recorded "
+        "server-side when the call is minted, so a forged call id resolves to "
+        "no session; test_an_unminted_call_id_reaches_no_interview",
     ("WS", "/ws/interview/{session_id}"):
         "_socket_is_authorised(ws, state) as the first act of the handler; "
         "test_candidate_a_cannot_reach_candidate_bs_session",
     ("POST", "/api/auth/logout"):
         "revokes whatever session the caller presents and always succeeds; "
         "test_logging_out_revokes_the_session_server_side",
+    ("GET", "/api/recruiter/interviews/generate/progress/{progress_token}"):
+        "progress.get(token, principal.organization_id) — the token is a "
+        "client-minted lookup key, not a resource id, so no path resolver "
+        "can scope it and the handler compares the organization itself; "
+        "test_a_progress_board_is_not_readable_by_another_organization",
 }
 
 

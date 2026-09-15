@@ -32,6 +32,7 @@ from services.ai.workloads.interview_design import Design, DesignError
 from packages.types import new_id
 from services.ai.workloads.interview_designer import Skill, Task
 from services.api import questions as questions_api
+from services.api import progress
 from services.data import audit, interviews, jobs, skill_master, versions
 from services.data.interviews import InterviewConfig
 from services.data.jobs import SUPPORTED_LANGUAGES, ValidationError
@@ -67,6 +68,11 @@ class GenerateRequest(BaseModel):
     funnel_stage: str = "technical"
     job_description: str = ""
     additional_information: str = ""
+    #: A client-generated id used only to look up progress on this generation.
+    #: Not a credential and not an identifier of anything: the progress
+    #: endpoint checks the caller's organization before answering. Blank means
+    #: the client does not want progress, and reporting is skipped entirely.
+    progress_token: str = ""
 
 
 class SkillPatch(BaseModel):
@@ -416,6 +422,9 @@ async def generate(request: Request, body: GenerateRequest,
         raise HTTPException(422, detail={"errors": exc.errors}) from exc
 
     who = _who(request)
+    token = body.progress_token.strip()[:64]
+    progress.start(token, who.organization_id, detail="Reading the job description")
+
     job = jobs.create(**clean, org_id=who.organization_id, created_by=who.user_id)
     audit.product(audit.JOB_CREATED, actor=who.user_id, org_id=who.organization_id,
                   subject_type="job", subject_id=job.id, title=job.title)
@@ -444,6 +453,12 @@ async def generate(request: Request, body: GenerateRequest,
     audit.product(audit.INTERVIEW_CREATED, actor="recruiter", subject_type="interview",
                   subject_id=cfg.id, title=cfg.title, job_id=job.id)
 
+    # The interview id is known from here on, so the client can navigate the
+    # moment the work finishes rather than waiting for the response body.
+    progress.update(
+        token, stage="designing", interview_id=cfg.id,
+        detail="Working out the skills and the tasks behind them",
+    )
     cfg = await _run_designer(cfg, job, audit.INTERVIEW_GENERATED)
 
     # Questions too, in the same call. A recommendation without them is not an
@@ -455,7 +470,7 @@ async def generate(request: Request, body: GenerateRequest,
     # the second half of the work failed would be the worse trade.
     if not cfg.design_failed:
         try:
-            await questions_api.write_questions(cfg)
+            await questions_api.write_questions(cfg, progress_token=token)
         except Exception as exc:  # noqa: BLE001 — the design must survive it
             audit.product(
                 audit.QUESTION_GENERATION_FAILED, actor=who.user_id,
@@ -464,7 +479,35 @@ async def generate(request: Request, body: GenerateRequest,
             )
         cfg = interviews.get(cfg.id) or cfg
 
+    progress.update(
+        token,
+        stage="failed" if cfg.design_failed else "complete",
+        detail="Couldn't design this interview" if cfg.design_failed
+               else f"{len(cfg.questions)} questions ready to review",
+    )
     return _draft_payload(cfg)
+
+
+# NOT `{token}`: that path-param name is reserved — `authz.RESOLVERS` maps it
+# to an invitation and ownership-checks it, so this route 404'd on a string
+# that was never an invitation in the first place. The guard was right; the
+# name was wrong.
+@router.get("/interviews/generate/progress/{progress_token}")
+async def generation_progress(request: Request, progress_token: str) -> dict[str, Any]:
+    """What the generation behind `token` is doing right now.
+
+    Polled by the create screen while it waits. Answers `unknown` rather than
+    404 for a token this worker has never seen, because the honest reading of
+    that is "no news" — the generation is driven by the POST and is unaffected
+    by whether anybody is watching. A client that treated it as failure would
+    abandon a run that is still going perfectly well.
+    """
+    who = _who(request)
+    entry = progress.get(progress_token, who.organization_id)
+    if entry is None:
+        return {"stage": "unknown", "detail": "", "done": 0, "total": 0,
+                "interview_id": "", "elapsed_sec": 0}
+    return entry.payload()
 
 
 @router.post("/interviews/{interview_id}/regenerate")
@@ -478,11 +521,26 @@ async def regenerate(interview_id: str,
     the UI confirms before calling it — the alternative, merging a fresh design
     into hand-edited content, produces a result nobody chose.
 
-    Published versions are untouched: this only ever rewrites the draft.
+    Refused once anything has been published, and that is not a UI nicety.
+    The published version is immutable and candidates keep sitting it, so a
+    regenerate would not change the live interview — it would leave the
+    recruiter reading a screen that no longer describes it. The next publish
+    then replaces a live assessment with a design nobody compared against the
+    one it replaced, while candidates are part-way through the old one. If the
+    role has genuinely changed, that is a new interview, not a new draft of
+    this one.
     """
     cfg = interviews.get(interview_id)
     if cfg is None:
         raise HTTPException(404, "No such interview.")
+    published = versions.latest_published(cfg.id)
+    if published is not None:
+        raise HTTPException(
+            409,
+            f"This interview is published (v{published.version}) and candidates "
+            "may be sitting it. Regenerating would replace the design behind a "
+            "live assessment. Create a new interview for the changed role.",
+        )
     job = jobs.get(cfg.job_id) if cfg.job_id else None
     if job is None:
         raise HTTPException(

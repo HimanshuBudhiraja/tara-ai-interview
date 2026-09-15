@@ -20,12 +20,24 @@ export function Welcome({
   error,
 }: {
   invite: Invite;
-  onStart: (opts: { accommodations: Record<string, unknown> }) => void;
+  onStart: (opts: {
+    accommodations: Record<string, unknown>;
+    preferredName: string;
+  }) => void;
   starting: boolean;
   error: string | null;
 }) {
   const [consent, setConsent] = useState(false);
   const [extraTime, setExtraTime] = useState(false);
+  // Prefilled from the invitation's first name, because the common case is
+  // that it is already right and nobody should have to type their own name to
+  // start an interview. Editable, because it is often NOT right: the name on
+  // an application is frequently a legal name nobody uses, and being called
+  // the wrong thing for twenty minutes by something that keeps saying it is
+  // having a conversation with you is worse than not being named at all.
+  const [preferredName, setPreferredName] = useState(
+    (invite.candidate_name || "").trim().split(" ")[0],
+  );
   const firstName = invite.candidate_name.split(" ")[0];
 
   return (
@@ -109,6 +121,28 @@ export function Welcome({
                 accommodation — the pace changes, what is measured does not. */}
             <Toggle checked={extraTime} onChange={setExtraTime} label="Give me extra time to think between questions" />
           </div>
+
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            <label
+              htmlFor="preferred-name"
+              className="block text-sm font-medium text-gray-900"
+            >
+              What should Tara call you?
+            </label>
+            <p className="mt-0.5 text-sm text-gray-500">
+              Spoken out loud during the interview. Your application stays in the name it
+              was sent in — this only changes how you're addressed.
+            </p>
+            <input
+              id="preferred-name"
+              value={preferredName}
+              onChange={(e) => setPreferredName(e.target.value)}
+              maxLength={40}
+              autoComplete="given-name"
+              placeholder="First name"
+              className="field-input mt-2 w-full max-w-[18rem]"
+            />
+          </div>
         </section>
 
         <section className="card mt-4 p-5">
@@ -181,7 +215,10 @@ export function Welcome({
             loading={starting}
             disabled={!consent}
             onClick={() =>
-              onStart({ accommodations: { extra_time: extraTime } })
+              onStart({
+                accommodations: { extra_time: extraTime },
+                preferredName: preferredName.trim(),
+              })
             }
           >
             {invite.resumable ? "Resume interview" : "Check microphone & start"}

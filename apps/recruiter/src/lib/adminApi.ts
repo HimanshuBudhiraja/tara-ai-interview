@@ -544,6 +544,31 @@ export interface GenerateInput {
   funnel_stage: string;
   job_description: string;
   additional_information: string;
+  /**
+   * A throwaway id the client mints so it can ask what this generation is
+   * doing. Not a credential — the progress endpoint authorises on the
+   * caller's session, not on this string. Optional: omit it and the server
+   * skips reporting entirely.
+   */
+  progress_token?: string;
+}
+
+/**
+ * What a running generation is doing, as reported by the server.
+ *
+ * Every field is something that has already happened — a stage entered, a slot
+ * finished. `stage: "unknown"` means this worker has no record of the token,
+ * which is "no news" rather than failure: the generation is driven by the POST
+ * and does not care whether anyone is watching.
+ */
+export interface GenerationProgress {
+  stage: "unknown" | "preparing" | "designing" | "writing_questions" | "complete" | "failed";
+  detail: string;
+  /** Questions written / questions planned. Both 0 before the question stage. */
+  done: number;
+  total: number;
+  interview_id: string;
+  elapsed_sec: number;
 }
 
 export interface FunnelStage {
@@ -1188,6 +1213,11 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  generationProgress: (token: string) =>
+    request<GenerationProgress>(
+      `/api/recruiter/interviews/generate/progress/${encodeURIComponent(token)}`,
+    ),
 
   draft: (id: string) => request<Draft>(`/api/recruiter/interviews/${id}/draft`),
 

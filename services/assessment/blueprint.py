@@ -67,7 +67,22 @@ OVERHEAD_SEC = 90
 #: questions. Too large and the recruiter cannot review it, which is worse than
 #: too small: an unreviewed pool is an unapproved assessment.
 POOL_MULTIPLIER = 1.75
-MAX_POOL_SIZE = 40
+
+#: The hard ceiling on a generated pool.
+#:
+#: Was 40. Fifteen is a pool a recruiter will actually read end to end before
+#: publishing, and an unreviewed pool is an unapproved assessment — so the
+#: binding constraint is human attention, not what the generator can produce.
+#: It is also the difference between a two-minute wait and a five-minute one,
+#: because every question in the pool is its own model call.
+#:
+#: Not an absolute guarantee, and the exception is deliberate: the per-skill
+#: MIN_ITEMS floors win if they sum to more than this. A skill that is being
+#: assessed with no question written for it cannot be assessed at all, so the
+#: trim in `build` stops at the floors rather than honouring the ceiling. In
+#: practice only the high-priority skills are evaluated — four to six of them,
+#: eight to twelve floors — so the ceiling binds and the floors do not.
+MAX_POOL_SIZE = 15
 
 #: Difficulty mix by interview difficulty. Every interview opens easy — the
 #: runtime's first question is a warm-up, and a pool with no easy question

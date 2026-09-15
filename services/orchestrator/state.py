@@ -124,6 +124,20 @@ class SessionState:
     def current(self) -> ItemRecord | None:
         return self.records.get(self.current_item_id) if self.current_item_id else None
 
+    #: What Tara calls them out loud, if they asked to be called something
+    #: else. Deliberately NOT the same field as `candidate_name`: the
+    #: invitation's name is the record — it is who the recruiter invited, what
+    #: the report is filed under, and what an erasure request resolves. A
+    #: candidate saying "call me Sam" is a courtesy about address, and must not
+    #: silently rename the person in the hiring record. Empty means use
+    #: `candidate_name`.
+    preferred_name: str = ""
+
+    @property
+    def spoken_name(self) -> str:
+        """What Tara says out loud. The preferred name if there is one."""
+        return (self.preferred_name or self.candidate_name or "").strip()
+
     def say(self, text: str, kind: SpeechKind, item_id: str | None = None) -> None:
         self.transcript.append(Utterance("tara", text, kind=kind, item_id=item_id))
         self.updated_at = time.time()

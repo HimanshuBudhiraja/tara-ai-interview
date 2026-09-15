@@ -141,14 +141,30 @@ export function RecommendedInterview({ id }: { id: string }) {
           <Badge tone={draft.published_version ? "success" : "neutral"} dot>
             {draft.published_version ? `Published v${draft.published_version}` : "Draft"}
           </Badge>
-          <Button variant="secondary" size="sm" onClick={() => setConfirmRegen(true)}>
-            <RefreshCw className="h-4 w-4" />
-            Regenerate
-          </Button>
+          {/* Gone once anything is published. The server refuses it anyway —
+              this is so the recruiter is not offered an action that will be
+              rejected, and so the reason is visible before they want it
+              rather than after. */}
+          {!draft.published_version && (
+            <Button variant="secondary" size="sm" onClick={() => setConfirmRegen(true)}>
+              <RefreshCw className="h-4 w-4" />
+              Regenerate
+            </Button>
+          )}
         </div>
       </header>
 
       {error && <Callout tone="error" title="That change wasn't saved">{error}</Callout>}
+
+      {draft.published_version > 0 && (
+        <Callout tone="info" title={`Published as v${draft.published_version}`}>
+          Candidates may be sitting this interview right now, so it can no longer be
+          regenerated — replacing the design behind a live assessment would leave this
+          screen describing something other than what they are answering. You can still
+          correct wording here, and publish again when you are ready. For a role that has
+          genuinely changed, create a new interview.
+        </Callout>
+      )}
 
       {confirmRegen && (
         <Callout tone="warning" title="Regenerate from the original job description?">

@@ -5,6 +5,7 @@ import { Access } from "./screens/Access";
 import { Welcome } from "./screens/Welcome";
 import { SystemCheck } from "./screens/SystemCheck";
 import { Interview } from "./screens/Interview";
+import { RetellInterview } from "./screens/RetellInterview";
 import { Complete } from "./screens/Complete";
 import { Loading, Problem } from "./screens/Problem";
 
@@ -40,6 +41,7 @@ export default function App() {
   const [answered, setAnswered] = useState(0);
   // Chosen on the welcome screen, used a screen later when the session starts.
   const accommodations = useRef<Record<string, unknown>>({});
+  const preferred = useRef("");
 
   const token = new URLSearchParams(location.search).get("invite")?.trim() ?? "";
 
@@ -83,11 +85,11 @@ export default function App() {
   }, [token]);
 
   const beginSession = useCallback(
-    async (accommodations: Record<string, unknown>) => {
+    async (accommodations: Record<string, unknown>, preferredName = "") => {
       setStarting(true);
       setStartError(null);
       try {
-        const { session_id, reply } = await api.start(token, accommodations);
+        const { session_id, reply } = await api.start(token, accommodations, preferredName);
         setSession({ id: session_id, first: reply });
         setStage("interview");
       } catch (err: unknown) {
@@ -126,8 +128,9 @@ export default function App() {
         invite={invite}
         starting={starting}
         error={startError}
-        onStart={({ accommodations: opts }) => {
+        onStart={({ accommodations: opts, preferredName }) => {
           accommodations.current = opts;
+          preferred.current = preferredName;
           // A browser that cannot do speech cannot do this interview, and it
           // is told so here rather than being walked through a hardware check
           // it is going to fail. There is no typed channel to divert into: a
@@ -152,12 +155,21 @@ export default function App() {
 
   if (stage === "check") {
     return (
-      <SystemCheck onReady={() => void beginSession(accommodations.current)} />
+      <SystemCheck
+        onReady={() => void beginSession(accommodations.current, preferred.current)}
+      />
     );
   }
 
   if (stage === "interview" && session) {
-    return (
+    // Two transports, one interview. In "retell" mode the vendor talks to our
+    // server directly and the browser only joins the call; in "browser" mode
+    // the client owns the turn loop. The orchestrator, the questions and the
+    // evaluation are identical either way — this chooses who carries the audio,
+    // nothing else.
+    return invite?.voice_mode === "retell" ? (
+      <RetellInterview sessionId={session.id} onComplete={handleComplete} />
+    ) : (
       <Interview
         sessionId={session.id}
         firstReply={session.first}
