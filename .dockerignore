@@ -9,6 +9,6 @@ __pycache__
 *.pyc
 *.tsbuildinfo
 .pytest_cache
-data
+/data
 *.md
 evals
