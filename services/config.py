@@ -198,6 +198,14 @@ BOOTSTRAP_ORG = os.environ.get("TARA_BOOTSTRAP_ORG", "").strip()
 #: and the seeder cannot drift apart.
 DEMO_TOKEN = "demo"
 
+#: Serve the well-known `demo` invitation even on a publicly reachable host.
+#:
+#: Off by default, and opt-IN rather than opt-out, because the failure it
+#: guards against is a deployment nobody remembered to switch to production —
+#: which is precisely the case an opt-out default does not cover. Set it only
+#: for a demo deployment you intend to be open to anyone holding the URL.
+DEMO_INVITE_PUBLIC = _flag("TARA_DEMO_INVITE", False)
+
 
 # --------------------------------------------------------------------------- #
 #  Deployment identity

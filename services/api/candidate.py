@@ -151,11 +151,49 @@ async def demo_prompts() -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 #  Invite
 # --------------------------------------------------------------------------- #
+def _demo_invite_allowed() -> bool:
+    """May the well-known `demo` invitation be served at all?
+
+    Only on a local development host, or when an operator has deliberately
+    opted in with TARA_DEMO_INVITE=1 for a demo deployment they intend to be
+    open. A fresh clone on localhost still gets its ready-to-open link — that
+    convenience is real and is why the demo invitation exists — but it stops at
+    the edge of the machine.
+    """
+    if config.DEMO_INVITE_PUBLIC:
+        return True
+    host = (config.PUBLIC_URL or "").lower()
+    if not host:
+        # No public URL configured is the signature of local development.
+        return True
+    return "localhost" in host or "127.0.0.1" in host
+
+
 @router.get("/api/invite/{token}")
 async def read_invite(
     token: str, _: None = Depends(ratelimit.limiter("invitation")),
 ) -> dict[str, Any]:
     """What the welcome screen renders. Read-only — never mints a session."""
+    if token == config.DEMO_TOKEN and not _demo_invite_allowed():
+        # The same 404 an unknown token gets. `demo` is a well-known,
+        # never-expiring credential, and on a public host it is an open door
+        # into a real interview — every turn of which costs provider credit and
+        # voice minutes.
+        #
+        # Gated HERE, not only where it is created. The row is persisted, so a
+        # deployment that ran once in development keeps serving it forever
+        # afterwards no matter what the environment is later set to: switching
+        # TARA_ENV stops it being re-created and does nothing about the one
+        # already on disk. That gap is the whole reason this check exists.
+        #
+        # And gated on REACHABILITY rather than on the environment label,
+        # because the danger is being reachable from the internet, not being
+        # labelled "production". A public deployment left in development is
+        # exactly the case that needs protecting, and it is the one an
+        # `is_production()` check misses.
+        raise HTTPException(404, "This interview link isn't valid. Check that you "
+                                 "copied all of it, exactly as you received it.")
+
     invite = invites.get(token)
     if invite is None:
         # Channel-neutral: Tara sends no email. An invitation is a link the

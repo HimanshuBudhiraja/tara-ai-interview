@@ -1235,3 +1235,62 @@ def test_no_frontend_source_file_reads_a_secret_through_the_build(world):
                                    path.read_text(encoding="utf-8"))):
             offenders.append(f"{path.name}: {name}")
     assert offenders == [], offenders
+
+
+# --------------------------------------------------------------------------- #
+#  The well-known demo invitation
+# --------------------------------------------------------------------------- #
+def test_the_demo_invitation_is_refused_on_a_public_host(data_dir, monkeypatch):
+    """`demo` is a never-expiring credential anyone can guess.
+
+    Gated on REACHABILITY, not on the environment label. A public deployment
+    left in development is exactly the case that needs protecting, and an
+    `is_production()` check misses it — which is how a live site ended up
+    serving this to anyone holding the URL.
+    """
+    from fastapi.testclient import TestClient
+
+    from services import config
+    from services.api.app import app
+    from services.data import invites
+
+    monkeypatch.setattr(config, "PUBLIC_URL", "https://interviews.example.com")
+    monkeypatch.setattr(config, "DEMO_INVITE_PUBLIC", False)
+
+    with TestClient(app) as c:
+        invites.ensure_demo_invite("iv_default", 1)  # it exists on disk
+        response = c.get(f"/api/invite/{config.DEMO_TOKEN}")
+
+    assert response.status_code == 404
+    # Indistinguishable from a token that was never issued.
+    assert "isn't valid" in response.text
+
+
+def test_the_demo_invitation_still_works_for_local_development(data_dir, monkeypatch):
+    """A fresh clone must not be a dead end — that is why it exists."""
+    from fastapi.testclient import TestClient
+
+    from services import config
+    from services.api.app import app
+
+    monkeypatch.setattr(config, "PUBLIC_URL", "http://localhost:8000")
+    monkeypatch.setattr(config, "DEMO_INVITE_PUBLIC", False)
+
+    with TestClient(app) as c:
+        response = c.get(f"/api/invite/{config.DEMO_TOKEN}")
+    assert response.status_code == 200
+
+
+def test_a_public_demo_deployment_can_opt_in(data_dir, monkeypatch):
+    """Deliberate, and it has to be said out loud to happen."""
+    from fastapi.testclient import TestClient
+
+    from services import config
+    from services.api.app import app
+
+    monkeypatch.setattr(config, "PUBLIC_URL", "https://demo.example.com")
+    monkeypatch.setattr(config, "DEMO_INVITE_PUBLIC", True)
+
+    with TestClient(app) as c:
+        response = c.get(f"/api/invite/{config.DEMO_TOKEN}")
+    assert response.status_code == 200
