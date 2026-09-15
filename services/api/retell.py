@@ -184,7 +184,12 @@ async def create_web_call(session_id: str, request: Request) -> dict[str, Any]:
     if not enabled():
         raise HTTPException(503, "Voice calling is not configured for this deployment.")
 
-    state = store.load(session_id)
+    # try_load, not load: `load` raises for a session that does not exist, so
+    # the `is None` check below never fired and an unknown session id came back
+    # as a 500 with "Internal Server Error" — both a worse answer than 404 and
+    # a different one, which is itself a way to tell real session ids from
+    # invented ones.
+    state = store.try_load(session_id)
     if state is None:
         raise HTTPException(404, "No such session.")
     if not _session_belongs_to_caller(request, state):
@@ -311,7 +316,7 @@ async def llm_websocket(ws: WebSocket, call_id: str) -> None:
                 continue
 
             response_id = msg.get("response_id", 0)
-            state = store.load(session_id) if session_id else None
+            state = store.try_load(session_id) if session_id else None
 
             if state is None:
                 await say(response_id, "Sorry — I can't find your interview. "

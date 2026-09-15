@@ -136,3 +136,24 @@ def test_a_voice_call_cannot_be_minted_for_someone_elses_session(data_dir):
     # deployment without voice does not leak which session ids are real.
     assert response.status_code in (404, 503)
     assert "not_mine" not in response.text
+
+
+def test_an_unknown_session_is_a_404_and_never_a_500(data_dir, monkeypatch):
+    """Caught on the live deployment, not in the suite.
+
+    `sessions.load` RAISES for a session that does not exist — `try_load` is
+    the one that returns None — so the `is None` guard never fired and an
+    unknown id came back as a 500. Wrong twice over: it is the wrong status,
+    and a 500-versus-404 split tells an attacker which session ids are real.
+    """
+    from fastapi.testclient import TestClient
+
+    from services import config
+    from services.api.app import app
+
+    monkeypatch.setattr(config, "RETELL_API_KEY", "key_test")
+    monkeypatch.setattr(config, "RETELL_AGENT_ID", "agent_test")
+
+    with TestClient(app, raise_server_exceptions=False) as c:
+        response = c.post("/api/session/definitely-not-a-session/voice")
+    assert response.status_code == 404, response.text
