@@ -44,6 +44,20 @@ def duration_band(interview_type: str) -> tuple[int, int]:
     return DURATION_BANDS.get(interview_type, DURATION_BANDS["medium"])
 
 
+#: The speaking-pace range an interview may use. 0.75 is slow and deliberate;
+#: 1.1 is brisk. Wider than this and the delivery itself starts to affect how
+#: well a candidate can answer, which would make the pace part of the
+#: assessment.
+SPEECH_RATE_RANGE = (0.75, 1.1)
+
+
+def clamp_speech_rate(rate: float | None) -> float:
+    low, high = SPEECH_RATE_RANGE
+    if not rate:
+        return 0.9
+    return round(max(low, min(high, float(rate))), 2)
+
+
 def duration_for(interview_type: str) -> int:
     """The duration an interview type means.
 
@@ -266,6 +280,14 @@ class RuntimeLimits:
     max_clarifies_per_item: int = 2
     allow_generated_probes: bool = True
     rejoin_window_sec: int = 3600
+    #: How fast Tara speaks, as a multiplier of the voice's natural pace.
+    #: Part of the published definition rather than a server setting, because
+    #: it is a property of THIS interview: a prescreen can move briskly where a
+    #: deep technical round should not, and two candidates sitting the same
+    #: published version must hear it delivered the same way. Bounded by
+    #: SPEECH_RATE_RANGE — outside it the speech stops being comprehensible,
+    #: which is a fairness problem rather than a preference.
+    speech_rate: float = 0.9
 
 
 # --------------------------------------------------------------------------- #

@@ -21,11 +21,13 @@ interface Options {
   sessionId: string;
   firstReply?: Reply;
   onEnded?: () => void;
+  /** Speaking pace from the published interview. See RuntimeLimits.speech_rate. */
+  speechRate?: number;
 }
 
 const RECONNECT_DELAYS_MS = [500, 1000, 2000, 4000, 8000];
 
-export function useInterview({ sessionId, firstReply, onEnded }: Options) {
+export function useInterview({ sessionId, firstReply, onEnded, speechRate = 0.9 }: Options) {
   const [phase, setPhase] = useState<CallPhase>("connecting");
   const [turns, setTurns] = useState<TranscriptTurn[]>([]);
   const [progress, setProgress] = useState<Progress | null>(firstReply?.progress ?? null);
@@ -46,7 +48,7 @@ export function useInterview({ sessionId, firstReply, onEnded }: Options) {
   const turnOpen = useRef(false);
 
   if (voice.current === null) {
-    voice.current = new BrowserVoiceChannel();
+    voice.current = new BrowserVoiceChannel("en-US", speechRate);
   }
   const voiceSupported = voice.current?.supported ?? false;
   const usingVoice = voiceSupported;

@@ -224,6 +224,42 @@ export function RecommendedInterview({ id }: { id: string }) {
             onChange={(v) => patch({ interview_type: v as InterviewType })}
           />
           <div>
+            <p className="label">Speaking pace</p>
+            {/* The one delivery setting the recruiter genuinely owns. Nothing
+                derives it — the right pace for a role is a judgement about the
+                candidates, not something the interview type implies. Presets
+                rather than a slider: "0.87" is not a decision anyone can make,
+                where "slower, because this round is technical" is. */}
+            <div className="mt-1.5 inline-flex rounded-md border border-gray-300 bg-surface p-0.5 shadow-xs">
+              {SPEECH_PACES.map((pace) => {
+                const on = Math.abs(draft.assessment.speech_rate - pace.rate) < 0.001;
+                return (
+                  <button
+                    key={pace.label}
+                    type="button"
+                    onClick={() => patch({ speech_rate: pace.rate })}
+                    aria-pressed={on}
+                    title={pace.hint}
+                    className={cn(
+                      "rounded px-2.5 py-1 text-sm font-medium transition-colors",
+                      on
+                        ? "bg-brand-50 text-brand-700"
+                        : "text-gray-500 hover:text-gray-900",
+                    )}
+                  >
+                    {pace.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              {SPEECH_PACES.find(
+                (p) => Math.abs(draft.assessment.speech_rate - p.rate) < 0.001,
+              )?.hint ?? "How fast Tara speaks."}
+            </p>
+          </div>
+
+          <div>
             <p className="label">Runs for</p>
             <p className="mt-2 flex items-baseline gap-1.5">
               <span className="tabular text-md font-semibold text-gray-900">
@@ -407,6 +443,20 @@ function Pane({ children }: { children: ReactNode }) {
 }
 
 const INTERVIEW_TYPES = ["short", "medium", "deep"];
+
+/**
+ * How fast Tara speaks, as named choices rather than a number.
+ *
+ * The server bounds the value at 0.75–1.1; outside that the delivery itself
+ * starts to affect how well someone can answer, which would make the pace part
+ * of the assessment. Within it, the difference that matters is describable —
+ * so the control describes it.
+ */
+const SPEECH_PACES = [
+  { label: "Measured", rate: 0.82, hint: "Slower and deliberate. Good for technical rounds and for candidates interviewing in a second language." },
+  { label: "Natural", rate: 0.9, hint: "Conversational. The pace of someone thinking about what they are asking." },
+  { label: "Brisk", rate: 1.0, hint: "Quicker. Suits a short prescreen where the questions are straightforward." },
+];
 
 /**
  * The job description, verbatim, collapsed.

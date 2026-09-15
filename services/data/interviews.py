@@ -26,7 +26,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from packages.types import InterviewDefinition, derive_bank_min_items, derive_bank_weights
+from packages.types import clamp_speech_rate, InterviewDefinition, derive_bank_min_items, derive_bank_weights
 from packages.types.definition import (
     BankSpec,
     CriterionSpec,
@@ -119,6 +119,8 @@ class InterviewConfig:
 
     skills_evaluated: int = 6  # how many skills are actually interviewed
     question_budget: int = 8  # questions asked per candidate
+    #: How fast Tara speaks in this interview. See RuntimeLimits.speech_rate.
+    speech_rate: float = 0.9
     max_probes_per_item: int = 2  # follow-up ceiling per question
     allow_generated_probes: bool = True
     language: str = "en"
@@ -381,6 +383,7 @@ def build_definition(cfg: InterviewConfig, pool: Any = None) -> InterviewDefinit
             max_clarifies_per_item=config.MAX_CLARIFIES_PER_ITEM,
             allow_generated_probes=cfg.allow_generated_probes,
             rejoin_window_sec=config.REJOIN_WINDOW_SEC,
+            speech_rate=clamp_speech_rate(cfg.speech_rate),
         ),
         closing=(pool.closing if pool is not None
                  else "That's everything. Thank you for your time."),

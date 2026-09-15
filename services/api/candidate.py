@@ -254,12 +254,19 @@ async def read_invite(
         question_count = summary["question_count"]
         estimated = summary["estimated_minutes"] or max(10, question_count * 2)
         competencies = summary["competencies"]
+        # A delivery setting, not assessment content: it says how fast Tara
+        # speaks, nothing about what she asks. Read from the PUBLISHED
+        # definition so two candidates sitting the same version hear it the
+        # same way, and so changing the draft cannot alter an interview
+        # somebody is part-way through.
+        speech_rate = defn.runtime.speech_rate
     else:
         plan = pool.plan(None)
         role_title = pool.role_title
         question_count = min(plan.budget, len(plan.allowed))
         estimated = max(10, question_count * 2)
         competencies = [c["label"] for c in pool.coverage([], plan)]
+        speech_rate = 0.9
 
     return {
         "token": invite.token,
@@ -275,6 +282,7 @@ async def read_invite(
         # and the candidate app must not have to guess (or carry a key to find
         # out). "browser" is a working path, not a degraded one.
         "voice_mode": "retell" if retell_api.enabled() else "browser",
+        "speech_rate": speech_rate,
         "assessed_on": list(CRITERIA),
         "not_assessed": [factor for factor, _mechanism in analytics.EXCLUSIONS],
         "role": invite.role,

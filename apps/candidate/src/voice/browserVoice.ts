@@ -76,7 +76,18 @@ export class BrowserVoiceChannel implements VoiceChannel {
   private voice: SpeechSynthesisVoice | null = null;
   private _speaking = false;
 
-  constructor(private readonly lang = "en-US") {
+  constructor(
+    private readonly lang = "en-US",
+    /**
+     * How fast Tara speaks, from the PUBLISHED interview definition.
+     *
+     * Not a hardcoded constant any more: pace is a property of the interview,
+     * set by the recruiter, and a prescreen can move briskly where a deep
+     * technical round should not. The default matches the definition's own
+     * default so a candidate on an older published version is unaffected.
+     */
+    private readonly rate = 0.9,
+  ) {
     this.supported = Boolean(recognizerCtor()) && "speechSynthesis" in window;
     if (this.supported) this.pickVoice();
   }
@@ -132,10 +143,11 @@ export class BrowserVoiceChannel implements VoiceChannel {
       u.lang = this.lang;
       if (this.voice) u.voice = this.voice;
       // An interviewer who talks at reading speed sounds like a recording.
-      // 0.88 is about the pace of someone thinking about what they are
+      // Around 0.9 is the pace of someone thinking about what they are
       // asking; at 0.98 candidates reported being rushed, and a question you
-      // half-heard is a question you answer badly for no good reason.
-      u.rate = 0.88;
+      // half-heard is a question you answer badly for no good reason. The
+      // recruiter sets it per interview; the server bounds it.
+      u.rate = this.rate;
       // A touch above neutral. Flat pitch is most of what makes synthesised
       // speech read as robotic, and the engines vary intonation more when
       // they are not sitting exactly at 1.0.

@@ -25,7 +25,12 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from packages.types import DURATION_BANDS, duration_for
+from packages.types import (
+    DURATION_BANDS,
+    SPEECH_RATE_RANGE,
+    clamp_speech_rate,
+    duration_for,
+)
 from packages.types.definition import INTERVIEW_TYPES, PRIORITY_RANK
 from services.ai.workloads import interview_design
 from services.ai.workloads.interview_design import Design, DesignError
@@ -113,6 +118,11 @@ class DraftPatch(BaseModel):
     #: unknown field on a Pydantic model is ignored, so an old client sending
     #: either one changes nothing rather than half-applying.
     interview_type: str | None = None
+    #: How fast Tara speaks, 0.75–1.1. Unlike duration and difficulty this IS
+    #: the recruiter's to set: nothing else determines it, and the right pace
+    #: for a role is a judgement about the candidates, not something derivable
+    #: from the interview type.
+    speech_rate: float | None = None
     skills: list[SkillPatch] | None = None
     tasks: list[TaskPatch] | None = None
     remove_skills: list[str] | None = Field(default=None)
@@ -192,6 +202,8 @@ def _draft_payload(cfg: InterviewConfig) -> dict[str, Any]:
             "difficulty": cfg.difficulty,
             "recommended_duration_min": cfg.recommended_duration_min,
             "duration_band": {"min": low, "max": high},
+            "speech_rate": cfg.speech_rate,
+            "speech_rate_range": {"min": SPEECH_RATE_RANGE[0], "max": SPEECH_RATE_RANGE[1]},
         },
         "rationale": cfg.design_rationale,
         "design_failed": cfg.design_failed,
@@ -588,6 +600,17 @@ async def edit_draft(interview_id: str, body: DraftPatch) -> dict[str, Any]:
             # contradiction this exists to prevent.
             cfg.recommended_duration_min = duration_for(cfg.interview_type)
             changed.append("interview_type")
+
+    if body.speech_rate is not None:
+        low, high = SPEECH_RATE_RANGE
+        if not low <= body.speech_rate <= high:
+            errors["speech_rate"] = (
+                f"Speaking pace runs from {low} to {high}. Outside that the "
+                "delivery itself starts to affect how well someone can answer."
+            )
+        else:
+            cfg.speech_rate = clamp_speech_rate(body.speech_rate)
+            changed.append("speech_rate")
 
     by_id = {s.competency_id: s for s in cfg.skills}
 

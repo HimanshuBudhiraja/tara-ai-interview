@@ -6,6 +6,8 @@ from .definition import (  # noqa: F401
     DIFFICULTIES,
     DURATION_BANDS,
     duration_for,
+    SPEECH_RATE_RANGE,
+    clamp_speech_rate,
     INTERVIEW_TYPES,
     clamp_duration,
     duration_band,

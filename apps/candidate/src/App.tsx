@@ -173,6 +173,7 @@ export default function App() {
       <Interview
         sessionId={session.id}
         firstReply={session.first}
+        speechRate={invite?.speech_rate}
         onComplete={handleComplete}
       />
     );

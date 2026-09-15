@@ -64,6 +64,11 @@ export interface Invite {
    * degraded one.
    */
   voice_mode: "retell" | "browser";
+  /**
+   * How fast Tara speaks, from the published definition. A delivery setting,
+   * not assessment content — it says nothing about what is asked.
+   */
+  speech_rate: number;
 }
 
 export interface TranscriptTurn {

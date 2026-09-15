@@ -1112,3 +1112,45 @@ def test_a_published_interview_cannot_be_regenerated(client):
     # And the design is untouched — a refused call changes nothing.
     after = client.get(f"/api/recruiter/interviews/{draft['id']}/draft").json()
     assert [s["id"] for s in after["skills"]] == [s["id"] for s in draft["skills"]]
+
+
+# --------------------------------------------------------------------------- #
+#  Speaking pace
+# --------------------------------------------------------------------------- #
+def test_the_recruiter_sets_the_speaking_pace(client):
+    draft = _generate(client)
+    assert draft["assessment"]["speech_rate"] == 0.9
+
+    updated = client.patch(f"/api/recruiter/interviews/{draft['id']}/draft",
+                           json={"speech_rate": 0.82}).json()
+    assert updated["assessment"]["speech_rate"] == 0.82
+
+
+def test_a_pace_outside_the_range_is_refused(client):
+    """Outside the band the delivery itself affects how well someone can
+    answer, which would make the pace part of the assessment."""
+    draft = _generate(client)
+    for bad in (0.1, 3.0):
+        response = client.patch(f"/api/recruiter/interviews/{draft['id']}/draft",
+                                json={"speech_rate": bad})
+        assert response.status_code == 422
+        assert "speech_rate" in response.json()["detail"]["errors"]
+
+
+def test_the_pace_travels_with_the_published_version(client):
+    """A delivery setting on the immutable definition, so two candidates
+    sitting the same version hear it the same way."""
+    from services.data import interviews, versions
+
+    draft = _generate(client)
+    client.patch(f"/api/recruiter/interviews/{draft['id']}/draft",
+                 json={"speech_rate": 0.82})
+    cfg = interviews.get(draft["id"])
+    definition = interviews.build_definition(cfg)
+    assert definition.runtime.speech_rate == 0.82
+
+    versions.publish(cfg.id, definition, notes="paced", validate=False)
+    # Stored as a dict, so this also pins that the field survives the
+    # serialisation round trip rather than being silently dropped on publish.
+    stored = versions.latest_published(cfg.id).definition
+    assert stored["runtime"]["speech_rate"] == 0.82

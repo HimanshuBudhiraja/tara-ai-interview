@@ -39,10 +39,13 @@ import { cn } from "../lib/cn";
 export function Interview({
   sessionId,
   firstReply,
+  speechRate,
   onComplete,
 }: {
   sessionId: string;
   firstReply?: Reply;
+  /** From the published interview — the recruiter's pace for this role. */
+  speechRate?: number;
   onComplete: () => void;
 }) {
   const {
@@ -59,7 +62,7 @@ export function Interview({
     doneSpeaking,
     askRepeat,
     endInterview,
-  } = useInterview({ sessionId, firstReply, onEnded: onComplete });
+  } = useInterview({ sessionId, firstReply, speechRate, onEnded: onComplete });
 
   // A second, independent read of the mic purely so the orb can react to the
   // candidate's voice. The recognizer owns the words; this owns the animation.

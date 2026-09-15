@@ -515,6 +515,9 @@ export interface Draft {
     difficulty: Difficulty;
     recommended_duration_min: number;
     duration_band: { min: number; max: number };
+    /** How fast Tara speaks in this interview. */
+    speech_rate: number;
+    speech_rate_range: { min: number; max: number };
   };
   rationale: string;
   design_failed: boolean;
@@ -616,6 +619,8 @@ export interface DraftPatch {
    * control that appears to work and silently does nothing.
    */
   interview_type?: InterviewType;
+  /** Speaking pace, 0.75–1.1. Bounded server-side. */
+  speech_rate?: number;
   skills?: {
     id: string;
     name?: string;
