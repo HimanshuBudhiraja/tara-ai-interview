@@ -327,9 +327,8 @@ async def llm_websocket(ws: WebSocket, call_id: str) -> None:
                 # The greeting goes on the FIRST response_required, which
                 # Retell always speaks.
                 opened = True
-                reply = _orch.start(state)
-                store.save(state)
-                await say(response_id, reply.text, end=reply.ends)
+                text, ends = _opening(state)
+                await say(response_id, text, end=ends)
                 continue
 
             action, answer = turn_decision(
@@ -366,6 +365,44 @@ async def llm_websocket(ws: WebSocket, call_id: str) -> None:
             pass
     finally:
         forget(call_id)
+
+
+def _opening(state: Any) -> tuple[str, bool]:
+    """The first thing Tara says on a Retell call.
+
+    This used to be `orch.start(state)`, and that was wrong in a way no test
+    caught and every candidate heard.
+
+    `/api/session/start` has ALREADY run the orchestrator: it created the
+    session and generated the greeting and the first question before the
+    browser ever asked for a call. So by the time Retell connects,
+    `asked_item_ids` is non-empty, and `start()` correctly interprets that as
+    "this interview is already under way" and takes the RESUME path. The
+    candidate's opening words from Tara were therefore:
+
+        "We're back — sorry about that. Where we were: <question>"
+
+    No greeting, no name, no instructions — on a first-ever call, apologising
+    for a disconnection that never happened. The orchestrator was behaving
+    correctly; the caller was asking the wrong question.
+
+    What is actually wanted is the utterance the orchestrator already produced.
+    It is on the transcript, so it is replayed verbatim rather than
+    regenerated — regenerating would select a different question and leave the
+    session state pointing at one thing while the candidate heard another.
+    """
+    spoken = [u for u in state.transcript if u.speaker == "tara"]
+    heard = [u for u in state.transcript if u.speaker == "candidate"]
+
+    # Started, and the candidate has not said anything yet: replay the opening.
+    if spoken and not heard:
+        return spoken[0].text, False
+
+    # A genuine rejoin, or a session somehow never started. `start()` routes to
+    # resume or to the greeting as appropriate.
+    reply = _orch.start(state)
+    store.save(state)
+    return reply.text, reply.ends
 
 
 def _finish(state: Any) -> None:

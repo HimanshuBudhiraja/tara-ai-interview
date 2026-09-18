@@ -157,3 +157,53 @@ def test_an_unknown_session_is_a_404_and_never_a_500(data_dir, monkeypatch):
     with TestClient(app, raise_server_exceptions=False) as c:
         response = c.post("/api/session/definitely-not-a-session/voice")
     assert response.status_code == 404, response.text
+
+
+# --------------------------------------------------------------------------- #
+#  The opening
+# --------------------------------------------------------------------------- #
+def test_a_retell_call_opens_with_the_greeting_not_a_rejoin(data_dir, monkeypatch):
+    """The bug every candidate heard and no test caught.
+
+    `/api/session/start` runs the orchestrator before the browser asks for a
+    call, so by the time Retell connects the interview is already under way.
+    Calling `start()` again therefore took the RESUME path, and Tara's opening
+    words on a first-ever call were "We're back — sorry about that" — no
+    greeting, no name, no instructions, apologising for a disconnection that
+    had not happened.
+    """
+    from services.api.retell import _opening
+    from services.orchestrator.state import SessionState
+
+    state = SessionState.new(
+        candidate_name="Priya Sharma", candidate_id="c1", role="csr",
+        invite_token="t", interview_id="iv", interview_version=1,
+    )
+    # What /api/session/start leaves behind: Tara has spoken, nobody answered.
+    state.say("Hi Priya! I'm Tara. …Let's start with something straightforward.",
+              "greeting", "q1")
+
+    text, ends = _opening(state)
+    assert text.startswith("Hi Priya!"), text
+    assert "sorry about that" not in text.lower()
+    assert ends is False
+
+
+def test_a_genuine_rejoin_still_resumes(data_dir):
+    """The resume path is right — it was only being reached at the wrong time."""
+    from services.api.retell import _opening
+    from services.orchestrator.state import SessionState
+
+    state = SessionState.new(
+        candidate_name="Priya Sharma", candidate_id="c1", role="csr",
+        invite_token="t", interview_id="iv", interview_version=1,
+    )
+    state.say("Hi Priya! …", "greeting", "q1")
+    state.heard("I handled a refund dispute last month.", item_id="q1")
+    # What a real mid-interview session carries: the orchestrator has asked
+    # something. Without this, `start()` correctly reads the session as never
+    # begun and greets — which is right, and is why the test has to set it.
+    state.asked_item_ids.append("q1")
+
+    text, _ = _opening(state)
+    assert not text.startswith("Hi Priya!"), "replayed the greeting mid-interview"

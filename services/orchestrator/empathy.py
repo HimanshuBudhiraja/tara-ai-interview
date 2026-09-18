@@ -172,19 +172,47 @@ def greeting(name: str, role_title: str) -> str:
     one spoken block without it landing like an ambush.
     """
     first = (name or "").strip().split(" ")[0]
-    hello = f"Hi {first}, " if first else "Hello, "
+    hello = f"Hi {first}! " if first else "Hi! "
     return (
-        f"{hello}I'm Tara, and I'll be talking with you about the {role_title} role today. "
-        "This is a conversation rather than a test. I'll ask about situations you've "
-        "handled, and I'll follow up on the things I'd like to hear more about — "
-        "that's me being interested, not you getting something wrong. "
-        "Answer in your own words, take whatever time you need, and if you'd like me "
-        "to repeat something or say it differently, just ask. "
+        f"{hello}I'm Tara. I'll be having a conversation with you to understand your "
+        f"experience, skills, and how you approach real-world situations related to "
+        f"the {role_title} role. "
+        # The three things a candidate most needs permission to do, said before
+        # the first question rather than discovered halfway through. People
+        # rush, answer the letter of the question, and leave out the reasoning
+        # that is the actual evidence — unless they are told not to.
+        "There are no trick questions. Take a moment to think before answering, "
+        "and feel free to explain your reasoning or share examples from your "
+        "experience. "
+        "If you'd like me to repeat something or put it another way, just ask. "
         "Let's start with something straightforward."
     )
 
 
 def closing(name: str, pool_closing: str) -> str:
+    """How the interview ends.
+
+    An interview that simply stops is the single most unsettling way to end
+    one: the candidate is left wondering whether it finished, whether they
+    were cut off, and whether anybody will look at it. So the close does three
+    things a person would do — name them, say it is genuinely over, and say
+    what happens next.
+
+    "A person reviews this" is not reassurance padding. It is true, it is the
+    thing candidates most want to know about an AI interview, and it is stated
+    everywhere else in the product; ending without it would be the one moment
+    that implies otherwise.
+    """
     first = (name or "").strip().split(" ")[0]
-    lead = f"That's everything from me, {first}. " if first else "That's everything from me. "
-    return lead + pool_closing
+    body = (pool_closing or "That's everything. Thank you for your time.").strip()
+    # Address them by name without restating whatever the pool's own closing
+    # says. A fixed "That's everything from me" lead in front of a pool closing
+    # that also opens "That's everything" produced exactly that stutter.
+    if first and body:
+        body = f"{first}, {body[0].lower()}{body[1:]}"
+    return (
+        body.rstrip()
+        + " Your answers go to the hiring team, and a person reviews them "
+        "before any decision is made. You can close this window now — "
+        "there's nothing else you need to do."
+    )
