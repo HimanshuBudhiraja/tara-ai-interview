@@ -189,8 +189,22 @@ def greeting(name: str, role_title: str) -> str:
     )
 
 
+#: The stock closing a definition gets when nobody authored one. Recognised so
+#: a bland default can be REPLACED rather than built on top of; an authored
+#: closing is the interview's own voice and is used as written.
+STOCK_CLOSING = "That's everything. Thank you for your time."
+
+
 def closing(name: str, pool_closing: str) -> str:
     """How the interview ends.
+
+    Built as ONE closing rather than a stock line with additions bolted onto
+    it. Concatenating a lead, whatever the pool said, and a next-steps
+    sentence produced — for a JD-designed interview, which authors no closing
+    and so gets the stock line — "Himanshu, that's everything. Thank you for
+    your time. Your answers go to…": two flat sentences of stock phrasing
+    stitched together before anything useful was said. Someone who has just
+    spent twenty minutes answering should not sign off to a form letter.
 
     An interview that simply stops is the single most unsettling way to end
     one: the candidate is left wondering whether it finished, whether they
@@ -204,15 +218,29 @@ def closing(name: str, pool_closing: str) -> str:
     that implies otherwise.
     """
     first = (name or "").strip().split(" ")[0]
-    body = (pool_closing or "That's everything. Thank you for your time.").strip()
-    # Address them by name without restating whatever the pool's own closing
-    # says. A fixed "That's everything from me" lead in front of a pool closing
-    # that also opens "That's everything" produced exactly that stutter.
-    if first and body:
-        body = f"{first}, {body[0].lower()}{body[1:]}"
-    return (
-        body.rstrip()
-        + " Your answers go to the hiring team, and a person reviews them "
-        "before any decision is made. You can close this window now — "
-        "there's nothing else you need to do."
+    authored = (pool_closing or "").strip()
+
+    if authored and authored != STOCK_CLOSING:
+        # The interview authored its own sign-off. Use its words, not ours.
+        opener = (
+            f"That's everything from me, {first}. {authored}" if first
+            else f"That's everything from me. {authored}"
+        )
+    else:
+        opener = (
+            f"That's everything from me, {first} — thank you for taking the "
+            "time today." if first
+            else "That's everything from me — thank you for taking the time today."
+        )
+
+    parts = [opener]
+    parts.append(
+        "Everything you've said goes to the hiring team, and a person reviews "
+        "it before any decision is made."
     )
+    # Only promise next steps if the authored closing has not already.
+    lowered = authored.lower()
+    if "next step" not in lowered and "in touch" not in lowered:
+        parts.append("They'll be in touch about next steps.")
+    parts.append("You can close this window whenever you're ready. All the best.")
+    return " ".join(parts)
