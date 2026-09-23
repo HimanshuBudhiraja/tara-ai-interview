@@ -46,6 +46,7 @@ from services.api import (  # noqa: E402
     questions,
     recruiter,
     retell,
+    roleplay,
 )
 from services.data import accounts, interviews, invites, versions  # noqa: E402
 from services.data import pilot as pilot_store  # noqa: E402
@@ -107,6 +108,19 @@ app.include_router(candidate.router)
 # so the routes have one access class rather than a shape that depends on the
 # environment. `create_web_call` answers 503 when it is not configured.
 app.include_router(retell.router)
+
+# The role-play surface. Mounted beside the candidate router rather than under
+# the recruiter guard because, like the candidate side, the link is the session.
+# It is a POC surface and says so in its own responses.
+app.include_router(roleplay.router)
+
+
+@app.get("/roleplay")
+async def roleplay_page():
+    """The POC page. Registered here, above the candidate SPA's catch-all —
+    below it, `/{full_path:path}` would answer first and serve the interview
+    app instead."""
+    return FileResponse(ROOT / "apps" / "roleplay" / "index.html")
 
 # The design router is mounted FIRST because FastAPI matches in registration
 # order: `/interviews/generate` has to be reached before `/interviews/{id}`
@@ -297,7 +311,7 @@ if _CANDIDATE_DIST.exists():
 
     @app.get("/{full_path:path}")
     async def candidate_spa(full_path: str):
-        if full_path.startswith(("api/", "ws/", "recruiter")):
+        if full_path.startswith(("api/", "ws/", "recruiter", "roleplay")):
             raise HTTPException(404)
         return FileResponse(_CANDIDATE_DIST / "index.html")
 
@@ -310,6 +324,7 @@ else:
                 "message": "API is up. The two frontends run on their own dev servers.",
                 "candidate": "cd apps/candidate && npm run dev  →  http://localhost:5173/?invite=demo",
                 "recruiter": "cd apps/recruiter && npm run dev  →  http://localhost:5174/recruiter",
+                "roleplay": "http://localhost:8000/roleplay",
                 "health": "/api/health",
             }
         )

@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tara Role-Play</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* The product's design system, not a new one: iMocha brand orange over the
+     Untitled UI gray ramp, taken from packages/ui/tailwind-preset.js. Values are
+     copied rather than imported because this page is a single static file with
+     no build step — so if that preset changes, this needs changing with it.
+     Light only, because the preset defines no dark ramp and inventing one here
+     is exactly how a second design system starts. */
+  :root {
+    --canvas: #FAFAFA; --surface: #FFFFFF;
+    --brand-25: #FFF8F5; --brand-50: #FEEEE7; --brand-500: #F1592A; --brand-700: #B23714;
+    --gray-50: #F9FAFB; --gray-100: #F2F4F7; --gray-200: #EAECF0; --gray-300: #D0D5DD;
+    --gray-500: #667085; --gray-600: #475467; --gray-700: #344054; --gray-900: #101828;
+    --success-700: #027A48; --warning-700: #B54708; --error-600: #D92D20; --error-700: #B42318;
+    --shadow-xs: 0 1px 2px rgba(16,24,40,.04);
+    --shadow-sm: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
+  }
+  * { box-sizing: border-box; }
+  /* `.turn { display:flex }` outranks the [hidden] attribute's own
+     display:none, so the pending row showed before anything was sent. */
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; background: var(--canvas); color: var(--gray-900);
+    font: 14px/21px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02","cv03","cv04","cv11","ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(241,89,42,.14); }
+  ::selection { background: var(--brand-50); color: var(--brand-700); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { margin-bottom: 24px; }
+  h1 { font-size: 20px; line-height: 28px; letter-spacing: -.014em; margin: 0 0 2px; }
+  .sub { color: var(--gray-500); font-size: 13px; line-height: 20px; }
+  .agent { margin: 24px 0 12px; }
+  .agent h2 { font-size: 15px; line-height: 23px; margin: 0 0 2px; }
+  .agent .dims { color: var(--gray-500); font-size: 12px; line-height: 18px; }
+  .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .card {
+    background: var(--surface); border: 1px solid var(--gray-200); border-radius: 10px;
+    padding: 14px; cursor: pointer; text-align: left; color: inherit; font: inherit;
+    box-shadow: var(--shadow-xs); transition: all 160ms cubic-bezier(.4,0,.2,1);
+  }
+  .card:hover { border-color: var(--gray-300); box-shadow: var(--shadow-sm); }
+  .card h3 { font-size: 14px; line-height: 21px; margin: 0 0 4px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+  .tag {
+    font-size: 11px; line-height: 16px; letter-spacing: .02em; padding: 2px 8px;
+    border-radius: 6px; background: var(--brand-50); color: var(--brand-700);
+    border: 1px solid transparent;
+  }
+  .tag.plain { background: var(--gray-50); color: var(--gray-600); border-color: var(--gray-200); }
+  .tag.sel { background: transparent; color: var(--error-700); border-color: var(--gray-300); }
+  .scene {
+    background: var(--surface); border: 1px solid var(--gray-200);
+    border-radius: 10px; padding: 18px; box-shadow: var(--shadow-xs);
+  }
+  .briefing {
+    background: var(--brand-25); border: 1px solid var(--brand-50);
+    padding: 12px 14px; border-radius: 8px; margin-bottom: 16px;
+    font-size: 14px; color: var(--gray-700);
+  }
+  .log { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+  .turn { display: flex; gap: 10px; align-items: flex-start; }
+  .turn .who {
+    font-size: 11px; line-height: 16px; text-transform: uppercase; letter-spacing: .02em;
+    color: var(--gray-500); min-width: 78px; padding-top: 4px; flex-shrink: 0;
+  }
+  .turn.me .who { color: var(--brand-700); }
+  .bubble {
+    background: var(--gray-50); border: 1px solid var(--gray-200);
+    border-radius: 8px; padding: 9px 12px; color: var(--gray-700);
+  }
+  .turn.me .bubble { background: var(--brand-25); border-color: var(--brand-50); color: var(--gray-900); }
+  .composer { display: flex; gap: 8px; }
+  textarea {
+    flex: 1; resize: vertical; min-height: 64px; padding: 10px 12px; font: inherit;
+    color: var(--gray-900); background: var(--surface);
+    border: 1px solid var(--gray-300); border-radius: 8px;
+  }
+  textarea::placeholder { color: var(--gray-500); }
+  textarea:focus { outline: none; border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(241,89,42,.14); }
+  button.go {
+    background: var(--brand-500); color: #fff; border: 0; border-radius: 8px;
+    padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer;
+    transition: background 160ms cubic-bezier(.4,0,.2,1);
+  }
+  button.go:hover { background: var(--brand-700); }
+  button.go:disabled { opacity: .45; cursor: default; }
+  .bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .link { background: none; border: 0; color: var(--brand-700); cursor: pointer; font: inherit; padding: 0; }
+  .rail { height: 4px; background: var(--gray-100); border-radius: 6px; overflow: hidden; margin-bottom: 16px; }
+  .rail i { display: block; height: 100%; background: var(--brand-500); transition: width 300ms cubic-bezier(.4,0,.2,1); }
+  .result { margin-top: 18px; border-top: 1px solid var(--gray-200); padding-top: 16px; }
+  .comp {
+    display: flex; justify-content: space-between; gap: 12px; padding: 8px 0;
+    border-bottom: 1px solid var(--gray-100); font-size: 14px;
+  }
+  .comp:last-of-type { border-bottom: 0; }
+  .comp .n { color: var(--gray-500); font-size: 12px; }
+  .miss { color: var(--gray-500); font-size: 12px; margin: 4px 0 0; padding-left: 12px; }
+  .flag { color: var(--error-600); font-size: 12px; margin: 4px 0 0; padding-left: 12px; }
+  .note { color: var(--gray-500); font-size: 12px; line-height: 18px; margin-top: 12px; }
+  .err { color: var(--error-600); font-size: 13px; }
+  .thinking { color: var(--gray-500); font-size: 13px; font-style: italic; padding-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Tara Role-Play</h1>
+    <div class="sub" id="sub">Build the agent once, configure the simulation many times.</div>
+  </header>
+  <div id="view"></div>
+</div>
+
+<script>
+const view = document.getElementById("view");
+const sub = document.getElementById("sub");
+let session = null, defn = null, busy = false;
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+async function api(path, opts) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+  return r.json();
+}
+
+async function library() {
+  session = null;
+  const data = await api("/api/roleplay/agents");
+  sub.textContent = "Build the agent once, configure the simulation many times.";
+  view.innerHTML = data.agents.map(a => `
+    <section class="agent">
+      <h2>${esc(a.name)}</h2>
+      <div class="dims">${esc(a.identity)}</div>
+      <div class="dims" style="margin:4px 0 10px">
+        Assesses: ${a.dimensions.map(esc).join(" · ")} — ${a.permanent_guardrails} permanent guardrails
+      </div>
+      <div class="cards">
+        ${a.scenarios.map(s => `
+          <button class="card" data-id="${esc(s.scenario_id)}">
+            <h3>${esc(s.title)}</h3>
+            <div class="dims">${esc(s.persona)} — ${esc(s.persona_role)}</div>
+            <div class="meta">
+              <span class="tag">${esc(s.difficulty)}</span>
+              <span class="tag plain">${s.duration_min} min</span>
+              <span class="tag plain">${esc(s.allowed_sources.join(", ") || "all sources")}</span>
+              <span class="tag plain">${s.competencies.length} competencies</span>
+              <span class="tag plain">${esc(s.feedback_visibility)} feedback</span>
+              ${s.selection_grade ? '<span class="tag sel">selection grade</span>' : ""}
+            </div>
+          </button>`).join("")}
+      </div>
+    </section>`).join("")
+    || `<p class="err">No scenarios configured.</p>`;
+
+  view.querySelectorAll(".card").forEach(b =>
+    b.onclick = () => start(b.dataset.id).catch(showError));
+}
+
+async function start(scenarioId) {
+  defn = await api(`/api/roleplay/scenario/${scenarioId}`);
+  session = await api("/api/roleplay/session/start", {
+    method: "POST",
+    body: JSON.stringify({ scenario_id: scenarioId, subject_name: "", subject_id: "demo" }),
+  });
+  sub.textContent = `${defn.title} — you are the ${defn.candidate.role || "subject"}`;
+  render([{ speaker: "tara", text: session.reply.text }]);
+}
+
+function render(turns, result) {
+  const pct = defn.turn_budget ? Math.min(100, (turns.filter(t => t.speaker === "subject").length / defn.turn_budget) * 100) : 0;
+  view.innerHTML = `
+    <div class="bar">
+      <button class="link" id="back">← all scenarios</button>
+      <span class="dims">${esc(session.persona.name)} · ${esc(session.persona.role)}</span>
+    </div>
+    <div class="scene">
+      <div class="briefing">${esc(session.briefing)}</div>
+      <div class="rail"><i style="width:${pct}%"></i></div>
+      <div class="log">${turns.map(t => `
+        <div class="turn ${t.speaker === "subject" ? "me" : ""}">
+          <span class="who">${t.speaker === "subject" ? "you" : esc(session.persona.name)}</span>
+          <div class="bubble">${esc(t.text)}</div>
+        </div>`).join("")}
+        <div class="turn" id="pending" hidden>
+          <span class="who">${esc(session.persona.name)}</span>
+          <div class="thinking">…</div>
+        </div>
+      </div>
+      ${result ? resultHtml(result) : `
+        <div class="composer">
+          <textarea id="say" placeholder="Say something — handle it the way you would for real."></textarea>
+          <button class="go" id="send">Send</button>
+        </div>
+        <p class="note">Typed for the POC. The same loop drives voice — the server deals in text either way.</p>`}
+    </div>`;
+
+  view.querySelector("#back").onclick = () => library().catch(showError);
+  const say = view.querySelector("#say");
+  if (!say) return;
+  const send = view.querySelector("#send");
+  const go = () => turn(turns, say.value.trim());
+  send.onclick = go;
+  say.onkeydown = e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) go(); };
+  say.focus();
+}
+
+async function turn(turns, said) {
+  if (!said || busy) return;
+  busy = true;
+  const next = [...turns, { speaker: "subject", text: said }];
+  render(next);
+  view.querySelector("#pending").hidden = false;
+  view.querySelector("#say").disabled = true;
+  view.querySelector("#send").disabled = true;
+  try {
+    const out = await api(`/api/roleplay/session/${session.session_id}/turn`, {
+      method: "POST", body: JSON.stringify({ said }),
+    });
+    const withReply = [...next, { speaker: "tara", text: out.reply.text }];
+    if (out.reply.ends) {
+      const result = await api(`/api/roleplay/session/${session.session_id}/result`);
+      render(withReply, result);
+    } else {
+      render(withReply);
+    }
+  } catch (e) {
+    showError(e);
+  } finally {
+    busy = false;
+  }
+}
+
+function resultHtml(r) {
+  if (r.visibility === "hidden") {
+    return `<div class="result"><p>${esc(r.message)}</p>
+      <p class="note">This is a selection-grade scenario, so nothing about performance is
+      shown to the person who sat it. A reviewer sees the evidence.</p></div>`;
+  }
+  const rows = (r.competencies || []).map(c => {
+    if (r.visibility === "gated") {
+      return `<div class="comp"><span>${esc(c.label)}</span>
+        <span class="n" style="color:${c.met ? "var(--success-700)" : c.reached ? "var(--warning-700)" : "var(--gray-500)"}">
+          ${c.met ? "met" : c.reached ? "not yet" : "not reached"}</span></div>`;
+    }
+    return `<div class="comp"><span>${esc(c.label)}</span>
+        <span class="n">${c.handled}/${c.reached} handled${c.not_reached ? ` · ${c.not_reached} not reached` : ""}</span></div>
+      ${c.missed?.length ? `<p class="miss">missed: ${c.missed.map(esc).join("; ")}</p>` : ""}
+      ${c.red_flags?.length ? `<p class="flag">flagged: ${c.red_flags.map(esc).join("; ")}</p>` : ""}`;
+  }).join("");
+  return `<div class="result">
+    <strong>${r.visibility === "gated" ? "Certification result" : "Your practice feedback"}</strong>
+    ${rows}
+    <p class="note">${r.visibility === "gated"
+      ? "Pass or fail plus what fell short — enough to fix before the retake, not enough to game."
+      : "Practice shows everything, immediately. Unreached beats are excluded, never scored as zero."}</p>
+  </div>`;
+}
+
+function showError(e) {
+  const p = document.createElement("p");
+  p.className = "err";
+  p.textContent = String(e.message || e);
+  view.prepend(p);
+}
+
+library().catch(showError);
+</script>
+</body>
+</html>

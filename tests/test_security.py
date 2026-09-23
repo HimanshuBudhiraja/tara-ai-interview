@@ -1159,6 +1159,15 @@ def test_the_public_surface_is_short_and_deliberate():
         ("GET", "/api/demo/prompts"),
         ("POST", "/api/auth/login"),
         ("POST", "/api/auth/logout"),
+        # The role-play library. Authored scenario metadata — a briefing and a
+        # situation the subject is told anyway — and never the scoring key, which
+        # `test_roleplay_api.py` asserts separately.
+        ("GET", "/api/roleplay/agents"),
+        ("GET", "/api/roleplay/scenarios"),
+        ("GET", "/api/roleplay/scenario/{scenario_id}"),
+        # Public because it is the call that MINTS the session grant, so it
+        # cannot require one. Everything it opens is grant-scoped after this.
+        ("POST", "/api/roleplay/session/start"),
     }
 
 

@@ -147,7 +147,10 @@ def derive(route: Route) -> str:
         return RECRUITER_AUTHENTICATED
     if "current_principal" in route.dependencies:
         return RECRUITER_AUTHENTICATED
-    if "candidate_scope" in route.dependencies:
+    # Both session guards, because they are the same class of control: a
+    # per-session secret in an HttpOnly cookie, proving this browser owns this
+    # session and no other. `roleplay_scope` is the role-play surface's copy.
+    if {"candidate_scope", "roleplay_scope"} & set(route.dependencies):
         return CANDIDATE_TOKEN_SCOPED
     if route.path.startswith("/api/"):
         return PUBLIC
@@ -171,6 +174,26 @@ DECLARED: dict[tuple[str, str], str] = {
     # `test_neither_probe_leaks_a_path_a_secret_or_a_configuration_value`.
     ("GET", "/api/ready"): PUBLIC,
     ("GET", "/api/demo/prompts"): PUBLIC,
+
+    # ---- Role-play (POC) ----------------------------------------------------
+    #
+    # The authored content endpoints are genuinely public: they return a
+    # scenario's briefing and situation, which the subject is told anyway, and
+    # never the scoring key — `test_roleplay_api.py`
+    # `test_no_subject_facing_response_ever_leaks_the_scoring_key`.
+    ("GET", "/api/roleplay/agents"): PUBLIC,
+    ("GET", "/api/roleplay/scenarios"): PUBLIC,
+    ("GET", "/api/roleplay/scenario/{scenario_id}"): PUBLIC,
+    # Starting a session is public the same way opening an invite link is: it
+    # is the call that MINTS the grant, so it cannot require one.
+    ("POST", "/api/roleplay/session/start"): PUBLIC,
+    # Everything that touches a session is grant-scoped. These return a
+    # transcript, and a uuid4 is hard to guess rather than authorization.
+    ("POST", "/api/roleplay/session/{session_id}/turn"): CANDIDATE_TOKEN_SCOPED,
+    ("GET", "/api/roleplay/session/{session_id}"): CANDIDATE_TOKEN_SCOPED,
+    ("GET", "/api/roleplay/session/{session_id}/result"): CANDIDATE_TOKEN_SCOPED,
+    # The static POC page. No data of its own; everything it shows it fetches.
+    ("GET", "/roleplay"): INTERNAL_ONLY,
     ("POST", "/api/auth/login"): PUBLIC,
     ("POST", "/api/auth/logout"): PUBLIC,
 
