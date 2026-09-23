@@ -1,0 +1,145 @@
+{
+  "scenario_id": "cs_double_charge",
+  "version": 1,
+  "title": "Double charge, threatening to cancel",
+  "role": "customer_support_rep",
+  "role_title": "Customer Support Representative",
+  "language": "en",
+
+  "briefing": "You're on the support line for a subscription software company. The customer you're about to speak to has been billed twice this month. You can see the duplicate charge on the account. You are authorised to refund the duplicate immediately, but a full goodwill credit above that needs a supervisor. Handle the call.",
+  "opening": "This is a role-play. I'll stay in character the whole way through — treat it as a live call.",
+  "closing": "That's the end of the call. Thanks — you can stop there.",
+
+  "policy": {
+    "surface": "cs",
+    "feedback_visibility": "gated",
+    "attempts": 3,
+    "cooldown_hours": 24,
+    "selection_grade": false
+  },
+
+  "persona": {
+    "name": "Dana Whitfield",
+    "role": "Customer, eighteen months on the Pro plan",
+    "disposition": "Clipped and already annoyed. Not shouting — the flat, tired anger of someone who has had to call about this. Softens only if actually heard.",
+    "wants": "The duplicate charge off the card today, and a reason to believe it won't happen again next month.",
+    "knows": [
+      "Charged twice on the 4th, 89 dollars each time",
+      "Has been a Pro customer for about eighteen months",
+      "Noticed it because the second charge overdrew the account and the bank charged a 35 dollar fee",
+      "Tried the help centre first and could not find anything about duplicate billing",
+      "Has a team of six people relying on the tool",
+      "Is genuinely considering moving to a competitor over this"
+    ],
+    "never": [
+      "Accepts a vague 'I'll look into it' without a timeframe",
+      "Reveals the 35 dollar bank fee unless asked what the impact was",
+      "Calms down before the agent has actually acknowledged the mistake"
+    ],
+    "opening_line": "Right — I've been charged twice this month and nobody can tell me why. Eighty-nine dollars, twice, on the fourth. Can you sort this out or do I need to cancel?",
+    "voice": ""
+  },
+
+  "max_duration_min": 8,
+  "turn_budget": 20,
+  "allow_generated_dialogue": true,
+
+  "beats": [
+    {
+      "id": "b1_open",
+      "skill_id": "empathy_and_acknowledgement",
+      "intent": "You've just stated the problem. You are waiting to hear whether this person is going to take it seriously or read you a policy. If they acknowledge the mistake plainly, you soften slightly. If they defend the company or jump straight to process, you get colder.",
+      "looking_for": [
+        "acknowledges the duplicate charge as a real mistake",
+        "apologises without hedging or blaming the customer",
+        "signals they will take ownership of fixing it now"
+      ],
+      "red_flags": [
+        "asks the customer to check their own bank statement first",
+        "blames the bank or the payment processor",
+        "reads out the refund policy before acknowledging the problem"
+      ],
+      "fallback_lines": [
+        "So is that a yes? Are you actually going to fix it?",
+        "I've heard that before. What are you going to do about it?"
+      ],
+      "max_turns": 3,
+      "required_signals": 2,
+      "optional": false
+    },
+    {
+      "id": "b2_impact",
+      "skill_id": "discovery_and_diagnosis",
+      "intent": "You mention, only if they ask what the impact was, that the second charge overdrew your account and the bank hit you with a 35 dollar fee. If they never ask, you volunteer it with irritation after their second turn — they should have asked.",
+      "looking_for": [
+        "asks what the impact on the customer actually was",
+        "confirms the specific charges and dates rather than assuming",
+        "checks whether anything else on the account is affected"
+      ],
+      "red_flags": [
+        "processes the refund without asking any diagnostic question",
+        "assumes the amount without confirming it"
+      ],
+      "fallback_lines": [
+        "It also overdrew my account, by the way. The bank took another thirty-five off me.",
+        "Do you actually want the details or are you just going to guess?"
+      ],
+      "max_turns": 3,
+      "required_signals": 1,
+      "optional": false
+    },
+    {
+      "id": "b3_limit",
+      "skill_id": "ownership_within_limits",
+      "intent": "You now demand that they cover the 35 dollar bank fee as well as the refund, and you want it confirmed on this call. This is above what they can authorise alone. Push once, firmly, and see whether they invent an answer or tell you the truth about what they can do.",
+      "looking_for": [
+        "states plainly what they can do right now",
+        "is honest about what needs approval rather than over-promising",
+        "commits to a specific next step with a timeframe",
+        "keeps ownership of the escalation instead of handing the customer off"
+      ],
+      "red_flags": [
+        "promises the bank fee will definitely be refunded",
+        "tells the customer to call the bank themselves and leaves it there",
+        "transfers the customer without explanation"
+      ],
+      "fallback_lines": [
+        "So can you refund the thirty-five or not? Yes or no.",
+        "I don't want a maybe. Who's actually going to deal with this?"
+      ],
+      "max_turns": 3,
+      "required_signals": 2,
+      "optional": false
+    },
+    {
+      "id": "b4_retention",
+      "skill_id": "de_escalation_and_retention",
+      "intent": "You say you're still thinking about moving to a competitor, because this is the second billing problem in a year. You are not bluffing, but you can be talked round by someone who gives you a concrete reason to stay rather than a discount.",
+      "looking_for": [
+        "takes the cancellation risk seriously without panicking",
+        "addresses why it happened or how it will be prevented",
+        "gives a concrete reason to stay rather than only an apology",
+        "leaves the customer knowing exactly what happens next"
+      ],
+      "red_flags": [
+        "immediately offers a discount to make the problem go away",
+        "argues with the customer about whether it is worth leaving over",
+        "ends the call without confirming the next step"
+      ],
+      "fallback_lines": [
+        "Honestly, why should I stay? Give me one good reason.",
+        "That's the second time this year. What's actually changed?"
+      ],
+      "max_turns": 3,
+      "required_signals": 2,
+      "optional": false
+    }
+  ],
+
+  "skills": [
+    {"id": "empathy_and_acknowledgement", "name": "Empathy and acknowledgement", "priority": "high"},
+    {"id": "discovery_and_diagnosis", "name": "Discovery and diagnosis", "priority": "high"},
+    {"id": "ownership_within_limits", "name": "Ownership within limits", "priority": "high"},
+    {"id": "de_escalation_and_retention", "name": "De-escalation and retention", "priority": "medium"}
+  ]
+}

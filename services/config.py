@@ -116,6 +116,10 @@ ANSWER_CLASSIFIER_MODEL = _first("ANSWER_CLASSIFIER_MODEL", "TARA_MODEL_FAST", d
 FOLLOWUP_GENERATOR_MODEL = _first("FOLLOWUP_GENERATOR_MODEL", "TARA_MODEL_FAST", default=_DEFAULT_MODEL)
 SCORING_MODEL = _first("SCORING_MODEL", "TARA_MODEL_DEEP", default=_DEFAULT_MODEL)
 REPORT_GENERATOR_MODEL = _first("REPORT_GENERATOR_MODEL", "TARA_MODEL_DEEP", default=_DEFAULT_MODEL)
+# The counterparty runs on the FAST model. It improvises dialogue; it judges
+# nothing. The deep model buys no quality here and costs a turn of latency in
+# the one place the subject is waiting mid-conversation.
+COUNTERPARTY_MODEL = _first("COUNTERPARTY_MODEL", "TARA_MODEL_FAST", default=_DEFAULT_MODEL)
 
 # Kept for the runtime modules that still read them by these names.
 MODEL_FAST = ANSWER_CLASSIFIER_MODEL
@@ -361,6 +365,7 @@ def _provider_problems() -> list[str]:
             ("FOLLOWUP_GENERATOR_MODEL", FOLLOWUP_GENERATOR_MODEL),
             ("SCORING_MODEL", SCORING_MODEL),
             ("REPORT_GENERATOR_MODEL", REPORT_GENERATOR_MODEL),
+            ("COUNTERPARTY_MODEL", COUNTERPARTY_MODEL),
         ) if not (value or "").strip()
     ]
     if unresolved:

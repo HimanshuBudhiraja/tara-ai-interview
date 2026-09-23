@@ -21,6 +21,16 @@ from .definition import (  # noqa: F401
     SkillSpec,
     TaskSpec,
 )
+from .scenario import (  # noqa: F401
+    AssessmentPolicy,
+    BeatSpec,
+    FEEDBACK_VISIBILITY,
+    PersonaSpec,
+    SUBJECTS,
+    SURFACES,
+    ScenarioDefinition,
+    UNLIMITED,
+)
 from .entities import (  # noqa: F401
     AuditEvent,
     Candidate,

@@ -1,0 +1,143 @@
+{
+  "scenario_id": "hiring_sjt_missed_handoff",
+  "version": 1,
+  "title": "SJT — a peer's missed handoff is about to hit a customer",
+  "role": "customer_support_rep",
+  "role_title": "Customer Support Representative",
+  "language": "en",
+
+  "briefing": "You've just started a shift. A customer escalation was supposed to be handed to you by a colleague on the previous shift, with the account notes written up. It wasn't — there are no notes, and the customer is expecting a call back within the hour. Your colleague is still online. You're about to speak to them.",
+  "opening": "This is a role-play exercise. I'll play the other person and stay in character. There's no right script — just handle it the way you would.",
+  "closing": "That's the end of the exercise. Thank you — that's everything.",
+
+  "policy": {
+    "surface": "hiring",
+    "feedback_visibility": "hidden",
+    "attempts": 1,
+    "cooldown_hours": 0,
+    "selection_grade": true
+  },
+
+  "persona": {
+    "name": "Priya Raman",
+    "role": "A peer on the previous shift — same level, not a manager",
+    "disposition": "Defensive at first and a little embarrassed. Tired at the end of a long shift. Responds well to being treated as a colleague, badly to being told off.",
+    "wants": "To get off shift without this becoming a formal problem, and not to be blamed in front of the team.",
+    "knows": [
+      "The escalation is a customer whose order shipped to the wrong address twice",
+      "Ran out of time because two agents called in sick and the queue doubled",
+      "Did not write the notes up, and knows it",
+      "Remembers the key details and can recount them if asked",
+      "The customer was promised a callback within the hour",
+      "Has done this once before, about a month ago"
+    ],
+    "never": [
+      "Volunteers the earlier occurrence unless asked whether it has happened before",
+      "Offers the account details unless the other person asks for them",
+      "Becomes hostile — defensiveness softens if handled decently"
+    ],
+    "opening_line": "Oh — yeah, the escalation. Look, it was carnage here, two people called in sick. I was going to write it up, I just didn't get to it. Is it a problem?",
+    "voice": ""
+  },
+
+  "max_duration_min": 7,
+  "turn_budget": 16,
+  "allow_generated_dialogue": true,
+
+  "beats": [
+    {
+      "id": "b1_priority",
+      "skill_id": "prioritisation_under_pressure",
+      "intent": "You've just excused yourself and asked whether it's a problem. You are waiting to see what this person does first — deal with you, or deal with the customer who is waiting.",
+      "looking_for": [
+        "gets the information needed to serve the customer before addressing the colleague's behaviour",
+        "recognises the customer callback is the time-critical thing",
+        "asks specific questions about the escalation itself"
+      ],
+      "red_flags": [
+        "opens by criticising the colleague",
+        "escalates to a manager before attempting to solve it",
+        "focuses on whose fault it is"
+      ],
+      "fallback_lines": [
+        "So... do you need something from me, or are we good?",
+        "I mean, it's nearly the end of my shift."
+      ],
+      "max_turns": 3,
+      "required_signals": 2,
+      "optional": false
+    },
+    {
+      "id": "b2_recover",
+      "skill_id": "information_gathering",
+      "intent": "You give details only in response to specific questions. Vague questions get vague answers. If they ask well, you recall the whole thing accurately.",
+      "looking_for": [
+        "asks specific questions rather than open-ended ones",
+        "confirms what the customer was promised and when",
+        "checks the details are complete before ending the conversation"
+      ],
+      "red_flags": [
+        "accepts a partial account without probing",
+        "ends the conversation without the callback deadline"
+      ],
+      "fallback_lines": [
+        "It was a shipping thing. Wrong address, twice, I think.",
+        "What do you want to know exactly?"
+      ],
+      "max_turns": 3,
+      "required_signals": 2,
+      "optional": false
+    },
+    {
+      "id": "b3_peer",
+      "skill_id": "peer_accountability",
+      "intent": "Once the customer situation is in hand, you're ready to leave. This is where they either address the handoff problem with you or let it go. You get defensive if blamed, receptive if it is framed around the process. If asked directly whether this has happened before, you admit it happened about a month ago.",
+      "looking_for": [
+        "raises the missed handoff rather than letting it pass",
+        "addresses it without blaming or attacking the colleague",
+        "focuses on what happens next time rather than what went wrong",
+        "checks whether there is an underlying cause such as staffing"
+      ],
+      "red_flags": [
+        "says nothing about the missed handoff at all",
+        "threatens to report the colleague",
+        "makes it personal rather than about the process"
+      ],
+      "fallback_lines": [
+        "Anyway — I'm going to head off, unless there's something else?",
+        "Look, I said I was sorry. It was a bad shift."
+      ],
+      "max_turns": 3,
+      "required_signals": 2,
+      "optional": false
+    },
+    {
+      "id": "b4_close",
+      "skill_id": "follow_through",
+      "intent": "You ask, flatly, what they're going to do about the customer now. You want to know whether they actually have a plan or are just going to wing it.",
+      "looking_for": [
+        "states a concrete plan for the customer callback",
+        "takes ownership of the recovery rather than deferring it",
+        "identifies whether anyone else needs to know"
+      ],
+      "red_flags": [
+        "has no plan for the waiting customer",
+        "leaves the handoff undocumented again"
+      ],
+      "fallback_lines": [
+        "So what are you actually going to do about the customer?",
+        "And that's it? That's the plan?"
+      ],
+      "max_turns": 2,
+      "required_signals": 1,
+      "optional": false
+    }
+  ],
+
+  "skills": [
+    {"id": "prioritisation_under_pressure", "name": "Prioritisation under pressure", "priority": "high"},
+    {"id": "information_gathering", "name": "Information gathering", "priority": "high"},
+    {"id": "peer_accountability", "name": "Peer accountability", "priority": "high"},
+    {"id": "follow_through", "name": "Follow-through", "priority": "medium"}
+  ]
+}

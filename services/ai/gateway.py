@@ -67,7 +67,7 @@ class CallStatus(str, Enum):
 
 
 class Workload(str, Enum):
-    """The six AI boundaries in the product. Each is independently configured."""
+    """The AI boundaries in the product. Each is independently configured."""
 
     INTERVIEW_DESIGNER = "interview_designer"
     QUESTION_GENERATOR = "question_generator"
@@ -75,6 +75,11 @@ class Workload(str, Enum):
     FOLLOWUP_GENERATOR = "followup_generator"
     SCORING = "scoring"
     REPORT_GENERATOR = "report_generator"
+    #: The counterparty speaking inside a role-play. Its latency budget is
+    #: the tightest in the product: the subject is mid-conversation with a
+    #: person who has just stopped talking, and a two-second gap reads as
+    #: the character hesitating rather than as a system thinking.
+    COUNTERPARTY = "counterparty"
 
 
 class AIError(RuntimeError):
@@ -135,6 +140,10 @@ _DEFAULTS: dict[Workload, tuple[float, int, float]] = {
     Workload.FOLLOWUP_GENERATOR: (0.5, 160, config.LLM_TIMEOUT_SEC),
     Workload.SCORING: (0.2, 3000, 90.0),
     Workload.REPORT_GENERATOR: (0.4, 3000, 90.0),
+    # Warmer than anything else here on purpose: a counterparty at 0.2 gives
+    # the same four sentences to every subject, and a scenario people can
+    # rehearse is a scenario that has stopped measuring anything.
+    Workload.COUNTERPARTY: (0.8, 160, config.LLM_TIMEOUT_SEC),
 }
 
 _MODELS: dict[Workload, str] = {
@@ -144,6 +153,7 @@ _MODELS: dict[Workload, str] = {
     Workload.FOLLOWUP_GENERATOR: config.FOLLOWUP_GENERATOR_MODEL,
     Workload.SCORING: config.SCORING_MODEL,
     Workload.REPORT_GENERATOR: config.REPORT_GENERATOR_MODEL,
+    Workload.COUNTERPARTY: config.COUNTERPARTY_MODEL,
 }
 
 
