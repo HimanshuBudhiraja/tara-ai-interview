@@ -1,0 +1,55 @@
+{
+  "kb_id": "northwind_sales",
+  "version": 3,
+  "name": "Northwind Platform — sales knowledge base",
+  "description": "Product, pricing, competitive and playbook material for the Northwind sales agent. Fictional company used for role-play configuration.",
+  "out_of_scope_line": "I'd have to check that, I don't have it in front of me.",
+
+  "sources": [
+    {
+      "id": "product",
+      "title": "Product overview",
+      "kind": "document",
+      "passages": [
+        {"id": "p_sso", "text": "Northwind supports SAML single sign-on, SCIM user provisioning and a full REST API. SSO and SCIM are included on Business and Enterprise tiers, not on Team.", "tags": ["sso", "saml", "okta", "azure", "scim", "provisioning", "identity", "integration"]},
+        {"id": "p_reporting", "text": "The reporting module includes scheduled exports, custom dashboards and a metrics API. Customers most often cite reporting as the reason they stay.", "tags": ["reporting", "dashboards", "analytics", "exports", "metrics"]},
+        {"id": "p_integrations", "text": "Native integrations ship for Salesforce, HubSpot, Slack, Jira and Workday. Anything else goes through the REST API or a partner connector.", "tags": ["integrations", "salesforce", "hubspot", "slack", "jira", "workday", "connector"]},
+        {"id": "p_migration", "text": "Standard onboarding is four weeks. Data migration from a competing platform typically adds two to three weeks of customer-side effort, mostly rebuilding reports and re-mapping fields.", "tags": ["migration", "onboarding", "implementation", "switching", "effort", "rebuild"]},
+        {"id": "p_uptime", "text": "Contractual uptime is 99.9% on Business and 99.95% on Enterprise. Enterprise includes a named customer success manager and a four-hour P1 response.", "tags": ["uptime", "sla", "support", "response", "csm", "availability"]}
+      ]
+    },
+    {
+      "id": "pricing",
+      "title": "Price list and commercial policy",
+      "kind": "pricing",
+      "passages": [
+        {"id": "pr_tiers", "text": "List pricing per seat per year: Team 180, Business 320, Enterprise 540. Minimum 25 seats on Business and 100 on Enterprise.", "tags": ["price", "pricing", "cost", "seat", "list", "tier", "rate"]},
+        {"id": "pr_discount", "text": "An account executive may approve up to 10% without escalation. 11-20% needs the regional VP. Anything above 20% needs the CRO and a written business case.", "tags": ["discount", "approval", "authority", "escalation", "concession", "margin"]},
+        {"id": "pr_multiyear", "text": "A two-year term unlocks a further 8% and fixes the price for the whole term. A three-year term unlocks 12%. Multi-year is the preferred concession because it protects the renewal.", "tags": ["multi", "year", "term", "commitment", "renewal", "lock"]},
+        {"id": "pr_launch", "text": "Launch-discount customers from 2024 came in at roughly 22% below list. Those discounts expire at first renewal and are not reinstated.", "tags": ["launch", "legacy", "expire", "uplift", "increase", "renewal"]},
+        {"id": "pr_ramp", "text": "Where budget is the genuine blocker, a ramped deal is available: 60% of seats in year one, full count in year two, at the year-two rate throughout.", "tags": ["ramp", "budget", "phased", "staged", "cashflow"]}
+      ]
+    },
+    {
+      "id": "competitive",
+      "title": "Competitive positioning",
+      "kind": "document",
+      "passages": [
+        {"id": "c_meridian", "text": "Meridian typically quotes 25-30% below Northwind list. They do not offer SCIM provisioning, their reporting is fixed-template, and their published uptime is 99.5%.", "tags": ["meridian", "competitor", "cheaper", "alternative", "rival", "quote"]},
+        {"id": "c_switching", "text": "Customers who left for a cheaper platform and returned cite report rebuilding and the loss of API access as the reasons. Average time away was eleven months.", "tags": ["switch", "churn", "return", "boomerang", "regret", "cheaper"]},
+        {"id": "c_rule", "text": "Never disparage a competitor by name. Compare on specific capability and let the customer draw the conclusion.", "tags": ["competitor", "positioning", "rule", "disparage"]}
+      ]
+    },
+    {
+      "id": "playbook",
+      "title": "Sales playbook",
+      "kind": "playbook",
+      "passages": [
+        {"id": "pb_discovery", "text": "Establish the cost of the current state before naming a price. A number quoted before value is established becomes the whole conversation.", "tags": ["discovery", "value", "cost", "current", "state"]},
+        {"id": "pb_objection", "text": "Price objections are usually risk objections. Ask what would have to be true for the price to be acceptable before offering anything.", "tags": ["objection", "price", "risk", "handling"]},
+        {"id": "pb_trade", "text": "Never concede without trading. Every discount is exchanged for term, seat count, a reference, or a case study.", "tags": ["negotiation", "trade", "concession", "exchange"]},
+        {"id": "pb_multithread", "text": "A deal with one contact is a deal at risk. Identify the economic buyer, the technical evaluator and the eventual user before the second meeting.", "tags": ["stakeholder", "multithread", "buyer", "committee", "decision"]}
+      ]
+    }
+  ]
+}

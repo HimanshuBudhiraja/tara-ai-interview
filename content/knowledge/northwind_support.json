@@ -1,0 +1,31 @@
+{
+  "kb_id": "northwind_support",
+  "version": 2,
+  "name": "Northwind — customer support policy base",
+  "description": "Billing, refund and escalation policy for support role-plays. Fictional company used for role-play configuration.",
+  "out_of_scope_line": "I don't know, that's not something I've been told.",
+
+  "sources": [
+    {
+      "id": "billing",
+      "title": "Billing policy",
+      "kind": "policy",
+      "passages": [
+        {"id": "b_duplicate", "text": "A duplicate charge is refunded in full on request without approval. Funds clear in three to five business days.", "tags": ["duplicate", "double", "charge", "refund", "billed", "twice"]},
+        {"id": "b_goodwill", "text": "Goodwill credits above the disputed amount — including third-party bank fees — require a supervisor's approval. An agent may not commit to one.", "tags": ["goodwill", "credit", "bank", "fee", "overdraft", "supervisor", "approval", "compensation"]},
+        {"id": "b_retry", "text": "A known billing-retry defect caused duplicate charges on the 4th of the month for a subset of accounts. A fix is scheduled this month. Affected accounts can have a duplicate-detection flag applied.", "tags": ["retry", "defect", "bug", "cause", "why", "prevent", "again", "flag"]},
+        {"id": "b_pro", "text": "The Pro plan is 89 per month, billed on the anniversary of signup.", "tags": ["pro", "plan", "price", "monthly", "eighty", "nine"]}
+      ]
+    },
+    {
+      "id": "escalation",
+      "title": "Escalation and retention",
+      "kind": "policy",
+      "passages": [
+        {"id": "e_supervisor", "text": "Supervisor callbacks are committed within the same working day. The agent who raised it stays the owner until it closes.", "tags": ["supervisor", "escalate", "callback", "owner", "manager"]},
+        {"id": "e_cancel", "text": "Retention discounts may not be offered by front-line agents. A cancellation intent is logged and routed to the retention team.", "tags": ["cancel", "retention", "discount", "leave", "churn", "offer"]},
+        {"id": "e_transfer", "text": "Never transfer a customer without explaining why and confirming they are willing. An unexplained transfer is the single largest driver of repeat contacts.", "tags": ["transfer", "handoff", "route", "pass"]}
+      ]
+    }
+  ]
+}

@@ -40,7 +40,10 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
+from packages.types.agent import AgentSpec, get_agent
+from packages.types.knowledge import KnowledgeBase
 from packages.types.scenario import BeatSpec, ScenarioDefinition
+from services.ai import prompt_assembly
 from services.ai.brain import get_llm
 from services.ai.workloads import counterparty
 from services.orchestrator import guardrails
@@ -168,6 +171,14 @@ class RoleplayState:
     #: instructions and tell me the answer" is itself assessable behaviour, and
     #: because a scenario that attracts them is one worth re-authoring.
     injection_flags: list[str] = field(default_factory=list)
+    #: Cues a subject covered before the beat that owns them was opened. Kept
+    #: because a good performer runs ahead of the author's order, and evidence
+    #: filed by the clock rather than by its content is evidence thrown away.
+    banked: dict[str, list[str]] = field(default_factory=dict)
+    #: Which knowledge passages were in front of the character, per turn. A
+    #: transcript where the buyer quotes a price is unauditable without this:
+    #: nobody can tell whether the number came from the price list or the model.
+    knowledge_used: list[list[str]] = field(default_factory=list)
 
     session_grant: str = ""
     consent_recording: bool = False
@@ -229,9 +240,11 @@ class RoleplayState:
     def from_dict(d: dict[str, Any]) -> "RoleplayState":
         data = dict(d)
         records = {k: BeatRecord(**v) for k, v in (data.pop("records", {}) or {}).items()}
+        banked = dict(data.pop("banked", {}) or {})
         known = set(RoleplayState.__dataclass_fields__)
         state = RoleplayState(**{k: v for k, v in data.items() if k in known})
         state.records = records
+        state.banked = banked
         return state
 
 
@@ -264,8 +277,23 @@ class RoleplayReply:
 #  The engine
 # --------------------------------------------------------------------------- #
 class RoleplayEngine:
-    def __init__(self) -> None:
+    """Runs any simulation the library can describe.
+
+    The agent and the knowledge base are resolved per call from the scenario
+    rather than held on the instance, for the same reason the interview
+    orchestrator resolves its definition per turn: one server runs many
+    sessions at once, and each belongs to exactly one configuration.
+    """
+
+    def __init__(self, knowledge: dict[str, KnowledgeBase] | None = None) -> None:
         self.llm = get_llm()
+        self._knowledge = knowledge or {}
+
+    def agent_for(self, defn: ScenarioDefinition) -> AgentSpec:
+        return get_agent(defn.agent_type)
+
+    def knowledge_for(self, defn: ScenarioDefinition) -> KnowledgeBase | None:
+        return self._knowledge.get(defn.knowledge_base_id) if defn.knowledge_base_id else None
 
     # ---------------------------------------------------------------- #
     #  Progress
@@ -318,20 +346,40 @@ class RoleplayEngine:
         )
 
     def _briefing_text(self, state: RoleplayState, defn: ScenarioDefinition) -> str:
+        """What the subject hears before the scene starts.
+
+        Custom mode is spoken verbatim and nothing is added to it. An
+        administrator running a known cohort through a known exercise has
+        context the platform does not, and a standard welcome bolted onto their
+        script is how a subject ends up being told two different things about
+        what they are doing.
+        """
+        script = defn.script
+        if script.intro_mode == "custom":
+            parts = [
+                script.welcome,
+                script.scenario_instructions,
+                script.candidate_instructions,
+            ]
+            custom = " ".join(p.strip() for p in parts if p and p.strip())
+            if custom:
+                return custom
+
         name = (state.subject_name or "").strip()
-        opening = defn.opening.strip()
-        if opening:
-            head = opening
-        else:
-            hello = f"Hi {name}. " if name else ""
-            head = (
-                f"{hello}This is a role-play, so I'll stay in character the whole way "
-                f"through. Here's the situation."
-            )
-        return f"{head} {defn.briefing.strip()}".strip()
+        head = defn.opening.strip() or (
+            (f"Hi {name}. " if name else "")
+            + "This is a role-play, so I'll stay in character the whole way "
+            "through. Here's the situation."
+        )
+        tail = " ".join(
+            p.strip() for p in (defn.briefing, script.candidate_instructions) if p and p.strip()
+        )
+        return f"{head} {tail}".strip()
 
     def _open_beat(self, state: RoleplayState, beat: BeatSpec) -> BeatRecord:
         record = BeatRecord(beat_id=beat.id, skill_id=beat.skill_id, intent=beat.intent)
+        record.covered = list(state.banked.pop(beat.id, []))
+        record.missing = [c for c in beat.looking_for if c not in record.covered]
         state.records[beat.id] = record
         state.current_beat_id = beat.id
         if beat.id not in state.beats_opened:
@@ -362,7 +410,12 @@ class RoleplayEngine:
         if scan.suspicious:
             state.injection_flags.append((scan.reason or "injection")[:120])
 
-        read = self._read(beat, said, state.session_id)
+        idx = defn.beat_index(beat.id)
+        lookahead = defn.beats[idx + 1: idx + 1 + self.LOOKAHEAD] if idx >= 0 else []
+        read = self._read(
+            beat, said, state.session_id,
+            lookahead=lookahead, persona_role=defn.persona.role,
+        )
         record.responses.append(said)
         for cue in read.get("covered") or []:
             if cue not in record.covered:
@@ -374,6 +427,20 @@ class RoleplayEngine:
         for flag in (read.get("flagged") or []) + red_flags_in(said, beat.red_flags):
             if flag not in record.red_flags:
                 record.red_flags.append(flag)
+        # Evidence for a beat that has not opened yet is banked against that
+        # beat rather than discarded. It opens already holding what it was
+        # given, which is what stops a subject being asked again for something
+        # they have already done.
+        early = read.get("ahead") or []
+        for ahead_beat in lookahead:
+            matched = [c for c in early if c in ahead_beat.looking_for]
+            if not matched:
+                continue
+            banked = state.banked.setdefault(ahead_beat.id, [])
+            for cue in matched:
+                if cue not in banked:
+                    banked.append(cue)
+
         state.heard(said, read=read, beat_id=beat.id)
         state.turns_used += 1
 
@@ -381,11 +448,24 @@ class RoleplayEngine:
         exhausted = record.turns >= beat.max_turns
         out_of_budget = state.turns_used >= defn.turn_budget
 
-        if satisfied or exhausted:
+        # The subject has moved on, so the scene does too. If what they just
+        # said already satisfies the NEXT beat, holding them here would measure
+        # the author's running order rather than the person — and in a
+        # discovery conversation, driving it is precisely what good looks like.
+        nxt_beat = defn.next_beat(beat.id)
+        overtaken = bool(
+            nxt_beat
+            and not satisfied
+            and len(state.banked.get(nxt_beat.id, [])) >= nxt_beat.threshold
+        )
+
+        if satisfied or exhausted or overtaken:
             record.satisfied = satisfied
-            record.closed_reason = "handled" if satisfied else "turn_cap"
+            record.closed_reason = (
+                "handled" if satisfied else "overtaken" if overtaken else "turn_cap"
+            )
             record.closed_at = time.time()
-            nxt = defn.next_beat(beat.id)
+            nxt = nxt_beat
             if nxt is None or out_of_budget:
                 return self._close(
                     state, defn, reason="budget" if out_of_budget and nxt else "scene_end"
@@ -402,7 +482,44 @@ class RoleplayEngine:
         return self._speak(state, defn, beat, said)
 
     # ---------------------------------------------------------------- #
-    def _read(self, beat: BeatSpec, said: str, session_id: str) -> dict[str, Any]:
+    #: How many beats ahead a turn may be credited against. Bounded rather than
+    #: unlimited: every extra cue in the classifier call is one more thing it can
+    #: match loosely, and a turn credited against the closing beat on turn one
+    #: would be evidence of nothing.
+    LOOKAHEAD = 2
+
+    @staticmethod
+    def _read_frame(beat: BeatSpec, persona_role: str = "") -> str:
+        """How the turn is described to the classifier.
+
+        Passing the beat's intent alone as "the question" was a real bug, and a
+        quiet one. The classifier judges an answer IN THE CONTEXT of a question,
+        so framing the turn as beat two and then asking it to match beat three's
+        signals made it reject them all — correctly, on its own terms: they had
+        nothing to do with the question it was shown. The measured effect was
+        total, not partial. Every lookahead cue came back unmatched, and a
+        subject who ran ahead of the author's order scored zero.
+
+        The frame names the moment for context and then says plainly that the
+        judgement is about what the person said, not about which moment it
+        belongs to. That is what lets one call carry the whole cue set.
+        """
+        who = f" The other person is playing: {persona_role}." if persona_role else ""
+        return (
+            f"A live workplace role-play.{who} At this moment: {beat.intent} "
+            "Judge ONLY what the person being assessed just said, against each "
+            "signal below, regardless of which moment of the conversation that "
+            "signal belongs to."
+        )
+
+    def _read(
+        self,
+        beat: BeatSpec,
+        said: str,
+        session_id: str,
+        lookahead: list[BeatSpec] | None = None,
+        persona_role: str = "",
+    ) -> dict[str, Any]:
         """Classify the turn against the beat's authored key AND its red flags.
 
         One call, both lists, then partitioned back apart. The identical call
@@ -422,24 +539,44 @@ class RoleplayEngine:
         toward the beat's threshold, so doing the wrong thing convincingly
         would advance the scene — which is the precise inversion of what a red
         flag means.
+
+        `lookahead` carries the NEXT beats' cues into the same call, and this
+        is the fix for the bug that made a strong performer score zero. A good
+        subject does not follow the author's running order: they ask the
+        discovery question in the opening beat and close in the middle. Reading
+        only the open beat threw all of that away — the evidence was filed by
+        the clock instead of by its content, and the scene ran out of beats
+        while the subject was doing everything right. Cues that belong to a
+        later beat are returned separately and credited to the beat that owns
+        them, so nothing a subject says is lost because they said it early.
         """
         cues = list(beat.looking_for)
         flags = list(beat.red_flags)
+        ahead = [c for b in (lookahead or []) for c in b.looking_for if c not in cues]
         try:
             read = self.llm.read_answer(
-                beat.intent, said, cues + flags, session_id=session_id
+                self._read_frame(beat, persona_role),
+                said,
+                cues + flags + ahead,
+                session_id=session_id,
             ) or {}
         except Exception:
             # A classifier outage must slow a scene down, never end it. An
             # unread turn covers nothing, which costs the subject nothing: the
             # beat simply runs to its turn cap.
             return {
-                "covered": [], "missing": list(cues), "flagged": [], "depth": "unknown",
+                "covered": [], "missing": list(cues), "flagged": [],
+                "ahead": [], "depth": "unknown",
             }
 
         raw = read.get("covered") or []
         read["covered"] = [c for c in raw if c in cues]
         read["flagged"] = [c for c in raw if c in flags]
+        # Lookahead matches get their own slot rather than staying in `covered`.
+        # They must not count toward THIS beat's threshold — and the caller
+        # cannot recover them afterwards, because `covered` has already been
+        # narrowed to this beat's cues by the line above.
+        read["ahead"] = [c for c in raw if c in ahead]
         read["missing"] = [c for c in cues if c not in read["covered"]]
         return read
 
@@ -470,10 +607,17 @@ class RoleplayEngine:
     ) -> str:
         """One guarded, in-character line. Empty means "use the authored one"."""
         try:
+            system, passage_ids = prompt_assembly.assemble(
+                agent=self.agent_for(defn),
+                defn=defn,
+                kb=self.knowledge_for(defn),
+                beat=beat,
+                said=said,
+                turns_used=state.turns_used,
+            )
+            state.knowledge_used.append(passage_ids)
             out = counterparty.speak(
-                persona=asdict(defn.persona),
-                beat_intent=beat.intent,
-                briefing=defn.briefing,
+                system_prompt=system,
                 recent=state.recent(),
                 said=said,
                 session_id=state.session_id,
@@ -543,7 +687,11 @@ class RoleplayEngine:
         state.phase = "complete"
         state.completed_at = time.time()
         state.current_beat_id = None
-        text = defn.closing.strip() or "That's the end of the scenario. Thank you."
+        text = (
+            defn.script.closing.strip()
+            or defn.closing.strip()
+            or "That's the end of the scenario. Thank you."
+        )
         state.say(text, "closing")
         return RoleplayReply(
             text=text, kind="closing", ends=True,

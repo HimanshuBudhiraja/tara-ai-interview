@@ -23,7 +23,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from services.assessment import scenarios  # noqa: E402
+from packages.types.agent import LIBRARY, get_agent  # noqa: E402
+from services.ai import prompt_assembly  # noqa: E402
+from services.assessment import knowledge, scenarios  # noqa: E402
 from services.orchestrator.roleplay import (  # noqa: E402
     RoleplayEngine,
     RoleplayState,
@@ -72,7 +74,7 @@ SUBJECTS: dict[str, dict[str, list[str]]] = {
             "I'm sorry you feel that way. I can offer you a discount on next month if that helps?",
         ],
     },
-    "sales_price_pushback": {
+    "sales_price_objection": {
         "strong": [
             "That's a real gap and I'm not going to pretend it isn't. Before I talk about numbers — "
             "what would actually have to change for you to stay, beyond price?",
@@ -93,6 +95,48 @@ SUBJECTS: dict[str, dict[str, list[str]]] = {
             "better integrations.",
             "We're just a much better product overall. Most customers see a lot of value.",
             "Okay, let me speak to my manager. I'm pretty sure I can get you the full twenty-two percent.",
+        ],
+    },
+    "sales_competitor_objection": {
+        "strong": [
+            "Nothing, maybe — they might genuinely be the right call. Before I try to "
+            "convince you of anything: what does your team actually need this to do?",
+            "That's helpful. Two more — are there any constraints from IT or security "
+            "on new tools? And has anyone on your team migrated a platform before?",
+            "Then that's the difference that matters. We support SAML SSO and SCIM "
+            "provisioning; the other platform doesn't do SCIM. You can verify that on "
+            "their own docs page rather than taking my word for it. Their reporting is "
+            "genuinely fine — it's fixed-template, which is fine until you need to change one.",
+            "Let's test it rather than argue it. Can we get thirty minutes with you, "
+            "your colleague who recommended them, and whoever owns the SSO mandate — "
+            "and I'll walk through provisioning live?",
+        ],
+        "weak": [
+            "We've got much better reporting, better integrations and better support.",
+            "Honestly, they're a lot less mature than us. A lot of customers switch back.",
+            "Our reporting is really flexible. Customers love it.",
+            "Let me send you a comparison document and you can take a look.",
+        ],
+    },
+    "sales_enterprise_discovery": {
+        "strong": [
+            "That's fair enough. Rather than pitch at you — what does your team actually "
+            "do today when a report is needed?",
+            "You said quarter end is a scramble. What does that scramble actually cost "
+            "you — how many people, how many days?",
+            "And how many people would eventually touch something like this? Is there "
+            "budget sitting anywhere for it this year?",
+            "Then I don't think you need a demo yet. What I'd suggest is thirty minutes "
+            "with you and the director who asked you to take this, next week, to size "
+            "whether the quarter-end problem is worth a business case at all. "
+            "Does Tuesday work?",
+        ],
+        "weak": [
+            "Great, thanks for the time. So Northwind is a reporting and analytics "
+            "platform used by over two thousand companies to automate their reporting.",
+            "We've got scheduled exports, custom dashboards and a metrics API.",
+            "It's really easy to get started, onboarding is only four weeks.",
+            "I'll send over some information and follow up next week.",
         ],
     },
     "hiring_sjt_missed_handoff": {
@@ -119,7 +163,7 @@ SUBJECTS: dict[str, dict[str, list[str]]] = {
 
 def play(scenario_id: str, subject: str, interactive: bool, as_json: bool) -> int:
     defn = scenarios.load(scenario_id)
-    engine = RoleplayEngine()
+    engine = RoleplayEngine(knowledge=knowledge.load_all())
     state = RoleplayState.new(
         subject_name="Sam Taylor",
         subject_id="demo",
@@ -130,6 +174,9 @@ def play(scenario_id: str, subject: str, interactive: bool, as_json: bool) -> in
 
     if not as_json:
         print(f"\n{BOLD}{defn.title}{OFF}")
+        print(f"{DIM}agent={defn.agent_type}  difficulty={defn.difficulty}  "
+              f"kb={defn.knowledge_base_id or '-'} "
+              f"(sources: {', '.join(defn.guardrails.allowed_sources) or 'all'}){OFF}")
         print(f"{DIM}surface={defn.policy.surface}  feedback={defn.policy.feedback_visibility}  "
               f"attempts={'unlimited' if defn.policy.unlimited_attempts else defn.policy.attempts}  "
               f"selection_grade={defn.policy.selection_grade}{OFF}\n")
@@ -196,6 +243,44 @@ def play(scenario_id: str, subject: str, interactive: bool, as_json: bool) -> in
     return 0
 
 
+def show_prompt(scenario_id: str) -> int:
+    """Print the assembled standard prompt — the POC's prompt-standardisation proof."""
+    defn = scenarios.load(scenario_id)
+    kb = knowledge.load_all().get(defn.knowledge_base_id)
+    system, used = prompt_assembly.assemble(
+        agent=get_agent(defn.agent_type), defn=defn, kb=kb,
+        beat=defn.beats[0] if defn.beats else None,
+        said="what does this actually cost per seat?",
+    )
+    print(system)
+    print(f"\n{DIM}--- grounded on passages: {', '.join(used) or 'none'} ---{OFF}")
+    return 0
+
+
+def poc() -> int:
+    """One agent, three configurations. Section 12 of the POC brief."""
+    by_agent: dict[str, list] = {}
+    for defn in scenarios.load_all().values():
+        by_agent.setdefault(defn.agent_type, []).append(defn)
+
+    print(f"\n{BOLD}AGENT LIBRARY{OFF}  {DIM}— build the agent once, configure many times{OFF}\n")
+    for agent_type, agent in LIBRARY.items():
+        configs = by_agent.get(agent_type, [])
+        print(f"{BOLD}{agent.name}{OFF} {DIM}({agent_type}){OFF}")
+        print(f"{DIM}  dimensions: {', '.join(agent.evaluation.dimensions)}{OFF}")
+        print(f"{DIM}  permanent guardrails: {len(agent.permanent_guardrails)}{OFF}")
+        for d in configs:
+            srcs = ", ".join(d.guardrails.allowed_sources) or "all"
+            print(f"    {CYAN}{d.scenario_id:30}{OFF} {d.difficulty:6} "
+                  f"{d.max_duration_min:2}min  persona={d.persona.name:18} "
+                  f"kb[{srcs}]  {len(d.evaluation.competencies)} competencies  "
+                  f"intro={d.script.intro_mode}")
+        if not configs:
+            print(f"{DIM}    (no scenarios configured yet){OFF}")
+        print()
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Play a Tara role-play scenario.")
     ap.add_argument("-s", "--scenario", default="cs_double_charge")
@@ -203,8 +288,14 @@ def main() -> int:
     ap.add_argument("-i", "--interactive", action="store_true")
     ap.add_argument("--json", action="store_true", help="print the evidence payload only")
     ap.add_argument("--list", action="store_true", help="list shipped scenarios")
+    ap.add_argument("--prompt", action="store_true", help="print the assembled standard prompt")
+    ap.add_argument("--poc", action="store_true", help="show the agent library and its configurations")
     args = ap.parse_args()
 
+    if args.poc:
+        return poc()
+    if args.prompt:
+        return show_prompt(args.scenario)
     if args.list:
         for sid, defn in scenarios.load_all().items():
             print(f"{sid:32} {defn.policy.surface:7} {defn.title}")

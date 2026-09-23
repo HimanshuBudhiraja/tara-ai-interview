@@ -403,3 +403,68 @@ def test_the_counterpartys_memory_is_bounded():
     for i in range(20):
         state.say(f"line {i}", "in_character")
     assert len(state.recent()) == 6
+
+
+# --------------------------------------------------------------------------- #
+#  Evidence attribution
+#
+#  A good subject does not follow the author's running order: they ask the
+#  discovery question in the opening beat and close in the middle. Reading each
+#  turn only against the open beat filed evidence by the clock instead of by its
+#  content, and a strong performer scored zero.
+# --------------------------------------------------------------------------- #
+def test_evidence_for_a_later_beat_is_banked_not_discarded():
+    """The cue belongs to b2 and was said while b1 was open. It must survive.
+
+    It is asserted on the RECORD rather than on `state.banked`, because the
+    overtake rule fires on the same turn and `_open_beat` consumes the bank
+    immediately — the bank is a hand-off, not a store.
+    """
+    defn, state = _scenario(), _state()
+    engine = RoleplayEngine()
+    engine.open(state, defn)
+    engine.on_turn(state, defn, STRONG_B2)
+    assert state.records["b2"].covered == ["offers a concrete next step"]
+    assert "offers a concrete next step" not in state.records["b1"].covered
+
+
+def test_a_beat_opens_holding_what_was_banked_for_it():
+    defn, state = _scenario(), _state()
+    engine = RoleplayEngine()
+    engine.open(state, defn)
+    engine.on_turn(state, defn, STRONG_B2)          # banks b2
+    engine.on_turn(state, defn, STRONG_B1)          # closes b1, opens b2
+    assert state.records["b2"].covered == ["offers a concrete next step"]
+
+
+def test_the_scene_advances_when_the_subject_has_overtaken_the_beat():
+    """Holding someone in beat two while they are demonstrably doing beat three
+    measures the author's running order, not the person."""
+    defn, state = _scenario(), _state()
+    engine = RoleplayEngine()
+    engine.open(state, defn)
+    engine.on_turn(state, defn, STRONG_B2)
+    assert state.records["b1"].closed_reason == "overtaken"
+    assert state.records["b1"].satisfied is False   # they did not do b1's work
+    assert state.current_beat_id == "b2"
+
+
+def test_banked_evidence_survives_serialisation():
+    defn, state = _scenario(), _state()
+    engine = RoleplayEngine()
+    engine.open(state, defn)
+    engine.on_turn(state, defn, STRONG_B2)
+    restored = RoleplayState.from_dict(state.to_dict())
+    assert restored.banked == state.banked
+
+
+def test_the_read_frame_asks_for_a_moment_independent_judgement():
+    """The regression guard for a silent, total failure: framing the turn as
+    one beat's question made the classifier reject every other beat's signals.
+    The measured effect was 0 of 3 matches, recovered to 2 of 3 by this frame."""
+    frame = RoleplayEngine._read_frame(
+        BeatSpec(id="b", intent="Ask about budget", looking_for=["x"]), "a CFO"
+    )
+    assert "Ask about budget" in frame
+    assert "a CFO" in frame
+    assert "regardless of which moment" in frame

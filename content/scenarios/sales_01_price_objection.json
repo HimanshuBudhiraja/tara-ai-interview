@@ -1,0 +1,257 @@
+{
+  "scenario_id": "sales_price_objection",
+  "version": 1,
+  "title": "CFO challenges the renewal uplift",
+  "agent_type": "sales",
+  "role": "account_executive",
+  "role_title": "Account Executive",
+  "language": "en",
+  "difficulty": "hard",
+  "max_duration_min": 15,
+  "turn_budget": 22,
+  "knowledge_base_id": "northwind_sales",
+  "knowledge_base_version": 3,
+  "policy": {
+    "surface": "sales",
+    "feedback_visibility": "full",
+    "attempts": 0,
+    "selection_grade": false
+  },
+  "situation": {
+    "background": "A 2024 launch-discount customer on 40 Business seats, renewing in six weeks. The launch discount has expired, so the renewal quote is 22 percent above what they paid last year.",
+    "current_situation": "The CFO has joined the renewal call personally, which he has never done before. He has a competitor quote on his desk at roughly 30 percent below the Northwind number.",
+    "business_context": "The company has asked every department to hold software spend flat for the year. The CFO has to defend any increase to a board finance committee in three weeks.",
+    "counterparty_context": "He does not use the product himself. Everything he knows about its value is second-hand from his operations director, who likes it.",
+    "objective": "Hold the renewal without conceding more than the seller is authorised to give, and without the price becoming the only thing discussed.",
+    "expected_outcome": "The CFO leaves with a defensible business case and a concrete next step, and the concession \u2014 if any \u2014 is traded rather than given.",
+    "known_challenges": [
+      "The uplift is real and cannot be argued away",
+      "The CFO does not experience the product's value directly",
+      "A discount offered early will be pocketed and built on"
+    ]
+  },
+  "persona": {
+    "name": "Raymond Achebe",
+    "role": "Chief Financial Officer",
+    "disposition": "Measured, unhurried, quietly sceptical. Never raises his voice. Returns to the number every time the conversation drifts.",
+    "wants": "A number he can defend to the finance committee, or a reason to believe the increase buys something.",
+    "knows": [
+      "Renewal quote is 22 percent above last year",
+      "40 seats, renewing in six weeks",
+      "A competitor quoted approximately 30 percent under Northwind",
+      "The operations director rates the product highly, particularly the reporting",
+      "Every department has been told to hold software spend flat"
+    ],
+    "never": [
+      "Raises his voice or becomes personal",
+      "Accepts a claim about value that has no number attached",
+      "Volunteers that the board committee meets in three weeks"
+    ],
+    "hidden_concerns": [
+      "He was criticised at the last board meeting for uncontrolled software spend and does not want to be the person who approved another increase",
+      "He does not actually want to switch \u2014 a migration going wrong would be his problem too",
+      "He has not verified whether the competitor quote covers the same seat count"
+    ],
+    "escalation_behaviour": "If the seller discounts early, he treats it as the new floor and asks for more. If the seller establishes value in a number he can repeat, he softens and starts negotiating structure instead of size.",
+    "aggressiveness": 2,
+    "cooperation": 2,
+    "escalation_tendency": 3,
+    "opening_line": "Thanks for making the time. I'll be direct \u2014 the renewal came in twenty-two percent up, and I have a quote on my desk that's thirty percent below yours. Help me understand why I shouldn't take it."
+  },
+  "candidate": {
+    "role": "Account Executive who owns this renewal",
+    "objective": "Discover the concern underneath the price objection, quantify the value, handle the objection without conceding early, and secure a concrete next step.",
+    "information_available": [
+      "The renewal quote and the expired launch discount",
+      "Your discount authority: 10 percent alone, 11-20 percent needs the regional VP",
+      "Multi-year terms unlock additional discount and fix the price",
+      "The operations director is an advocate"
+    ],
+    "expected_behaviours": [
+      "Asks at least one discovery question before making any commercial move",
+      "Surfaces the real concern behind the stated price objection",
+      "Quantifies value or switching cost in a number the CFO could repeat",
+      "Trades rather than concedes",
+      "States their authority honestly rather than inventing approval",
+      "Closes with a specific next step and a date"
+    ]
+  },
+  "script": {
+    "intro_mode": "custom",
+    "welcome": "You're about to take a renewal call.",
+    "scenario_instructions": "The customer's CFO has joined personally. He has a competitor quote roughly thirty percent below your renewal number and has to defend any increase to his board. Handle the call as you would a real one.",
+    "candidate_instructions": "You can approve up to ten percent on your own. Anything deeper needs your regional VP.",
+    "closing": "That's the end of the call. Thanks \u2014 you can stop there."
+  },
+  "interaction": {
+    "channel": "voice",
+    "speech_rate": 0.95,
+    "max_response_words": 45,
+    "max_turns": 22,
+    "session_timeout_sec": 1200
+  },
+  "evaluation": {
+    "scoring_scale": 4,
+    "competencies": [
+      {
+        "id": "discovery",
+        "label": "Discovery",
+        "weight": 1.5,
+        "observable_behaviours": [
+          "Asks before offering",
+          "Surfaces the concern under the stated objection",
+          "Establishes what switching would actually cost"
+        ]
+      },
+      {
+        "id": "value_articulation",
+        "label": "Value articulation",
+        "weight": 2.0,
+        "observable_behaviours": [
+          "Connects the product to a business outcome",
+          "Attaches a number to the claim",
+          "Gives the buyer language they can repeat internally"
+        ]
+      },
+      {
+        "id": "objection_handling",
+        "label": "Objection handling",
+        "weight": 2.0,
+        "observable_behaviours": [
+          "Does not discount in the first response",
+          "Acknowledges without conceding",
+          "Reframes away from list price"
+        ]
+      },
+      {
+        "id": "negotiation",
+        "label": "Negotiation",
+        "weight": 1.5,
+        "observable_behaviours": [
+          "Trades rather than concedes",
+          "Stays inside approval authority",
+          "Proposes a structure such as multi-year"
+        ]
+      },
+      {
+        "id": "closing",
+        "label": "Closing",
+        "weight": 1.0,
+        "observable_behaviours": [
+          "Secures a specific next step",
+          "Attaches a date",
+          "Confirms who else needs to be involved"
+        ]
+      }
+    ]
+  },
+  "guardrails": {
+    "allowed_sources": [
+      "pricing",
+      "product",
+      "playbook"
+    ],
+    "restricted_topics": [
+      "the seller's personal compensation",
+      "other Northwind customers by name"
+    ],
+    "no_coaching": true,
+    "no_hints": true,
+    "persona_boundaries": [
+      "Never name the competitor's company \u2014 refer to it only as 'the other quote'.",
+      "Never state the board committee date unless asked directly what the deadline is."
+    ],
+    "exit_conditions": [
+      "The seller commits to a specific next step with a date and the CFO accepts it"
+    ]
+  },
+  "briefing": "You're the account executive on a renewal call. This customer has 40 Business seats and came in on a 2024 launch discount that has now expired, so the renewal is 22 percent up. Their CFO has joined the call and has a competitor quote about 30 percent below yours.",
+  "beats": [
+    {
+      "id": "b1_frame",
+      "skill_id": "objection_handling",
+      "intent": "You have just put the price gap on the table. Wait and see whether this person discounts immediately, defends the increase, or asks you something. If they lead with a discount, pocket it and ask for more.",
+      "looking_for": [
+        "acknowledges the pricing concern without conceding it",
+        "asks a question before making an offer",
+        "asks what is behind the concern"
+      ],
+      "red_flags": [
+        "offers a discount in the first response",
+        "apologises for the price increase",
+        "disparages the competitor"
+      ],
+      "fallback_lines": [
+        "So what can you do on the number?",
+        "I still have a thirty percent gap in front of me."
+      ],
+      "max_turns": 3,
+      "required_signals": 2
+    },
+    {
+      "id": "b2_discovery",
+      "skill_id": "discovery",
+      "intent": "Answer honestly but volunteer nothing. If asked what switching would cost, mention the report rebuilding your operations director warned about. If asked whether the other quote covers the same seats, admit you have not checked.",
+      "looking_for": [
+        "asks what switching would actually cost the customer",
+        "establishes what the customer values in the current product",
+        "tests how real or comparable the competing quote is",
+        "surfaces who else is involved in the decision"
+      ],
+      "red_flags": [
+        "moves to negotiating terms without asking anything",
+        "accepts the competitor quote as equivalent without testing it"
+      ],
+      "fallback_lines": [
+        "Ask what you need to, but the number is still the number.",
+        "My operations director likes it. That isn't the issue. The price is."
+      ],
+      "max_turns": 4,
+      "required_signals": 2
+    },
+    {
+      "id": "b3_value",
+      "skill_id": "value_articulation",
+      "intent": "Push back on anything without a number: 'that's what every vendor says'. You are looking for one sentence you could put in front of a finance committee. Soften only when they attach the product to a figure or an outcome in your business.",
+      "looking_for": [
+        "connects the product to a specific outcome in the customer's business",
+        "quantifies the value or the cost of switching",
+        "gives the customer something they can repeat to their board",
+        "reframes the comparison away from list price"
+      ],
+      "red_flags": [
+        "recites generic product features",
+        "claims value without any number or example",
+        "concedes the uplift is unjustified"
+      ],
+      "fallback_lines": [
+        "That's what every vendor tells me. Give me something I can take to my committee.",
+        "Right, but what does that actually save us?"
+      ],
+      "max_turns": 4,
+      "required_signals": 2
+    },
+    {
+      "id": "b4_close",
+      "skill_id": "negotiation",
+      "intent": "Ask for the full 22 percent to come off, which is beyond what they can approve. Hold there once. You will accept a structured concession \u2014 multi-year, or a smaller discount tied to something \u2014 if they ask you for something in return.",
+      "looking_for": [
+        "trades rather than simply conceding",
+        "stays inside their approval limit or says plainly that approval is needed",
+        "proposes a concrete structure such as a multi-year term",
+        "secures a specific next step with a date"
+      ],
+      "red_flags": [
+        "agrees to the full discount",
+        "invents an approval they do not have",
+        "ends the call without a next step"
+      ],
+      "fallback_lines": [
+        "Take the twenty-two percent off and we're done today.",
+        "So where does that leave us? I need something to take back."
+      ],
+      "max_turns": 4,
+      "required_signals": 2
+    }
+  ]
+}

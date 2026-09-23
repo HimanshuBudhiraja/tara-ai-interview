@@ -1,15 +1,13 @@
 {
   "scenario_id": "hiring_sjt_missed_handoff",
   "version": 1,
-  "title": "SJT — a peer's missed handoff is about to hit a customer",
+  "title": "SJT \u2014 a peer's missed handoff is about to hit a customer",
   "role": "customer_support_rep",
   "role_title": "Customer Support Representative",
   "language": "en",
-
-  "briefing": "You've just started a shift. A customer escalation was supposed to be handed to you by a colleague on the previous shift, with the account notes written up. It wasn't — there are no notes, and the customer is expecting a call back within the hour. Your colleague is still online. You're about to speak to them.",
-  "opening": "This is a role-play exercise. I'll play the other person and stay in character. There's no right script — just handle it the way you would.",
-  "closing": "That's the end of the exercise. Thank you — that's everything.",
-
+  "briefing": "You've just started a shift. A customer escalation was supposed to be handed to you by a colleague on the previous shift, with the account notes written up. It wasn't \u2014 there are no notes, and the customer is expecting a call back within the hour. Your colleague is still online. You're about to speak to them.",
+  "opening": "This is a role-play exercise. I'll play the other person and stay in character. There's no right script \u2014 just handle it the way you would.",
+  "closing": "That's the end of the exercise. Thank you \u2014 that's everything.",
   "policy": {
     "surface": "hiring",
     "feedback_visibility": "hidden",
@@ -17,10 +15,9 @@
     "cooldown_hours": 0,
     "selection_grade": true
   },
-
   "persona": {
     "name": "Priya Raman",
-    "role": "A peer on the previous shift — same level, not a manager",
+    "role": "A peer on the previous shift \u2014 same level, not a manager",
     "disposition": "Defensive at first and a little embarrassed. Tired at the end of a long shift. Responds well to being treated as a colleague, badly to being told off.",
     "wants": "To get off shift without this becoming a formal problem, and not to be blamed in front of the team.",
     "knows": [
@@ -34,21 +31,27 @@
     "never": [
       "Volunteers the earlier occurrence unless asked whether it has happened before",
       "Offers the account details unless the other person asks for them",
-      "Becomes hostile — defensiveness softens if handled decently"
+      "Becomes hostile \u2014 defensiveness softens if handled decently"
     ],
-    "opening_line": "Oh — yeah, the escalation. Look, it was carnage here, two people called in sick. I was going to write it up, I just didn't get to it. Is it a problem?",
-    "voice": ""
+    "opening_line": "Oh \u2014 yeah, the escalation. Look, it was carnage here, two people called in sick. I was going to write it up, I just didn't get to it. Is it a problem?",
+    "voice": "",
+    "hidden_concerns": [
+      "This is the second time and they are afraid it will become formal",
+      "They are close to burnt out from covering short shifts and have not told anyone"
+    ],
+    "escalation_behaviour": "Defensive if blamed, and shuts down. Opens up and admits the earlier occurrence if approached as a colleague and asked about the cause.",
+    "aggressiveness": 2,
+    "cooperation": 3,
+    "escalation_tendency": 1
   },
-
   "max_duration_min": 7,
   "turn_budget": 16,
   "allow_generated_dialogue": true,
-
   "beats": [
     {
       "id": "b1_priority",
       "skill_id": "prioritisation_under_pressure",
-      "intent": "You've just excused yourself and asked whether it's a problem. You are waiting to see what this person does first — deal with you, or deal with the customer who is waiting.",
+      "intent": "You've just excused yourself and asked whether it's a problem. You are waiting to see what this person does first \u2014 deal with you, or deal with the customer who is waiting.",
       "looking_for": [
         "gets the information needed to serve the customer before addressing the colleague's behaviour",
         "recognises the customer callback is the time-critical thing",
@@ -104,7 +107,7 @@
         "makes it personal rather than about the process"
       ],
       "fallback_lines": [
-        "Anyway — I'm going to head off, unless there's something else?",
+        "Anyway \u2014 I'm going to head off, unless there's something else?",
         "Look, I said I was sorry. It was a bad shift."
       ],
       "max_turns": 3,
@@ -133,11 +136,131 @@
       "optional": false
     }
   ],
-
   "skills": [
-    {"id": "prioritisation_under_pressure", "name": "Prioritisation under pressure", "priority": "high"},
-    {"id": "information_gathering", "name": "Information gathering", "priority": "high"},
-    {"id": "peer_accountability", "name": "Peer accountability", "priority": "high"},
-    {"id": "follow_through", "name": "Follow-through", "priority": "medium"}
-  ]
+    {
+      "id": "prioritisation_under_pressure",
+      "name": "Prioritisation under pressure",
+      "priority": "high"
+    },
+    {
+      "id": "information_gathering",
+      "name": "Information gathering",
+      "priority": "high"
+    },
+    {
+      "id": "peer_accountability",
+      "name": "Peer accountability",
+      "priority": "high"
+    },
+    {
+      "id": "follow_through",
+      "name": "Follow-through",
+      "priority": "medium"
+    }
+  ],
+  "agent_type": "role_readiness",
+  "difficulty": "medium",
+  "situation": {
+    "background": "A support team running two shifts. Escalations are handed over at shift change with written account notes.",
+    "current_situation": "An escalation was supposed to be handed to the subject at the start of their shift with notes written up. It was not. The customer is expecting a callback within the hour.",
+    "business_context": "Two agents called in sick on the previous shift and the queue doubled.",
+    "counterparty_context": "The colleague is still online, at the end of a long shift, and knows they did not write the notes.",
+    "objective": "Get what is needed to serve the waiting customer, and address the missed handoff without making an enemy.",
+    "expected_outcome": "The customer is recoverable, the colleague is dealt with as a peer, and the underlying staffing cause is named rather than the person.",
+    "known_challenges": [
+      "The time-critical thing is the customer, not the colleague",
+      "The colleague is defensive and will close down if attacked",
+      "Saying nothing about the handoff is also a failure"
+    ]
+  },
+  "candidate": {
+    "role": "Support representative starting a shift",
+    "objective": "Recover the customer escalation and handle the missed handoff with a peer.",
+    "information_available": [
+      "An escalation should have been handed to you with notes",
+      "There are no notes on the account",
+      "The customer expects a callback within the hour",
+      "The colleague from the previous shift is still online"
+    ],
+    "expected_behaviours": [
+      "Deals with the time-critical customer need first",
+      "Asks specific rather than open questions to recover the detail",
+      "Raises the missed handoff rather than letting it pass",
+      "Addresses it without blaming or attacking",
+      "Looks for the underlying cause",
+      "States a concrete plan for the customer"
+    ]
+  },
+  "script": {
+    "intro_mode": "standard",
+    "candidate_instructions": "Handle it the way you would on a real shift.",
+    "closing": "That's the end of the exercise. Thank you \u2014 that's everything."
+  },
+  "interaction": {
+    "channel": "voice",
+    "speech_rate": 0.9,
+    "max_response_words": 40,
+    "max_turns": 16,
+    "session_timeout_sec": 720
+  },
+  "evaluation": {
+    "scoring_scale": 4,
+    "competencies": [
+      {
+        "id": "prioritisation_under_pressure",
+        "label": "Prioritisation under pressure",
+        "weight": 2.0,
+        "observable_behaviours": [
+          "Serves the waiting customer before litigating fault",
+          "Recognises what is time-critical"
+        ]
+      },
+      {
+        "id": "information_gathering",
+        "label": "Information gathering",
+        "weight": 1.5,
+        "observable_behaviours": [
+          "Asks specific questions",
+          "Confirms what was promised and by when",
+          "Checks completeness before closing"
+        ]
+      },
+      {
+        "id": "peer_accountability",
+        "label": "Peer accountability",
+        "weight": 2.0,
+        "observable_behaviours": [
+          "Raises the missed handoff",
+          "Does not blame or attack",
+          "Focuses on next time",
+          "Looks for the underlying cause"
+        ]
+      },
+      {
+        "id": "follow_through",
+        "label": "Follow-through",
+        "weight": 1.0,
+        "observable_behaviours": [
+          "States a concrete plan",
+          "Identifies who else needs to know"
+        ]
+      }
+    ]
+  },
+  "guardrails": {
+    "allowed_sources": [],
+    "restricted_topics": [
+      "the colleague's personal circumstances",
+      "pay or performance reviews"
+    ],
+    "no_coaching": true,
+    "no_hints": true,
+    "persona_boundaries": [
+      "Never volunteer that this happened once before \u2014 only admit it if asked directly.",
+      "Never become hostile. Defensiveness softens if handled decently."
+    ],
+    "exit_conditions": [
+      "The subject states a concrete plan for the customer"
+    ]
+  }
 }

@@ -47,6 +47,15 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from packages.types.simulation import (
+    CandidateBrief,
+    EvaluationConfig,
+    InteractionConfig,
+    ScenarioGuardrails,
+    ScriptSpec,
+    SituationSpec,
+)
+
 #: The three products this engine serves.
 #:
 #: Named for what is being established, not for the department that buys it —
@@ -169,6 +178,23 @@ class PersonaSpec:
     opening_line: str = ""
     voice: str = ""
 
+    #: What this character is actually worried about, under the thing they say
+    #: they are worried about. NEVER volunteered — it comes out only if the
+    #: subject asks the right question. This field is the assessment: a persona
+    #: with no hidden concern can be handled by anyone who listens politely.
+    hidden_concerns: list[str] = field(default_factory=list)
+    #: What has to happen for this character to calm down, harden, or walk. The
+    #: alternative is a persona that escalates because the model felt like it,
+    #: which makes two runs of one scenario different exercises.
+    escalation_behaviour: str = ""
+
+    #: Dials, 1-5. They exist so one authored character can be reused across
+    #: difficulties without rewriting it — the same CFO at aggressiveness 2 and
+    #: at 5 is the same person having a better or worse day.
+    aggressiveness: int = 3
+    cooperation: int = 3
+    escalation_tendency: int = 3
+
     def validate(self) -> list[str]:
         problems: list[str] = []
         if not self.name.strip():
@@ -183,12 +209,55 @@ class PersonaSpec:
                 f"Persona '{self.name or '?'}' needs a goal. A counterparty with "
                 "nothing to want cannot stay in character for five minutes."
             )
+        for label, dial in (
+            ("aggressiveness", self.aggressiveness),
+            ("cooperation", self.cooperation),
+            ("escalation tendency", self.escalation_tendency),
+        ):
+            if not 1 <= dial <= 5:
+                problems.append(f"Persona {label} must sit between 1 and 5.")
         return problems
+
+    def dial_rules(self) -> list[str]:
+        """The dials, rendered as behaviour the model can act on.
+
+        Numbers mean nothing to a language model — "aggressiveness: 4" is read
+        as flavour. The band it falls in, written as an instruction, is not.
+        """
+        out: list[str] = []
+        if self.aggressiveness >= 4:
+            out.append("You are sharp and confrontational. You interrupt and you do not soften.")
+        elif self.aggressiveness <= 2:
+            out.append("You are even-tempered. You raise things plainly rather than pushing.")
+        if self.cooperation >= 4:
+            out.append("You answer what you are asked and you help the conversation along.")
+        elif self.cooperation <= 2:
+            out.append("You give short answers and volunteer nothing. Make them ask.")
+        if self.escalation_tendency >= 4:
+            out.append("You reach for escalation quickly — a manager, cancelling, walking away.")
+        elif self.escalation_tendency <= 2:
+            out.append("You stay in the conversation rather than threatening to leave it.")
+        return out
 
 
 # --------------------------------------------------------------------------- #
 #  The spine
 # --------------------------------------------------------------------------- #
+#: Cues that describe an ABSENCE. A classifier asked whether an answer "covered"
+#: `does not offer a discount` will almost never say yes — there is nothing in
+#: the words to match — so a negative cue can never be satisfied. It then sits
+#: in the threshold forever and stalls the beat, which is how a strong performer
+#: ends up credited with nothing.
+#:
+#: The schema already has the right home for these: a thing the subject must NOT
+#: do is a red flag. Caught at authoring time because the failure is silent —
+#: the scenario runs, the scene plays, and only the scores are wrong.
+_NEGATIVE_OPENERS = (
+    "does not", "doesn't", "did not", "didn't", "never", "avoids", "avoid",
+    "no ", "not ", "refrains", "without offering", "fails to",
+)
+
+
 @dataclass
 class BeatSpec:
     """One authored moment the scene must reach.
@@ -249,6 +318,20 @@ class BeatSpec:
             )
         if self.max_turns < 1:
             problems.append(f"Beat '{self.id}' must allow at least one exchange.")
+        for cue in self.looking_for:
+            lowered = cue.strip().lower()
+            if any(lowered.startswith(neg) for neg in _NEGATIVE_OPENERS):
+                problems.append(
+                    f"Beat '{self.id}' has a negative signal: \"{cue}\". A signal "
+                    "describes something the subject SAYS, and an absence can never "
+                    "be matched — it would sit in the threshold and stall the beat. "
+                    "Move it to red_flags."
+                )
+        if self.threshold > len(self.looking_for):
+            problems.append(
+                f"Beat '{self.id}' needs {self.required_signals} signals but only "
+                f"has {len(self.looking_for)} — it can never be satisfied."
+            )
         return problems
 
 
@@ -274,9 +357,28 @@ class ScenarioDefinition:
     role_title: str = ""
     language: str = "en"
 
+    #: Which library agent runs this. The scenario configures an agent; it
+    #: never replaces one. An unknown type is caught at validation rather than
+    #: at the first turn.
+    agent_type: str = "customer_service"
+    difficulty: str = "medium"
+
     policy: AssessmentPolicy = field(default_factory=AssessmentPolicy)
     persona: PersonaSpec = field(default_factory=PersonaSpec)
     beats: list[BeatSpec] = field(default_factory=list)
+
+    situation: SituationSpec = field(default_factory=SituationSpec)
+    candidate: CandidateBrief = field(default_factory=CandidateBrief)
+    script: ScriptSpec = field(default_factory=ScriptSpec)
+    interaction: InteractionConfig = field(default_factory=InteractionConfig)
+    evaluation: EvaluationConfig = field(default_factory=EvaluationConfig)
+    guardrails: ScenarioGuardrails = field(default_factory=ScenarioGuardrails)
+
+    #: Which knowledge base grounds this simulation, and which version of it.
+    #: Pinned, so a report can be read knowing which price list the buyer was
+    #: arguing from.
+    knowledge_base_id: str = ""
+    knowledge_base_version: int = 0
 
     #: Reuses `SkillSpec` from the interview contract deliberately. A skill is
     #: the same object whether it was evidenced by an answer or by a handled
@@ -340,6 +442,14 @@ class ScenarioDefinition:
             )
         problems.extend(self.policy.validate())
         problems.extend(self.persona.validate())
+        problems.extend(self.situation.validate())
+        problems.extend(self.candidate.validate())
+        problems.extend(self.script.validate())
+        problems.extend(self.interaction.validate())
+        problems.extend(self.evaluation.validate())
+        problems.extend(self.guardrails.validate())
+        if self.difficulty not in ("easy", "medium", "hard"):
+            problems.append(f"Unknown difficulty '{self.difficulty}'.")
 
         if not self.beats:
             problems.append("A scenario with no beats is a conversation, not an assessment.")
@@ -369,12 +479,31 @@ class ScenarioDefinition:
     @staticmethod
     def from_dict(d: dict[str, Any]) -> "ScenarioDefinition":
         data = dict(d)
+        from packages.types.simulation import CompetencySpec
+
         policy = AssessmentPolicy(**(data.pop("policy", {}) or {}))
         persona = PersonaSpec(**(data.pop("persona", {}) or {}))
         beats = [BeatSpec(**b) for b in (data.pop("beats", []) or [])]
+        situation = SituationSpec(**(data.pop("situation", {}) or {}))
+        candidate = CandidateBrief(**(data.pop("candidate", {}) or {}))
+        script = ScriptSpec(**(data.pop("script", {}) or {}))
+        interaction = InteractionConfig(**(data.pop("interaction", {}) or {}))
+        guardrails = ScenarioGuardrails(**(data.pop("guardrails", {}) or {}))
+
+        raw_eval = dict(data.pop("evaluation", {}) or {})
+        competencies = [CompetencySpec(**c) for c in raw_eval.pop("competencies", []) or []]
+        evaluation = EvaluationConfig(**raw_eval)
+        evaluation.competencies = competencies
+
         known = set(ScenarioDefinition.__dataclass_fields__)
         defn = ScenarioDefinition(**{k: v for k, v in data.items() if k in known})
         defn.policy = policy
         defn.persona = persona
         defn.beats = beats
+        defn.situation = situation
+        defn.candidate = candidate
+        defn.script = script
+        defn.interaction = interaction
+        defn.evaluation = evaluation
+        defn.guardrails = guardrails
         return defn

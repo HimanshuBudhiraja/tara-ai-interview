@@ -5,11 +5,9 @@
   "role": "customer_support_rep",
   "role_title": "Customer Support Representative",
   "language": "en",
-
   "briefing": "You're on the support line for a subscription software company. The customer you're about to speak to has been billed twice this month. You can see the duplicate charge on the account. You are authorised to refund the duplicate immediately, but a full goodwill credit above that needs a supervisor. Handle the call.",
-  "opening": "This is a role-play. I'll stay in character the whole way through — treat it as a live call.",
-  "closing": "That's the end of the call. Thanks — you can stop there.",
-
+  "opening": "This is a role-play. I'll stay in character the whole way through \u2014 treat it as a live call.",
+  "closing": "That's the end of the call. Thanks \u2014 you can stop there.",
   "policy": {
     "surface": "cs",
     "feedback_visibility": "gated",
@@ -17,11 +15,10 @@
     "cooldown_hours": 24,
     "selection_grade": false
   },
-
   "persona": {
     "name": "Dana Whitfield",
     "role": "Customer, eighteen months on the Pro plan",
-    "disposition": "Clipped and already annoyed. Not shouting — the flat, tired anger of someone who has had to call about this. Softens only if actually heard.",
+    "disposition": "Clipped and already annoyed. Not shouting \u2014 the flat, tired anger of someone who has had to call about this. Softens only if actually heard.",
     "wants": "The duplicate charge off the card today, and a reason to believe it won't happen again next month.",
     "knows": [
       "Charged twice on the 4th, 89 dollars each time",
@@ -36,14 +33,20 @@
       "Reveals the 35 dollar bank fee unless asked what the impact was",
       "Calms down before the agent has actually acknowledged the mistake"
     ],
-    "opening_line": "Right — I've been charged twice this month and nobody can tell me why. Eighty-nine dollars, twice, on the fourth. Can you sort this out or do I need to cancel?",
-    "voice": ""
+    "opening_line": "Right \u2014 I've been charged twice this month and nobody can tell me why. Eighty-nine dollars, twice, on the fourth. Can you sort this out or do I need to cancel?",
+    "voice": "",
+    "hidden_concerns": [
+      "She has already told her own team this tool is reliable and is embarrassed to be chasing a billing error again",
+      "The overdraft was genuinely disruptive and she is more shaken than she is letting on"
+    ],
+    "escalation_behaviour": "Softens when the mistake is acknowledged plainly. Hardens and raises cancelling if she is given process before acknowledgement, or a promise that is not the agent's to make.",
+    "aggressiveness": 4,
+    "cooperation": 2,
+    "escalation_tendency": 4
   },
-
   "max_duration_min": 8,
   "turn_budget": 20,
   "allow_generated_dialogue": true,
-
   "beats": [
     {
       "id": "b1_open",
@@ -70,7 +73,7 @@
     {
       "id": "b2_impact",
       "skill_id": "discovery_and_diagnosis",
-      "intent": "You mention, only if they ask what the impact was, that the second charge overdrew your account and the bank hit you with a 35 dollar fee. If they never ask, you volunteer it with irritation after their second turn — they should have asked.",
+      "intent": "You mention, only if they ask what the impact was, that the second charge overdrew your account and the bank hit you with a 35 dollar fee. If they never ask, you volunteer it with irritation after their second turn \u2014 they should have asked.",
       "looking_for": [
         "asks what the impact on the customer actually was",
         "confirms the specific charges and dates rather than assuming",
@@ -135,11 +138,139 @@
       "optional": false
     }
   ],
-
   "skills": [
-    {"id": "empathy_and_acknowledgement", "name": "Empathy and acknowledgement", "priority": "high"},
-    {"id": "discovery_and_diagnosis", "name": "Discovery and diagnosis", "priority": "high"},
-    {"id": "ownership_within_limits", "name": "Ownership within limits", "priority": "high"},
-    {"id": "de_escalation_and_retention", "name": "De-escalation and retention", "priority": "medium"}
-  ]
+    {
+      "id": "empathy_and_acknowledgement",
+      "name": "Empathy and acknowledgement",
+      "priority": "high"
+    },
+    {
+      "id": "discovery_and_diagnosis",
+      "name": "Discovery and diagnosis",
+      "priority": "high"
+    },
+    {
+      "id": "ownership_within_limits",
+      "name": "Ownership within limits",
+      "priority": "high"
+    },
+    {
+      "id": "de_escalation_and_retention",
+      "name": "De-escalation and retention",
+      "priority": "medium"
+    }
+  ],
+  "agent_type": "customer_service",
+  "difficulty": "hard",
+  "knowledge_base_id": "northwind_support",
+  "knowledge_base_version": 2,
+  "situation": {
+    "background": "An eighteen-month Pro customer on a subscription software platform, billed monthly on the 4th.",
+    "current_situation": "She has been charged 89 dollars twice this month. The second charge overdrew her account and her bank added a 35 dollar fee. She has already tried the help centre and found nothing.",
+    "business_context": "A known billing-retry defect caused duplicate charges on the 4th for a subset of accounts. A fix is scheduled this month.",
+    "counterparty_context": "This is the second billing problem she has had in a year. She runs a team of six on the tool and is genuinely weighing a move to a competitor.",
+    "objective": "Resolve the duplicate charge, be honest about what needs approval, and give her a reason to stay that is not a discount.",
+    "expected_outcome": "The duplicate is refunded, the bank fee is escalated honestly with a committed callback, and she leaves knowing exactly what happens next.",
+    "known_challenges": [
+      "The bank fee is above what the agent can authorise",
+      "A discount is the easy move and the wrong one \u2014 front-line agents may not offer retention discounts",
+      "She will not calm down until the mistake is acknowledged plainly"
+    ]
+  },
+  "candidate": {
+    "role": "Customer support representative taking a live call",
+    "objective": "Acknowledge the error, diagnose the full impact, refund what you can, escalate honestly what you cannot, and keep the customer.",
+    "information_available": [
+      "You can see both charges on the account",
+      "You may refund a duplicate charge in full without approval",
+      "Goodwill credits above the disputed amount, including bank fees, need a supervisor",
+      "You may not offer a retention discount"
+    ],
+    "expected_behaviours": [
+      "Acknowledges the mistake before explaining any process",
+      "Asks what the impact on the customer actually was",
+      "Refunds the duplicate without being asked twice",
+      "Is honest about needing approval rather than over-promising",
+      "Commits to a specific callback time and keeps ownership",
+      "Gives a concrete reason to stay rather than a discount"
+    ]
+  },
+  "script": {
+    "intro_mode": "custom",
+    "welcome": "Welcome to the customer escalation simulation.",
+    "scenario_instructions": "You will be speaking with a customer who has been charged twice this month. Handle the conversation as you would a real one.",
+    "candidate_instructions": "You can refund the duplicate charge yourself. Anything beyond that needs a supervisor.",
+    "closing": "That's the end of the call. Thanks \u2014 you can stop there."
+  },
+  "interaction": {
+    "channel": "voice",
+    "speech_rate": 0.95,
+    "max_response_words": 40,
+    "max_turns": 20,
+    "session_timeout_sec": 900
+  },
+  "evaluation": {
+    "scoring_scale": 4,
+    "competencies": [
+      {
+        "id": "empathy_and_acknowledgement",
+        "label": "Empathy and acknowledgement",
+        "weight": 2.0,
+        "observable_behaviours": [
+          "Acknowledges the error before process",
+          "Apologises without hedging",
+          "Does not blame the bank or the customer"
+        ]
+      },
+      {
+        "id": "discovery_and_diagnosis",
+        "label": "Discovery and diagnosis",
+        "weight": 1.5,
+        "observable_behaviours": [
+          "Asks what the impact was",
+          "Confirms the specific charges",
+          "Checks for wider account impact"
+        ]
+      },
+      {
+        "id": "ownership_within_limits",
+        "label": "Ownership within limits",
+        "weight": 2.0,
+        "observable_behaviours": [
+          "States plainly what they can do now",
+          "Is honest about what needs approval",
+          "Commits to a timeframe and keeps ownership"
+        ]
+      },
+      {
+        "id": "de_escalation_and_retention",
+        "label": "De-escalation and retention",
+        "weight": 1.5,
+        "observable_behaviours": [
+          "Takes the cancellation risk seriously",
+          "Explains prevention rather than offering money",
+          "Closes with a clear next step"
+        ]
+      }
+    ]
+  },
+  "guardrails": {
+    "allowed_sources": [
+      "billing",
+      "escalation"
+    ],
+    "restricted_topics": [
+      "other customers' accounts",
+      "internal engineering ticket numbers"
+    ],
+    "no_coaching": true,
+    "no_hints": true,
+    "persona_boundaries": [
+      "Never reveal the 35 dollar bank fee unless asked what the impact was.",
+      "Do not calm down until the agent has acknowledged the mistake plainly."
+    ],
+    "exit_conditions": [
+      "The agent commits to a specific callback time and the customer accepts it"
+    ]
+  }
 }
