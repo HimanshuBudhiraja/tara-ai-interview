@@ -518,17 +518,17 @@ textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
 /* ===== iMocha platform rail: the product's own left sidebar, fitted around the builder ===== */
 :root{--rail:86px}
 body{padding-left:var(--rail)}
-.imrail{position:fixed;left:0;top:0;bottom:0;width:var(--rail);z-index:40;background:#23262D;display:flex;flex-direction:column;
+.imrail{position:fixed;left:0;top:0;bottom:0;width:var(--rail);z-index:40;background:var(--white);border-right:1px solid var(--line);display:flex;flex-direction:column;
   padding:calc(env(safe-area-inset-top,0px) + 10px) 0 env(safe-area-inset-bottom,0px);overflow-y:auto}
 .imrail .imlogo{display:flex;justify-content:center;padding:4px 0 14px}
 .imrail .imlogo svg{width:30px;height:30px}
-.imrail a{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;color:#E7E9EE;text-decoration:none;
-  font-family:var(--body);font-size:12px;font-weight:500;line-height:1.2;text-align:center;cursor:default}
-.imrail a svg{width:22px;height:22px;color:#C9CDD6}
-.imrail a.on{background:#3A3E47;cursor:pointer}
-.imrail a.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#F05A28}
-.imrail a.on svg{color:#fff}
-.imrail .beta{position:absolute;top:2px;right:4px;font-size:9.5px;font-weight:700;letter-spacing:.04em;color:#F05A28}
+.imrail a{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;text-decoration:none;
+  font-family:var(--body);font-size:12px;font-weight:500;line-height:1.2;text-align:center;cursor:default;color:var(--ink-3)}
+.imrail a svg{width:22px;height:22px;color:var(--faint)}
+.imrail a.on{background:var(--soft);color:var(--accent-ink);cursor:pointer}
+.imrail a.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.imrail a.on svg{color:var(--accent)}
+.imrail .beta{position:absolute;top:2px;right:4px;font-size:9.5px;font-weight:700;letter-spacing:.04em;color:var(--accent)}
 @media (max-width:760px){:root{--rail:0px}.imrail{display:none}}
 .mine-st{font-weight:600}
 .tc .cat.pub{background:#ECFDF3;color:#067647}
@@ -708,6 +708,6 @@ body{padding-left:var(--rail)}
 </div>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003c"></script>
+<script src="/agent-builder/app.js?v=20261003d"></script>
 </body>
 </html>
