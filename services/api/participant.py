@@ -130,8 +130,9 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
         "call": {
             "target_minutes": target, "cap_minutes": cap, "ending": cfg.get("ending"),
             "format": fmt, "speaker": cfg.get("speaker"), "sound": cfg.get("sound") or "None",
-            "camera_required": fmt == "Video & voice" or cfg.get("proctoring") in ("Basic", "Strict"),
-            "camera_used": fmt == "Video & voice" or cfg.get("proctoring") in ("Basic", "Strict"),
+            "camera_required": cfg.get("camera") == "Required" or cfg.get("proctoring") in ("Basic", "Strict"),
+            "camera_used": cfg.get("camera") in ("Optional", "Required") or cfg.get("proctoring") in ("Basic", "Strict"),
+            "proctoring": cfg.get("proctoring") or "Off",
             "recording_consent": bool(cfg.get("consent", True)),
             "voice_configured": bool(config.RETELL_API_KEY and config.RETELL_AGENT_BUILDER_AGENT_ID),
         },
@@ -141,43 +142,10 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
         "purpose": purpose_of(row),
         "attempt": int(row.get("attempt") or 1),
         "attempts": (snap.get("cfg") or {}).get("attempts") or "1",
-        **_participant_result(row),
         "calls": len(row.get("calls") or []),
         "submitted_at": row.get("ended_at"),
         "booking": booking_view(row),
     }
-
-
-def _participant_result(row: dict[str, Any]) -> dict[str, Any]:
-    """The result, for the participant, only when the scenario shows it to them.
-
-    Never the weights, the anchors or the reasoning behind each criterion: the
-    participant sees their scores, their own words as evidence, and coaching.
-    """
-    if (row["snapshot"].get("cfg") or {}).get("feedback") != "Immediate" or row["status"] != "complete":
-        return {"result": None, "result_status": "hidden"}
-    ev = row.get("evaluation")
-    if not ev:
-        err = row.get("evaluation_error")
-        return {"result": None, "result_status": "unavailable" if err and err.get("calls_key") else "pending"}
-    return {"result_status": "ready", "result": {
-        "overall": ev["overall"], "band": ev["band"], "recommendation": ev["recommendation"],
-        "skills": [{"name": r["name"], "status": r["status"], "score": r["score"], "evidence_ids": r["evidence_ids"]}
-                   for r in ev["skills"]],
-        "evidence": [{k: e[k] for k in ("id", "skill", "quote", "t", "polarity", "why")} for e in ev["evidence"]],
-        "narrative": ev.get("narrative") or {},
-        "attempt": ev.get("attempt", 1),
-        "history": _attempt_history(row),
-    }}
-
-
-def _attempt_history(row: dict[str, Any]) -> list[dict[str, Any]]:
-    """This person's evaluated attempts at this scenario, oldest first, for progression."""
-    rows = [r for r in sessions.for_agent(row["agent_id"]) if r.get("invite_code") == row.get("invite_code")
-            and r.get("email") == row.get("email") and r.get("evaluation")]
-    rows.sort(key=lambda r: int(r.get("attempt") or 1))
-    return [{"attempt": int(r.get("attempt") or 1), "overall": r["evaluation"]["overall"],
-             "skills": {s["name"]: s["score"] for s in r["evaluation"]["skills"]}} for r in rows]
 
 
 def booking_view(row: dict[str, Any]) -> dict[str, Any] | None:
@@ -464,6 +432,26 @@ def complete(body: CompleteBody, background: BackgroundTasks,
         sessions.save(row)
         background.add_task(_score, row["session_id"])
     return view(row)
+
+
+class EventBody(BaseModel):
+    type: str = Field(pattern="^(tab_hidden|tab_visible)$")
+    at_sec: int = Field(default=0, ge=0, le=36000)
+
+
+@router.post("/session/{session_id}/event")
+def proctoring_event(body: EventBody, row: dict[str, Any] = Depends(participant_scope)) -> dict[str, Any]:
+    """Proctoring: when the participant leaves and returns to the conversation tab.
+
+    Recorded only when the published scenario has proctoring on, capped so a
+    page cannot fill the record, and shown to admins in Results."""
+    if (row["snapshot"].get("cfg") or {}).get("proctoring") not in ("Basic", "Strict") or row["status"] == "complete":
+        return {"ok": True, "recorded": False}
+    events = row.setdefault("proctoring_events", [])
+    if len(events) < 500:
+        events.append({"type": body.type, "at_sec": body.at_sec, "ts": time.time()})
+        sessions.save(row)
+    return {"ok": True, "recorded": True}
 
 
 class FeedbackBody(BaseModel):

@@ -109,11 +109,9 @@ def test_every_call_fills_every_placeholder(speaker):
 
 
 @pytest.mark.parametrize("engine,key", [("llm", "retell_llm"), ("flow", "conversation_flow")])
-def test_participant_opens_means_the_agent_waits(engine, key):
-    body = rx.web_call_body(_row(speaker="Participant opens"), "agent_x", engine=engine)
-    assert body["agent_override"][key]["start_speaker"] == "user"
-    assert body["retell_llm_dynamic_variables"]["opening_line"] == ""
-    body = rx.web_call_body(_row(speaker="Tara opens"), "agent_x", engine=engine)
+def test_the_persona_always_opens(engine, key):
+    # "Who speaks first" was removed from the builder: whatever an old config says, the persona opens.
+    body = rx.web_call_body({**_row(), "cfg": api.clean_cfg({**_row()["cfg"], "speaker": "Participant opens"})}, "agent_x", engine=engine)
     assert body["agent_override"][key]["start_speaker"] == "agent"
     assert body["retell_llm_dynamic_variables"]["opening_line"]
     if engine == "flow":
@@ -283,7 +281,10 @@ def test_a_test_call_goes_to_the_one_agent_with_the_persona_overrides(client, mo
     monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
     r = client.post(f"{BASE}/agents/{aid}/test-call")
     assert r.status_code == 200, r.text
-    assert r.json() == {"access_token": "tok", "call_id": "call_123"}
+    assert r.json() == {"access_token": "tok", "call_id": "call_123", "max_minutes": rx.TEST_CALL_MINUTES}
+    # A test is the real agent, kept short, and the persona is told so it can wrap up.
+    assert sent["body"]["agent_override"]["agent"]["max_call_duration_ms"] == rx.TEST_CALL_MINUTES * 60_000
+    assert sent["body"]["retell_llm_dynamic_variables"]["max_minutes"] == str(rx.TEST_CALL_MINUTES)
     assert sent["url"].endswith("/v2/create-web-call")
     assert sent["body"]["agent_id"] == "agent_one"
     assert set(sent["body"]["retell_llm_dynamic_variables"]) == set(rx.VARIABLES)
@@ -410,7 +411,7 @@ def test_a_participant_signs_in_and_sees_only_the_published_agent(client, data_d
         assert r_["name"] in v["agent"]["skills"]
         assert r_["anchor"] not in blob                  # descriptors stay hidden
     assert agent["instructions"] not in blob and agent["questions"][0]["text"] not in blob
-    assert "weight" not in blob and v["result"] is None   # no result before it is complete
+    assert "weight" not in blob and "result" not in v and "evaluation" not in blob   # results are for admins only
     assert v["call"]["target_minutes"] in (10, 20, 30)
     sid = v["session_id"]
     assert p.get(f"/api/participant/session/{sid}").status_code == 200
@@ -496,30 +497,55 @@ def test_complete_and_feedback_then_the_recruiter_sees_it(client):
 def test_every_agent_is_voice_only(client):
     row = _draft(client)["done"]
     aid = row["agent_id"]
-    row["cfg"].update(format="Chat", proctoring="Strict")
+    row["cfg"].update(format="Chat", proctoring="Strict", camera="Off")
     out = client.put(f"{BASE}/agents/{aid}", json={**{k: row[k] for k in ("fields", "agent", "cfg")}}).json()
-    assert out["cfg"]["format"] == "Voice only" and out["cfg"]["proctoring"] == "Off"
+    assert out["cfg"]["format"] == "Voice only"
+    # Proctoring is a choice now, and it needs the camera whatever the camera setting said.
+    assert out["cfg"]["proctoring"] == "Strict" and out["cfg"]["camera"] == "Required"
 
 def test_nothing_about_the_role_play_is_public_before_sign_in(client):
     _published_invite(client)
     assert TestClient(app).get("/api/participant/invite/RP-0000-ZZ").status_code in (404, 405)
 
-def test_publishing_makes_one_shared_candidate_link_everyone_can_use(client):
+def test_the_open_link_is_off_until_switched_on(client):
     row = _draft(client)["done"]
     aid = row["agent_id"]
     client.put(f"{BASE}/agents/{aid}", json={**{k: row[k] for k in ("fields", "agent", "cfg")}, "reviewed": True})
     pub = client.post(f"{BASE}/agents/{aid}/publish").json()
-    link = pub["candidate_link"]
-    assert link["path"] == "/participant?code=" + link["code"]
-    assert client.post(f"{BASE}/agents/{aid}/publish").json()["candidate_link"] == link   # same link on republish
+    assert pub["open_link"]["enabled"] is False and pub["candidate_link"] is None     # publishing doesn't open it
+    on = client.post(f"{BASE}/agents/{aid}/open-link", json={"enabled": True}).json()
+    assert on["enabled"] and on["link"].endswith(on["path"])
+    code = on["code"]
+    assert client.post(f"{BASE}/agents/{aid}/publish").json()["open_link"]["code"] == code   # same link on republish
     a, b = TestClient(app), TestClient(app)
-    sa = a.post("/api/participant/sign-in", json={"code": link["code"], "name": "A", "email": "a@x.test", "consent": True}).json()["session_id"]
-    sb = b.post("/api/participant/sign-in", json={"code": link["code"], "name": "B", "email": "b@x.test", "consent": True}).json()["session_id"]
+    sa = a.post("/api/participant/sign-in", json={"code": code, "name": "A", "email": "a@x.test", "consent": True}).json()["session_id"]
+    sb = b.post("/api/participant/sign-in", json={"code": code, "name": "B", "email": "b@x.test", "consent": True}).json()["session_id"]
     assert sa != sb                                                    # one session per person
-    again = a.post("/api/participant/sign-in", json={"code": link["code"], "name": "A", "email": "A@x.test", "consent": True}).json()["session_id"]
+    again = a.post("/api/participant/sign-in", json={"code": code, "name": "A", "email": "A@x.test", "consent": True}).json()["session_id"]
     assert again == sa                                                 # the same person rejoins
-    a.post(f"/api/participant/session/{sa}/complete", json={})
-    assert a.post("/api/participant/sign-in", json={"code": link["code"], "name": "A", "email": "a@x.test", "consent": True}).status_code == 409
+    # Switched off: the code stops working at once.
+    assert client.post(f"{BASE}/agents/{aid}/open-link", json={"enabled": False}).json()["enabled"] is False
+    c = TestClient(app)
+    assert c.post("/api/participant/sign-in", json={"code": code, "name": "C", "email": "c@x.test", "consent": True}).status_code == 404
+    # Back on: the same code works again.
+    assert client.post(f"{BASE}/agents/{aid}/open-link", json={"enabled": True}).json()["code"] == code
+
+
+def test_an_invitation_can_be_emailed_or_copied(client, monkeypatch):
+    from services.notify import email
+
+    aid, _ = _published_invite(client)
+    r = client.post(f"{BASE}/agents/{aid}/invites", json={"name": "Maya Rao", "email": "maya@x.test", "send_email": True}).json()
+    assert r["sent"] is False and "isn't set up" in r["email_error"]          # no SMTP here: nothing pretends to send
+    assert r["code"] in r["text"] and r["link"] in r["text"] and r["text"].startswith("Hi Maya")
+    sent = {}
+    monkeypatch.setattr(email, "send", lambda to, subject, text, html=None: sent.update(to=to, subject=subject))
+    r = client.post(f"{BASE}/agents/{aid}/invites", json={"name": "Lee", "email": "lee@x.test", "send_email": True, "message": "See you soon."}).json()
+    assert r["sent"] is True and sent["to"] == "lee@x.test" and "See you soon." in r["text"]
+    listed = client.get(f"{BASE}/agents/{aid}/invites").json()["invites"]
+    assert {i["email"] for i in listed} >= {"maya@x.test", "lee@x.test"} and listed[0]["status"] == "Not started"
+    bad = client.post(f"{BASE}/agents/{aid}/invites", json={"email": "not-an-email", "send_email": True})
+    assert bad.status_code == 422
 
 
 def test_every_call_carries_the_tuned_turn_taking():
@@ -546,8 +572,7 @@ def test_publishing_applies_the_current_rules_to_an_older_agent(client):
 # --------------------------------------------------------------------------- #
 def _signed_in(client, n=1):
     aid, code = _published_invite(client)
-    row = store.load(aid)
-    shared = next(i for i in row["invites"] if i.get("shared"))["code"]
+    shared = client.post(f"{BASE}/agents/{aid}/open-link", json={"enabled": True}).json()["code"]
     out = []
     for i in range(n):
         c = TestClient(app)
@@ -724,27 +749,27 @@ def _publish_with(client, **cfg) -> tuple[str, str]:
 
 def test_purpose_sets_the_attempt_and_feedback_defaults(client):
     row = _draft(client)["done"]   # "a technical interview": a first guess of Hiring
-    assert row["cfg"]["purpose"] == "Hiring" and row["cfg"]["attempts"] == "1" and row["cfg"]["feedback"] == "Hidden"
+    assert row["cfg"]["purpose"] == "Hiring" and row["cfg"]["attempts"] == "1" and "feedback" not in row["cfg"]
     out = client.put(f"{BASE}/agents/{row['agent_id']}", json={"fields": row["fields"], "agent": row["agent"],
-                     "cfg": {**row["cfg"], "purpose": "L&D", "attempts": None, "feedback": None}}).json()
-    assert out["cfg"]["attempts"] == "Unlimited" and out["cfg"]["feedback"] == "Immediate"
+                     "cfg": {**row["cfg"], "purpose": "L&D", "attempts": None}}).json()
+    assert out["cfg"]["attempts"] == "Unlimited"
 
 
-def test_a_learner_can_practise_again_and_sees_their_result(client, monkeypatch):
+def test_a_learner_can_practise_again_but_never_sees_a_result(client, monkeypatch):
     from services.api import participant as part
 
-    aid, code = _publish_with(client, purpose="L&D", attempts="Unlimited", feedback="Immediate")
+    aid, code = _publish_with(client, purpose="L&D", attempts="Unlimited")
     p = TestClient(app)
     s1 = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
     assert s1["attempt"] == 1 and s1["purpose"] == "L&D"
     done = p.post(f"/api/participant/session/{s1['session_id']}/complete", json={"early": False, "elapsed_sec": 300}).json()
-    assert done["result_status"] in ("pending", "unavailable")   # no model in tests
+    assert "result" not in done and "result_status" not in done      # admins only, even for learners
     s2 = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
     assert s2["attempt"] == 2 and s2["session_id"] != s1["session_id"]
 
 
 def test_a_limited_attempt_policy_is_enforced(client):
-    aid, code = _publish_with(client, purpose="L&D", attempts="3", feedback="Immediate")
+    aid, code = _publish_with(client, purpose="L&D", attempts="3")
     p = TestClient(app)
     for n in range(3):
         sid = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()["session_id"]
@@ -753,7 +778,7 @@ def test_a_limited_attempt_policy_is_enforced(client):
     assert r.status_code == 409 and "all 3 attempts" in r.json()["detail"]["message"]
 
 
-def test_a_session_is_evaluated_once_and_hiring_results_stay_hidden(client, monkeypatch):
+def test_a_session_is_evaluated_once_and_only_admins_see_it(client, monkeypatch):
     from services.api import participant as part
     from services.data import agent_sessions
     from tests.test_simulation_evaluation import EVIDENCE, JUDGED, TRANSCRIPT, FakeLLM
@@ -772,6 +797,21 @@ def test_a_session_is_evaluated_once_and_hiring_results_stay_hidden(client, monk
     assert row["evaluation"]["purpose"] == "Hiring" and len(llm.calls) == 3
     agent_sessions.save(row)
     v = p.get(f"/api/participant/session/{sid}").json()
-    assert v["result"] is None and v["result_status"] == "hidden"
+    assert "result" not in v and "evaluation" not in json.dumps(v)
     recruiter = client.get(f"{BASE}/agents/{aid}/sessions").json()["sessions"][0]
     assert recruiter["evaluation"]["overall"] is not None
+
+
+def test_tab_leaves_are_recorded_only_when_proctoring_is_on(client):
+    aid, code = _publish_with(client, purpose="Hiring", proctoring="Basic")
+    p = TestClient(app)
+    v = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
+    assert v["call"]["proctoring"] == "Basic" and v["call"]["camera_required"] is True
+    sid = v["session_id"]
+    assert p.post(f"/api/participant/session/{sid}/event", json={"type": "tab_hidden", "at_sec": 40}).json()["recorded"]
+    assert p.post(f"/api/participant/session/{sid}/event", json={"type": "rm -rf"}).status_code == 422
+    row = client.get(f"{BASE}/agents/{aid}/sessions").json()["sessions"][0]
+    assert row["tab_leaves"] == 1 and row["proctoring"] == "Basic"
+    aid2, code2 = _publish_with(client, purpose="Hiring", proctoring="Off")
+    v2 = p.post("/api/participant/sign-in", json={"code": code2, "name": "Lee", "email": "l@x.test", "consent": True}).json()
+    assert not p.post(f"/api/participant/session/{v2['session_id']}/event", json={"type": "tab_hidden"}).json()["recorded"]

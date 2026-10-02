@@ -344,14 +344,14 @@
   }
   /* Purpose: who the result is for, and the attempt and feedback policy that follow. */
   const PURPOSES = [['Hiring', 'Hiring'], ['HR', 'HR'], ['L&D', 'Learning & Development']];
-  const PURPOSE_DEFAULTS = { Hiring: { attempts: '1', feedback: 'Hidden' }, HR: { attempts: '1', feedback: 'Hidden' }, 'L&D': { attempts: 'Unlimited', feedback: 'Immediate' } };
+  const PURPOSE_DEFAULTS = { Hiring: { attempts: '1' }, HR: { attempts: '1' }, 'L&D': { attempts: 'Unlimited' } };
   const PURPOSE_HINT = {
-    Hiring: 'A candidate, one attempt at a booked time. The result goes to the hiring team with a recommendation.',
-    HR: 'An employee or manager conversation. The result is themes, observations and follow-ups for HR, not a verdict.',
-    'L&D': 'A learner practising. They see their result and coaching straight away and can practise again.'
+    Hiring: 'A candidate, one attempt at a booked time. The result, with a recommendation, appears in Results for admins.',
+    HR: 'An employee or manager conversation. Results show themes, observations and follow-ups for admins, not a verdict.',
+    'L&D': 'A learner practising, with retries. Coaching and progress across attempts appear in Results for admins.'
   };
   function seg(label, key, opts) {
-    return h('div', { role: 'group', 'aria-label': label, class: 'seg' }, opts.map((o) => h('button', { type: 'button', 'aria-pressed': String(S.cfg[key] === o), text: o, onclick: () => { S.cfg[key] = o; touch(); renderMain(); } })));
+    return h('div', { role: 'group', 'aria-label': label, class: 'seg' }, opts.map((o) => h('button', { type: 'button', 'aria-pressed': String(S.cfg[key] === o), text: o, onclick: () => { S.cfg[key] = o; if (key === 'proctoring' && o !== 'Off') S.cfg.camera = 'Required'; touch(); renderMain(); } })));
   }
   function readiness() {
     const a = S.agent, f = S.fields;
@@ -376,16 +376,14 @@
       h('div', { class: 'sid' }, h('span', { class: 'bigava', text: initials(a.persona.name) }), h('div', null, h('b', { text: a.title }), h('small', { text: a.type_label }))),
       h('div', { class: 'ready' }, h('div', { class: 'top' }, h('span', { text: 'Ready to publish' }), h('b', { text: n + ' of ' + req.length })), h('div', { class: 'pbar' }, h('i', { style: 'width:' + Math.round(n / req.length * 100) + '%' })))
     );
-    const cl = S.row && S.row.candidate_link;
-    if (cl) {
-      const url = location.origin + cl.path;
+    if (S.row && S.row.published_version) {
+      const ol = S.row.open_link || {};
       side.append(h('div', { class: 'clink' },
-        h('div', { class: 'top' }, h('span', { text: 'Candidate link' }), h('small', { text: 'v' + S.row.published_version })),
-        h('a', { href: url, target: '_blank', rel: 'noopener', text: url.replace(/^https?:\/\//, '') }),
-        h('div', { class: 'row' }, h('span', { class: 'code', text: cl.code }),
-          h('button', { class: 'obtn ghost', type: 'button', text: 'Copy link', onclick: (e) => { const b = e.currentTarget; navigator.clipboard.writeText(url).then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy link'; }, 1500); }, () => toast('Copy was blocked. Select the link instead.')); } }))));
+        h('div', { class: 'top' }, h('span', { text: 'Participants' }), h('small', { text: 'v' + S.row.published_version })),
+        h('p', { class: 'clstate', text: ol.enabled ? 'Open link is on: anyone with it can join.' : 'Open link is off. Invite people by email, or switch the open link on.' }),
+        h('button', { class: 'obtn ghost', type: 'button', text: 'Invite participants', onclick: () => openInvite(ol.enabled ? 'link' : 'email') })));
     }
-    ['BASICS', 'AGENT SETUP', 'OPTIONAL'].forEach((g) => {
+    ['BASICS', 'AGENT SETUP', 'OPTIONAL', 'AFTER PUBLISHING'].forEach((g) => {
       side.append(h('div', { class: 'ngroup' }, h('span', { text: g }), items.filter((i) => i.group === g).map((i) =>
         h('a', { class: 'navi', href: '#' + i.id, onclick: (e) => { e.preventDefault(); const t = $(i.id); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash'); } } },
           i.label, i.review ? h('span', { class: 'revpill', text: 'Review' }) : i.done ? h('span', { class: 'okdot', 'aria-label': 'Complete', html: ICON.check11 }) : null))));
@@ -537,23 +535,31 @@
     const srow = (title, hint, key, opts) => h('div', { class: 'srow' }, h('span', { class: 'tt' }, h('b', { text: title }), h('small', { text: hint })), seg(title, key, opts));
     const L = lengthParts();
     m.append(h('section', { id: 'settings', class: 'card', style: 'gap:22px', 'aria-labelledby': 'set-h' },
-      h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'set-h', text: 'Conversation settings' }), h('p', { class: 'sub', text: 'How the session starts, runs and ends.' })),
-      srow('Who speaks first', 'Tara greets the participant in character.', 'speaker', ['Tara opens', 'Participant opens']),
-      srow('Introduction sound', 'Played as the session begins.', 'sound', ['None', 'Phone ring', 'Video join', 'Doorbell']),
+      h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'set-h', text: 'Conversation settings' }), h('p', { class: 'sub', text: 'How the conversation ends and how often one person may take it. The persona always opens.' })),
       srow('Ending', 'How the conversation wraps up.', 'ending', ['Tara decides', 'Hard time limit', 'No end time']),
       srow('Attempts', 'How many times one person may take it. Set by Purpose; change it here.', 'attempts', ['1', '3', 'Unlimited']),
-      srow('Results for the participant', 'Immediate shows their score and coaching when they finish.', 'feedback', ['Hidden', 'Immediate']),
       h('div', { class: 'srow', style: 'border-bottom:none;padding-bottom:0' },
         h('span', { class: 'tt' }, h('b', { text: 'Conversation length' }), h('small', { text: 'Set by Follow-up depth in Persona (' + c.depth + '). Change it there.' })),
         h('span', { style: 'display:flex;flex-direction:column;gap:4px' },
           h('span', { class: 'est' }, h('b', { text: '≈ ' + L.est }), h('span', { text: 'min' })),
           h('span', { class: 'estcalc', text: 'Call cap ' + L.cap + ' min (' + c.ending + ')' })))));
 
+    const langs = (OPT.languages || []).length ? OPT.languages : [voiceOf(c.voice).language];
     m.append(h('section', { id: 'advanced', class: 'adv' },
       h('button', { type: 'button', 'aria-expanded': String(S.advOpen), onclick: () => { S.advOpen = !S.advOpen; renderMain(); } },
-        h('span', null, h('b', { text: 'Advanced' }), h('small', { text: 'Language, recording consent' })), h('span', { class: 'spark', style: S.advOpen ? 'transform:rotate(180deg)' : null, html: ICON.chev })),
+        h('span', null, h('b', { text: 'Advanced' }), h('small', { text: 'Language, proctoring, camera, recording consent' })), h('span', { class: 'spark', style: S.advOpen ? 'transform:rotate(180deg)' : null, html: ICON.chev })),
       S.advOpen ? h('div', { class: 'advbody' },
-        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Language' }), h('p', { style: 'font-size:15px;margin:6px 0 0', text: voiceOf(c.voice).language + ' — set by the voice chosen in Persona' })),
+        h('div', { class: 'fld' }, h('label', { for: 'adv-lang', text: 'Language' }),
+          h('select', { id: 'adv-lang', class: 'inp', onchange: (e) => { const v = (OPT.voices || []).find((x) => x.language === e.target.value); if (v) setVoice(v.key); } },
+            langs.map((l) => h('option', { value: l, text: l, selected: voiceOf(c.voice).language === l }))),
+          h('small', { class: 'advhint', text: 'Changing the language picks a voice that speaks it, and the persona takes that voice\'s name. Fine-tune the voice in Persona.' })),
+        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Proctoring' }), seg('Proctoring', 'proctoring', OPT.proctoring || ['Off', 'Basic', 'Strict']),
+          h('small', { class: 'advhint', text: { Off: 'No proctoring.', Basic: 'Camera on, and every time the participant leaves the tab is recorded in Results.', Strict: 'Basic, and the conversation pauses until the participant comes back to the tab.' }[c.proctoring || 'Off'] })),
+        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Camera' }),
+          c.proctoring && c.proctoring !== 'Off'
+            ? h('p', { style: 'font-size:14px;margin:6px 0 0', text: 'Required: proctoring needs the camera.' })
+            : seg('Camera', 'camera', OPT.camera || ['Off', 'Optional', 'Required']),
+          h('small', { class: 'advhint', text: 'The camera is shown only on the participant\'s own screen. Video is never recorded or sent to the voice agent.' })),
         h('div', { class: 'togrow', style: 'grid-column:1 / -1' }, h('span', null, h('b', { text: 'Recording consent' }), h('small', { text: 'Ask participants to agree to recording before they start.' })),
           h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(c.consent), 'aria-label': 'Recording consent', onclick: () => { c.consent = !c.consent; touch(); renderMain(); } }, h('i')))) : null));
 
@@ -582,7 +588,7 @@
       const d = h('details', { class: 'resskill' },
         h('summary', null, h('span', { class: 'scp ' + (ev && ev.overall != null ? (ev.overall >= 70 ? 'hi' : ev.overall >= 50 ? 'mid' : 'lo') : 'na'), text: ev && ev.overall != null ? String(Math.round(ev.overall)) : '–' }),
           h('b', { text: (x.name || x.email || 'Participant') + (x.attempt > 1 ? ' · attempt ' + x.attempt : '') }),
-          h('span', { class: 'resw', text: status + (x.ended_at ? ' · ' + fmtDate(x.ended_at) : '') })));
+          h('span', { class: 'resw', text: status + (x.ended_at ? ' · ' + fmtDate(x.ended_at) : '') + (x.proctoring && x.proctoring !== 'Off' ? ' · left the tab ' + (x.tab_leaves || 0) + '×' : '') })));
       if (ev) d.append(resultView(ev));
       else if (x.evaluation_error) d.append(h('p', { class: 'resnote', text: 'Not evaluated: ' + (x.evaluation_error.problems || []).join('; ') + '.' }));
       sec.append(d);
@@ -673,14 +679,85 @@
     }
   });
   // One access code per participant, for the published version. The link opens the participant flow.
-  $('invBtn').addEventListener('click', async () => {
-    try {
-      const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/invites', { method: 'POST', body: {} });
-      let copied = false;
-      try { await navigator.clipboard.writeText(r.link); copied = true; } catch (e) { /* not allowed here */ }
-      toast((copied ? 'Link copied. ' : '') + 'Access code ' + r.code + ' · ' + r.link);
-    } catch (e) { toast(e.message); }
-  });
+  $('invBtn').addEventListener('click', () => openInvite('email'));
+
+  /* ---------- Invite participants: email an invitation, or switch the open link on ---------- */
+  async function openInvite(tab) {
+    S.inv = { tab: tab || 'email', list: null, last: null, busy: false };
+    renderInvite(); $('invDlg').showModal(); loadInvites();
+  }
+  async function loadInvites() {
+    try { const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/invites'); S.inv.list = r.invites; S.row.open_link = r.open_link; } catch (e) { S.inv.list = []; }
+    renderInvite(); renderSide();
+  }
+  function copyBtn(text, label) {
+    return h('button', { class: 'obtn ghost', type: 'button', text: label || 'Copy', onclick: (e) => { const b = e.currentTarget, was = b.textContent;
+      navigator.clipboard.writeText(text).then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = was; }, 1500); }, () => toast('Copy isn\'t allowed here. Select the text instead.')); } });
+  }
+  function renderInvite() {
+    const st = S.inv, body = $('invBody'); body.textContent = '';
+    $('invTitle').textContent = 'Invite participants · ' + S.agent.title;
+    const tabs = $('invTabs'); tabs.textContent = '';
+    [['email', 'Email invitation'], ['link', 'Open link']].forEach(([id, label]) => tabs.append(h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.tab === id), text: label, onclick: () => { st.tab = id; renderInvite(); } })));
+    if (st.tab === 'email') {
+      const name = h('input', { id: 'inv-name', class: 'inp', type: 'text', placeholder: 'Maya Rao', autocomplete: 'off' });
+      const mail = h('input', { id: 'inv-email', class: 'inp', type: 'email', placeholder: 'maya@company.com', autocomplete: 'off' });
+      const note = h('textarea', { id: 'inv-note', class: 'inp', rows: '3', maxlength: '1500', placeholder: 'Optional: a line from you, added to the email' });
+      const send = h('button', { class: 'cwt', type: 'button', text: OPT.email_configured ? 'Send invitation' : 'Create invitation', disabled: st.busy, onclick: async () => {
+        if (!mail.value.trim()) { toast('Enter the participant\'s email address.'); mail.focus(); return; }
+        st.busy = true; renderInviteBusy(send);
+        try {
+          st.last = await api('/agents/' + encodeURIComponent(S.agentId) + '/invites', { method: 'POST', body: { name: name.value.trim(), email: mail.value.trim(), message: note.value, send_email: !!OPT.email_configured } });
+          toast(st.last.sent ? 'Invitation sent to ' + mail.value.trim() + '.' : 'Invitation created. Copy it below and send it yourself.');
+          st.busy = false; await loadInvites(); return;
+        } catch (e) { toast((e.detail && e.detail.message) || e.message); }
+        st.busy = false; renderInvite();
+      } });
+      body.append(
+        h('p', { class: 'invsub', text: 'Each person gets their own access code for the published version (v' + S.row.published_version + '). ' +
+          (OPT.email_configured ? 'The invitation is emailed from ' + OPT.email_from + '.' : 'Email isn\'t set up on this server yet, so the invitation is created for you to copy and send yourself.') }),
+        h('div', { class: 'invgrid' },
+          h('div', { class: 'fld' }, h('label', { for: 'inv-name', text: 'Name' }), name),
+          h('div', { class: 'fld' }, h('label', { for: 'inv-email', text: 'Email' }), mail),
+          h('div', { class: 'fld', style: 'grid-column:1 / -1' }, h('label', { for: 'inv-note', text: 'Message' }), note)),
+        h('div', { class: 'invact' }, send));
+      if (st.last) {
+        body.append(h('div', { class: 'invlast' },
+          h('div', { class: 'top' }, h('b', { text: st.last.sent ? 'Sent' : 'Ready to send' }), st.last.email_error ? h('small', { text: st.last.email_error }) : null),
+          h('pre', { class: 'invmail', text: 'Subject: ' + st.last.subject + '\n\n' + st.last.text }),
+          h('div', { class: 'row' }, copyBtn(st.last.text, 'Copy invitation'), copyBtn(st.last.link, 'Copy link'), h('span', { class: 'code', text: st.last.code }))));
+      }
+      body.append(h('h3', { class: 'invh', text: 'Invited' }));
+      if (st.list === null) body.append(h('p', { class: 'invsub', text: 'Loading…' }));
+      else if (!st.list.length) body.append(h('p', { class: 'invsub', text: 'No one yet.' }));
+      else body.append(h('div', { class: 'invlist' }, st.list.map((i) => h('div', { class: 'invrow' },
+        h('div', null, h('b', { text: i.name || i.email || 'Participant' }), h('small', { text: (i.email || '') + (i.emailed ? ' · emailed' : '') })),
+        h('span', { class: 'invst ' + i.status.toLowerCase().replace(/\s/g, ''), text: i.status }),
+        h('span', { class: 'code', text: i.code }), copyBtn(i.link, 'Copy link')))));
+    } else {
+      const ol = S.row.open_link || {};
+      const url = ol.enabled ? location.origin + ol.path : '';
+      body.append(
+        h('p', { class: 'invsub', text: 'One link anyone can use. Each person signs in with their own name and email, so their attempts and results stay separate. It\'s off until you switch it on; switching it off stops the link working at once.' }),
+        h('div', { class: 'togrow' }, h('span', null, h('b', { text: 'Open link' }), h('small', { text: ol.enabled ? 'On: anyone with the link can join.' : 'Off' })),
+          h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(!!ol.enabled), 'aria-label': 'Open link', onclick: async () => {
+            try { const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/open-link', { method: 'POST', body: { enabled: !ol.enabled } }); S.row.open_link = r; toast(r.enabled ? 'Open link is on.' : 'Open link is off. The link no longer works.'); }
+            catch (e) { toast(e.message); }
+            renderInvite(); renderSide();
+          } }, h('i'))));
+      if (ol.enabled) body.append(h('div', { class: 'invlast' },
+        h('a', { href: url, target: '_blank', rel: 'noopener', text: url.replace(/^https?:\/\//, '') }),
+        h('div', { class: 'row' }, h('span', { class: 'code', text: ol.code }), copyBtn(url, 'Copy link'))));
+    }
+  }
+  function renderInviteBusy(btn) { btn.disabled = true; btn.textContent = OPT.email_configured ? 'Sending…' : 'Creating…'; }
+  $('invClose').addEventListener('click', () => $('invDlg').close());
+
+  /* ---------- Help ---------- */
+  document.querySelectorAll('[data-help]').forEach((b) => b.addEventListener('click', () => $('helpDlg').showModal()));
+  $('helpClose').addEventListener('click', () => $('helpDlg').close());
+  document.querySelectorAll('[data-home]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); go(1); window.scrollTo(0, 0); }));
+
   $('testBtn').addEventListener('click', () => { resetTest(true); $('testp').scrollIntoView({ behavior: 'smooth', block: 'start' }); if (OPT.voice_configured) startVoice(); });
 
   /* ---------- test: a real voice call, shown as its transcript ----------
@@ -699,7 +776,8 @@
   function syncSend() {
     $('scoreBtn').disabled = S.scoreBusy || S.tBusy || inCall() || !OPT.model_configured || S.test.filter((m) => m.from === 'user').length < 2;
     const mic = $('tMic');
-    const label = inCall() ? 'End call' : S.voice.state === 'ended' ? 'Start another voice test' : 'Start voice test';
+    const left = S.voice.left != null ? ' · ' + String(Math.floor(S.voice.left / 60)) + ':' + String(S.voice.left % 60).padStart(2, '0') + ' left' : '';
+    const label = inCall() ? 'End call' + left : S.voice.state === 'ended' ? 'Start another voice test' : 'Start voice test';
     mic.classList.toggle('on', inCall());
     mic.setAttribute('aria-label', label);
     $('tMicLabel').textContent = label;
@@ -761,7 +839,7 @@
     const log = $('tlog'); log.textContent = '';
     if (!S.test.length && !S.tBusy && !inCall()) {
       log.append(h('p', { class: 'empty', text: OPT.voice_configured
-        ? 'Start a voice test to talk to ' + (S.agent ? S.agent.persona.name : 'Tara') + ' as a participant would. The transcript appears here as you speak.'
+        ? 'Start a voice test to talk to ' + (S.agent ? S.agent.persona.name : 'the persona') + ' as a participant would. Tests are real calls on the live voice agent, limited to ' + (OPT.test_call_minutes || 5) + ' minutes. The transcript appears here as you speak.'
         : 'Voice testing is off until RETELL_API_KEY and RETELL_AGENT_BUILDER_AGENT_ID are set.' }));
     }
     const mmss = (x) => String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0');
@@ -810,7 +888,11 @@
       const mod = await import('https://cdn.jsdelivr.net/npm/retell-client-js-sdk@3/+esm');
       const client = new mod.RetellWebClient();
       v.client = client;
-      client.on('call_started', () => { v.state = 'live'; renderTest(); });
+      client.on('call_started', () => {
+        v.state = 'live'; v.left = (r.max_minutes || OPT.test_call_minutes || 5) * 60;
+        clearInterval(v.tick); v.tick = setInterval(() => { v.left = Math.max(0, v.left - 1); syncSend(); if (!inCall()) { clearInterval(v.tick); v.left = null; } }, 1000);
+        renderTest();
+      });
       client.on('agent_start_talking', () => { v.state = 'speaking'; renderStatus(); });
       client.on('agent_stop_talking', () => { if (v.state === 'speaking') v.state = 'live'; renderStatus(); });
       v.t0 = Date.now(); v.times = [];
@@ -821,7 +903,7 @@
         S.test = rows.map((x, i) => ({ from: x.role === 'agent' ? 'tara' : 'user', text: x.content, t: v.times[i] }));
         renderTest();
       });
-      client.on('call_ended', () => { v.state = 'ended'; v.client = null; v.dur = Math.round((Date.now() - v.t0) / 1000); renderTest(); });
+      client.on('call_ended', () => { clearInterval(v.tick); v.left = null; v.state = 'ended'; v.client = null; v.dur = Math.round((Date.now() - v.t0) / 1000); renderTest(); });
       client.on('error', (err) => { v.state = 'failed'; v.err = 'The call dropped. ' + ((err && err.message) || ''); v.client = null; try { client.stopCall(); } catch (e) { /* gone */ } renderTest(); });
       await client.startCall({ accessToken: r.access_token });
     } catch (e) {

@@ -581,19 +581,63 @@ body{padding-left:var(--rail)}
 .reslist b{font-size:13px}
 .reslist ul{margin:4px 0 0;padding-left:18px;font-size:13.5px;line-height:1.55;color:var(--ink-2)}
 .resver{margin:4px 0 0;font-size:11.5px;color:var(--faint);font-family:ui-monospace,Menlo,monospace}
+
+/* ===== invite window, help, rail ===== */
+.invsub{margin:0;font-size:14px;color:var(--muted-2);line-height:1.5}
+.invgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.invgrid{grid-template-columns:1fr}}
+.invgrid textarea.inp{height:auto;min-height:76px;padding:10px 12px;resize:vertical;font:inherit;font-size:14px}
+.invact{display:flex;justify-content:flex-end}
+.invlast{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:var(--uu-gray-50,#F9FAFB)}
+.invlast .top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.invlast .top small{color:var(--muted-2)}
+.invlast a{font-size:14px;color:var(--accent-ink);word-break:break-all}
+.invlast .row,.invrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.invmail{margin:0;white-space:pre-wrap;font:13px/1.55 var(--body);color:var(--ink-2);background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;max-height:200px;overflow:auto}
+.invh{margin:6px 0 0;font-size:14px;font-weight:600}
+.invlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.invrow{padding:10px 14px;border-bottom:1px solid var(--line);justify-content:space-between}
+.invrow:last-child{border-bottom:0}
+.invrow > div{display:flex;flex-direction:column;min-width:160px;flex:1}
+.invrow small{color:var(--muted-2);font-size:12.5px}
+.invst{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--uu-gray-100,#F2F4F7);color:var(--uu-gray-700,#344054)}
+.invst.completed{background:#ECFDF3;color:#067647}.invst.started{background:#EFF8FF;color:#175CD3}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--ink-3)}
+.clstate{margin:4px 0 8px;font-size:13px;color:var(--muted-2);line-height:1.45}
+.advhint{display:block;margin-top:6px;font-size:12.5px;color:var(--muted-2);line-height:1.45}
+.helplist{margin:0;padding:6px 24px 22px 44px;display:flex;flex-direction:column;gap:12px;font-size:14.5px;line-height:1.55;color:var(--ink-2)}
+.imrail a.off{opacity:.55}
+.me-ava{display:inline-flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
 <aside class="imrail" aria-label="iMocha">
   <div class="imlogo" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="none" stroke="#F05A28" stroke-width="5" stroke-dasharray="52 18" stroke-linecap="round"/></svg></div>
-  <a aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/></svg>Home</a>
-  <a aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Tests</a>
-  <a aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 13l2 2 4-4"/></svg>Reports</a>
+  <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/></svg>Home</a>
+  <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>Tests</a>
+  <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 13l2 2 4-4"/></svg>Reports</a>
   <a class="on" href="#" id="railAgent" aria-current="page"><span class="beta">BETA</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="15" height="11" rx="2"/><path d="M8 20h5M10.5 16v4"/><path d="M20 3v4M18 5h4"/><path d="M8 10.5h.01M13 10.5h.01"/></svg>AI Conversation Agent</a>
-  <a aria-disabled="true"><span class="beta">BETA</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>AI Skills Match</a>
-  <a aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>More</a>
+  <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><span class="beta">BETA</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>AI Skills Match</a>
+  <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>More</a>
 </aside>
 <div class="ainote" id="aiNote" hidden></div>
+<dialog id="invDlg" class="smdlg" aria-labelledby="invTitle">
+  <div class="smhd"><div><h2 id="invTitle">Invite participants</h2></div>
+    <button class="xbtn" type="button" id="invClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="smbar"><div role="tablist" aria-label="Invite by" class="ttabs" id="invTabs"></div></div>
+  <div class="smlist" id="invBody"></div>
+</dialog>
+<dialog id="helpDlg" class="smdlg helpdlg" aria-labelledby="helpTitle">
+  <div class="smhd"><div><h2 id="helpTitle">How it works</h2><p>Build a voice role-play or assessment, test it, publish it, invite people, and read the results.</p></div>
+    <button class="xbtn" type="button" id="helpClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <ol class="helplist">
+    <li><b>Describe it.</b> Write what the conversation is for, or start from a template. Tara drafts the persona, instructions, questions and skills.</li>
+    <li><b>Set it up.</b> Choose the Purpose (Hiring, HR or Learning &amp; Development), review the skills and their weights, and adjust the persona, voice and length.</li>
+    <li><b>Test it.</b> Test agent starts a real voice call (up to 5 minutes) on the live voice agent; the transcript appears as you talk, and you can score it.</li>
+    <li><b>Publish and invite.</b> Publish freezes a version. Invite people by email with their own access code, or switch on the open link.</li>
+    <li><b>Read the results.</b> Results shows every attempt with scores backed by quotes from what the participant said. Participants never see results.</li>
+  </ol>
+</dialog>
 <dialog id="smDlg" class="smdlg" aria-labelledby="smH">
   <div class="smhd"><div><h2 id="smH">Skill Master</h2><p>Pick the skills this conversation should bring out. Weights are balanced to 100% and Tara drafts what a 5 looks like, plus questions, for each one.</p></div>
     <button class="xbtn" type="button" id="smCancel" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -612,11 +656,11 @@ body{padding-left:var(--rail)}
   <header class="hdr" style="gap:24px">
     <div class="hl">
       <button class="brand" type="button" data-go="1"><span class="bmark" data-icon="spark18"></span><span class="bname"><b>Tara</b><small>by iMocha</small></span></button>
-      <nav class="pnav" aria-label="Primary"><a class="on" href="#">Agents</a><a href="#mine" id="navMine" hidden>Your role-plays</a><a href="#templates" id="navTpl">Templates</a></nav>
+      <nav class="pnav" aria-label="Primary"><a class="on" href="#" data-home>Agents</a><a href="#mine" id="navMine" hidden>Your role-plays</a><a href="#templates" id="navTpl">Templates</a></nav>
     </div>
     <div class="hr">
-      <button class="ibtn" type="button" aria-label="Help"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 17h.01"/></svg></button>
-      <button class="me-ava" type="button" aria-label="Account: HB" title="HB">HB</button>
+      <button class="ibtn" type="button" aria-label="Help" title="How it works" data-help><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 17h.01"/></svg></button>
+      <span class="me-ava" role="img" aria-label="Signed in as HB" title="Signed in as HB">HB</span>
     </div>
   </header>
   <main class="m1">
@@ -732,6 +776,6 @@ body{padding-left:var(--rail)}
 </div>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003i"></script>
+<script src="/agent-builder/app.js?v=20261003j"></script>
 </body>
 </html>

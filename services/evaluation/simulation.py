@@ -57,14 +57,14 @@ class EvaluationError(Exception):
 # --------------------------------------------------------------------------- #
 #: What each purpose does unless the scenario says otherwise.
 #:   attempts: how many times one person may take it ("1", "3", "Unlimited")
-#:   feedback: whether the participant sees their result ("Immediate") or not ("Hidden")
+#: Results are for admins only, whatever the purpose: the participant never sees
+#: a score, a rating or coaching. They appear in the builder's Results.
 PURPOSE_DEFAULTS: dict[str, dict[str, str]] = {
-    "Hiring": {"attempts": "1", "feedback": "Hidden"},
-    "HR": {"attempts": "1", "feedback": "Hidden"},
-    "L&D": {"attempts": "Unlimited", "feedback": "Immediate"},
+    "Hiring": {"attempts": "1"},
+    "HR": {"attempts": "1"},
+    "L&D": {"attempts": "Unlimited"},
 }
 ATTEMPTS = ("1", "3", "Unlimited")
-FEEDBACK = ("Hidden", "Immediate")
 _HIRING = re.compile(r"\b(interview\w*|hiring|hire|recruit\w*|candidate\w*|screening|job applica\w*)\b", re.I)
 _HR = re.compile(r"\b(exit interview|performance (review|conversation)|grievance|disciplinary|employee relations|"
                  r"hr (conversation|meeting)|termination|onboarding conversation)\b", re.I)

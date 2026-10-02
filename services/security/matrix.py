@@ -214,6 +214,8 @@ DECLARED: dict[tuple[str, str], str] = {
     # against the organization stamped on the row, and a miss is a 404.
     ("GET", "/agent-builder"): INTERNAL_ONLY,
     ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/invites"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/invites"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/open-link"): RECRUITER_AUTHENTICATED,
     ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/sessions"): RECRUITER_AUTHENTICATED,
     # ---- Participant (a published agent, taken by someone with an access code)
     # Public because it MINTS the session grant from an access code; every
@@ -226,6 +228,7 @@ DECLARED: dict[tuple[str, str], str] = {
     ("POST", "/api/participant/session/{session_id}/chat"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/participant/session/{session_id}/complete"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/participant/session/{session_id}/feedback"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/participant/session/{session_id}/event"): CANDIDATE_TOKEN_SCOPED,
     ("GET", "/participant"): INTERNAL_ONLY,
     ("GET", "/participant/support.js"): INTERNAL_ONLY,
     ("GET", "/participant/assets/{name}"): INTERNAL_ONLY,

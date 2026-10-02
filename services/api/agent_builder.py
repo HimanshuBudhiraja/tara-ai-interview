@@ -29,6 +29,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 import time
 from typing import Any
 
@@ -41,6 +42,7 @@ from services.ai.brain import LLMError
 from services.ai.workloads import agent_builder as ab
 from services.assessment import agent_builder_retell as rx
 from services.evaluation import simulation as sim
+from services.notify import email
 from services.data import built_agents as store
 from services.security import ratelimit
 
@@ -98,16 +100,20 @@ def clean_cfg(cfg: dict[str, Any], base: dict[str, Any] | None = None) -> dict[s
         "followups": bool(cfg.get("followups", True)),
         # Every agent is a voice conversation: no video, no typed chat.
         "format": rx.FORMATS[0],
-        "speaker": _one(cfg.get("speaker"), rx.SPEAKERS, rx.SPEAKERS[0]),
-        "sound": _one(cfg.get("sound"), rx.SOUNDS, rx.SOUNDS[0]),
+        # The persona always opens, with no introduction sound: both settings
+        # were removed from the builder as choices nobody needed to make.
+        "speaker": rx.SPEAKERS[0],
+        "sound": rx.SOUNDS[0],
         "ending": _one(cfg.get("ending"), rx.ENDINGS, rx.ENDINGS[0]),
         "voice": v,
         # The language follows the voice. Voice is chosen in Persona, and a
         # Hindi voice told to speak French would be a configuration nobody meant.
         "language": rx.voice(v).language,
         "consent": bool(cfg.get("consent", True)),
-        # Proctoring only ever meant turning the camera on, and there is no video.
-        "proctoring": "Off",
+        "proctoring": _one(cfg.get("proctoring"), rx.PROCTORING, "Off"),
+        # Proctoring needs the camera; otherwise it is the recruiter's choice.
+        "camera": "Required" if cfg.get("proctoring") in ("Basic", "Strict")
+                  else _one(cfg.get("camera"), rx.CAMERA, "Off"),
         **_purpose_cfg(cfg),
     }
 
@@ -119,7 +125,6 @@ def _purpose_cfg(cfg: dict[str, Any]) -> dict[str, Any]:
     return {
         "purpose": purpose,
         "attempts": cfg.get("attempts") if cfg.get("attempts") in sim.ATTEMPTS else d["attempts"],
-        "feedback": cfg.get("feedback") if cfg.get("feedback") in sim.FEEDBACK else d["feedback"],
     }
 
 
@@ -213,9 +218,17 @@ def public(row: dict[str, Any]) -> dict[str, Any]:
         "leaked_cues": rx.leaked_cues(body, row),
         "tests": (row.get("tests") or [])[-10:],
         "candidate_link": next(({"code": i["code"], "path": f"/participant?code={i['code']}"}
-                                for i in row.get("invites") or [] if i.get("shared")), None),
+                                for i in row.get("invites") or [] if i.get("shared") and not i.get("revoked")), None),
+        "open_link": _open_link(row),
         "updated_at": row.get("updated_at", 0),
     }
+
+
+def _open_link(row: dict[str, Any]) -> dict[str, Any]:
+    inv = next((i for i in row.get("invites") or [] if i.get("shared")), None)
+    on = bool(inv and not inv.get("revoked"))
+    return {"enabled": on, "code": inv["code"] if on else "",
+            "path": f"/participant?code={inv['code']}" if on else ""}
 
 
 def _new_row(p: dict[str, Any], c: dict[str, Any], brief: str, mode: str, org: str) -> dict[str, Any]:
@@ -248,6 +261,10 @@ def options() -> dict[str, Any]:
                    for v in rx.VOICES],
         "difficulties": rx.DIFFICULTIES, "depths": rx.DEPTHS, "depth_minutes": rx.DEPTH_MINUTES,
         "endings": rx.ENDINGS, "speakers": rx.SPEAKERS, "formats": rx.FORMATS, "sounds": rx.SOUNDS,
+        "proctoring": rx.PROCTORING, "camera": rx.CAMERA,
+        "languages": sorted({v.language for v in rx.VOICES}),
+        "test_call_minutes": rx.TEST_CALL_MINUTES,
+        "email_configured": email.configured(), "email_from": email.sender(),
         "model_configured": get_gateway().live,
         "voice_configured": bool(config.RETELL_API_KEY and config.RETELL_AGENT_BUILDER_AGENT_ID),
     }
@@ -466,6 +483,7 @@ async def test_call(agent_id: str, request: Request) -> dict[str, Any]:
         # instructions restate it, and the recruiter should see where.
         raise HTTPException(422, {"message": "The instructions or questions repeat a skill description, "
                                              "so this can't be sent to the voice agent.", "leaked": leaks})
+    limit_test(body)
     from services.assessment import slots
 
     running, limit = slots.retell_concurrency()
@@ -486,7 +504,19 @@ async def test_call(agent_id: str, request: Request) -> dict[str, Any]:
     row.setdefault("tests", []).append({"call_id": call_id, "kind": "voice", "at": time.time(),
                                         "version": int(row.get("version") or 0)})
     store.save(row)
-    return {"access_token": out.get("access_token", ""), "call_id": call_id}
+    return {"access_token": out.get("access_token", ""), "call_id": call_id,
+            "max_minutes": rx.TEST_CALL_MINUTES}
+
+
+def limit_test(body: dict[str, Any]) -> dict[str, Any]:
+    """A builder test is the real agent, kept short: Retell ends it at the cap,
+    and the persona is told the shorter time so it wraps up first instead of
+    being cut off mid-sentence."""
+    m = rx.TEST_CALL_MINUTES
+    body.setdefault("agent_override", {}).setdefault("agent", {})["max_call_duration_ms"] = m * 60_000
+    v = body.setdefault("retell_llm_dynamic_variables", {})
+    v["target_minutes"], v["max_minutes"] = str(max(1, m - 1)), str(m)
+    return body
 
 
 class ScoreBody(BaseModel):
@@ -566,10 +596,8 @@ def publish(agent_id: str, request: Request) -> dict[str, Any]:
     version = int((row.get("published") or {}).get("version") or 0) + 1
     row["published"] = {"version": version, "at": time.time(), "fields": row["fields"],
                         "agent": row["agent"], "cfg": row["cfg"]}
-    # One shareable candidate link per agent, made on first publish and kept
-    # across republishes: whoever opens it sits the latest published version.
-    if not any(i.get("shared") for i in row.get("invites") or []):
-        row.setdefault("invites", []).append({"code": _unique_code(), "shared": True, "created_at": time.time()})
+    # The open link is NOT made here: it is off until someone switches it on
+    # in the Invite window (see /open-link).
     return {**public(store.save(row)), "published": True}
 
 
@@ -579,6 +607,8 @@ def publish(agent_id: str, request: Request) -> dict[str, Any]:
 class InviteBody(BaseModel):
     name: str = Field(default="", max_length=120)
     email: str = Field(default="", max_length=200)
+    message: str = Field(default="", max_length=1500)
+    send_email: bool = False
 
 
 def _code() -> str:
@@ -598,18 +628,98 @@ def _unique_code() -> str:
     return code
 
 
+def _base(request: Request) -> str:
+    return config.PUBLIC_URL or str(request.base_url).rstrip("/")
+
+
+def invitation_email(row: dict[str, Any], name: str, code: str, link: str, note: str) -> tuple[str, str]:
+    """(subject, text) of an invitation: what it is, how long, how to join."""
+    a, cfg = row["published"]["agent"], row["published"]["cfg"]
+    target, _ = rx.lengths(cfg)
+    first = (name.split() or ["there"])[0]
+    kind = "interview" if cfg.get("purpose") == "Hiring" else "practice conversation" if cfg.get("purpose") == "L&D" else "conversation"
+    subject = f"Your invitation: {a['title']}"
+    text = (
+        f"Hi {first},\n\n"
+        f"You're invited to a spoken {kind}: {a['title']}. It takes about {target} minutes and runs in your web browser "
+        "on a computer or phone. You'll need a microphone and a quiet place.\n\n"
+        + (note.strip() + "\n\n" if note.strip() else "")
+        + f"Open your invitation: {link}\nYour access code: {code}\n\n"
+        "Sign in with your name and this email address, choose a time, check your microphone, and start when you're ready.\n"
+    )
+    return subject, text
+
+
 @router.post("/agents/{agent_id}/invites")
 def invite(agent_id: str, body: InviteBody, request: Request) -> dict[str, Any]:
-    """One access code per participant, for the PUBLISHED version."""
+    """One access code per participant, for the PUBLISHED version; optionally emailed."""
     row = _row(agent_id, request)
     if not row.get("published"):
         raise HTTPException(409, "Publish the agent before inviting anyone.")
+    addr = _s(body.email).lower()
+    if body.send_email and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", addr):
+        raise HTTPException(422, "Enter a valid email address to send the invitation.")
     code = _unique_code()
-    entry = {"code": code, "name": _s(body.name), "email": _s(body.email).lower(), "created_at": time.time()}
+    link = f"{_base(request)}/participant?code={code}"
+    subject, text = invitation_email(row, _s(body.name), code, link, body.message)
+    entry = {"code": code, "name": _s(body.name), "email": addr, "created_at": time.time()}
+    sent, error = False, ""
+    if body.send_email:
+        try:
+            email.send(addr, subject, text)
+            sent, entry["emailed_at"] = True, time.time()
+        except email.EmailNotSent as exc:
+            error = str(exc)
     row.setdefault("invites", []).append(entry)
     store.save(row)
-    base = config.PUBLIC_URL or str(request.base_url).rstrip("/")
-    return {"code": code, "link": f"{base}/participant?code={code}", "version": row["published"]["version"]}
+    return {"code": code, "link": link, "version": row["published"]["version"],
+            "sent": sent, "email_error": error, "subject": subject, "text": text}
+
+
+@router.get("/agents/{agent_id}/invites")
+def list_invites(agent_id: str, request: Request) -> dict[str, Any]:
+    from services.data import agent_sessions
+
+    row = _row(agent_id, request)
+    by_code: dict[str, list[dict[str, Any]]] = {}
+    for r in agent_sessions.for_agent(agent_id):
+        by_code.setdefault(r.get("invite_code", ""), []).append(r)
+    out = []
+    for i in row.get("invites") or []:
+        if i.get("shared"):
+            continue
+        rs = by_code.get(i["code"], [])
+        status = ("Completed" if any(r["status"] == "complete" for r in rs)
+                  else "Started" if rs else "Revoked" if i.get("revoked") else "Not started")
+        out.append({"code": i["code"], "name": i.get("name", ""), "email": i.get("email", ""),
+                    "created_at": i.get("created_at"), "emailed": bool(i.get("emailed_at")), "status": status,
+                    "link": f"{_base(request)}/participant?code={i['code']}"})
+    return {"invites": sorted(out, key=lambda x: x["created_at"] or 0, reverse=True), "open_link": _open_link(row)}
+
+
+class OpenLinkBody(BaseModel):
+    enabled: bool
+
+
+@router.post("/agents/{agent_id}/open-link")
+def open_link(agent_id: str, body: OpenLinkBody, request: Request) -> dict[str, Any]:
+    """Switch the agent's open link on or off. Off means its code stops working at once."""
+    row = _row(agent_id, request)
+    if body.enabled and not row.get("published"):
+        raise HTTPException(409, "Publish the agent before opening a link to it.")
+    inv = next((i for i in row.get("invites") or [] if i.get("shared")), None)
+    if body.enabled:
+        if inv is None:
+            row.setdefault("invites", []).append({"code": _unique_code(), "shared": True, "created_at": time.time()})
+        else:
+            inv.pop("revoked", None)
+    elif inv is not None:
+        inv["revoked"] = True
+    store.save(row)
+    out = _open_link(row)
+    if out["enabled"]:
+        out["link"] = _base(request) + out["path"]
+    return out
 
 
 @router.get("/agents/{agent_id}/sessions")
@@ -622,6 +732,8 @@ def participant_sessions(agent_id: str, request: Request) -> dict[str, Any]:
          "status": r["status"], "version": r["version"], "early": bool(r.get("early")),
          "elapsed_sec": r.get("elapsed_sec", 0), "ended_at": r.get("ended_at"),
          "attempt": int(r.get("attempt") or 1),
+         "tab_leaves": sum(1 for e in r.get("proctoring_events") or [] if e.get("type") == "tab_hidden"),
+         "proctoring": (r.get("snapshot", {}).get("cfg") or {}).get("proctoring", "Off"),
          "evaluation": r.get("evaluation"), "evaluation_error": r.get("evaluation_error"),
          "result": r.get("result"), "result_error": r.get("result_error"),
          "feedback": r.get("feedback"), "transcript": r.get("transcript") or [],

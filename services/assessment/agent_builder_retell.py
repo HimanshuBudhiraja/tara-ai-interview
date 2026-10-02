@@ -57,6 +57,14 @@ SPEAKERS = ("Tara opens", "Participant opens")
 #: Voice only. Video and typed (Chat) conversations were removed on 2026-10-02.
 FORMATS = ("Voice only",)
 SOUNDS = ("None", "Phone ring", "Video join", "Doorbell")
+#: Proctoring and camera, set in Advanced. Nothing here is sent to the voice
+#: agent; the camera is shown only on the participant's own screen.
+#:   Basic:  camera on, and every time the participant leaves the tab is recorded.
+#:   Strict: Basic, plus the conversation pauses until they come back.
+PROCTORING = ("Off", "Basic", "Strict")
+CAMERA = ("Off", "Optional", "Required")
+#: Builder test calls are real calls, kept short.
+TEST_CALL_MINUTES = 5
 LANGUAGES = ("English", "Hindi", "French", "Spanish", "German")
 
 #: Persona → Follow-up depth sets the conversation length. Nothing else does.
