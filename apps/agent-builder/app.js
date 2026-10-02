@@ -92,8 +92,9 @@
   /* ---------------- navigation ---------------- */
   function go(v) {
     S.view = v;
-    [1, 2, 3].forEach((i) => { $('v' + i).hidden = i !== v; });
+    [1, 2, 3, 4].forEach((i) => { $('v' + i).hidden = i !== v; });
     if (v === 3) renderS3();
+    if (v === 4) loadReport();
     window.scrollTo(0, 0);
   }
   document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); go(+g.getAttribute('data-go')); } });
@@ -392,7 +393,10 @@
     const pub = S.row && S.row.published_version;
     $('dpill').textContent = pub ? 'PUBLISHED · v' + pub : 'DRAFT';
     $('dpill').className = 'draftpill' + (pub ? ' pub' : '');
+    // Published: the header button duplicates instead of publishing again.
+    $('pubBtn').textContent = S.row && S.row.locked ? 'Duplicate to edit' : 'Publish';
     $('invBtn').hidden = !pub;
+    $('repBtn').hidden = !pub;
   }
 
   /* ---- autosave ---- */
@@ -407,7 +411,7 @@
   async function saveNow() {
     clearTimeout(saveT);
     if (saving) { await saving; }
-    if (!dirty || !S.agentId) return;
+    if (!dirty || !S.agentId || (S.row && S.row.locked)) { dirty = false; return; }
     dirty = false;
     saving = api('/agents/' + encodeURIComponent(S.agentId), { method: 'PUT', body: { fields: S.fields, agent: S.agent, cfg: S.cfg, reviewed: S.reviewed } })
       .then((row) => {
@@ -561,9 +565,154 @@
           h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(c.consent), 'aria-label': 'Recording consent', onclick: () => { c.consent = !c.consent; touch(); renderMain(); } }, h('i')))) : null));
 
     m.append(resultsSection());
+    if (S.row && S.row.locked) lockEditor(m);
 
     window.scrollTo(0, keepY);
   }
+  /* ---------- Published = locked: usable (test, invite, results), never edited ---------- */
+  function lockEditor(m) {
+    m.querySelectorAll('input, textarea, select, button').forEach((el) => {
+      if (el.closest('#results') || el.closest('#advanced > button') || el.closest('summary')) return;
+      el.disabled = true;
+    });
+    m.querySelectorAll('[draggable]').forEach((el) => el.setAttribute('draggable', 'false'));
+    m.prepend(h('div', { class: 'lockbar', role: 'status' },
+      h('div', null, h('b', { text: 'Published · v' + S.row.published_version + ' · locked' }),
+        h('span', { text: 'You can test it, invite people and read its reports. To change anything, duplicate it into a new draft.' })),
+      h('button', { class: 'cwt', type: 'button', text: 'Duplicate to edit', onclick: duplicateAgent })));
+  }
+  async function duplicateAgent() {
+    try {
+      const row = await api('/agents/' + encodeURIComponent(S.agentId) + '/duplicate', { method: 'POST' });
+      loadRow(row); history.replaceState(null, '', '?agent=' + encodeURIComponent(row.agent_id));
+      renderS3(); window.scrollTo(0, 0); loadMine();
+      toast('Draft copy created. Edit it and publish it as a new role-play.');
+    } catch (e) { toast(e.message); }
+  }
+
+  /* ---------- Reports: one grid per role-play, a report per attempt, admin notes and decision ---------- */
+  $('repBtn').addEventListener('click', () => { S.rep = { q: '', status: 'all', decision: 'all', sort: 'ended_at', dir: -1, sel: null }; go(4); });
+  $('repBack').addEventListener('click', () => go(3));
+  $('repRefresh').addEventListener('click', () => loadReport());
+  $('repCsv').addEventListener('click', exportCsv);
+  async function loadReport() {
+    S.rep = S.rep || { q: '', status: 'all', decision: 'all', sort: 'ended_at', dir: -1, sel: null };
+    $('repBack').textContent = S.agent ? S.agent.title : 'Role-play';
+    try { S.rep.data = await api('/agents/' + encodeURIComponent(S.agentId) + '/report'); } catch (e) { toast(e.message); return; }
+    renderReport();
+    if (S.rep.sel) openAttempt(S.rep.sel, true);
+  }
+  const mmssLong = (sec) => !sec ? '–' : Math.floor(sec / 60) + 'm ' + String(sec % 60).padStart(2, '0') + 's';
+  const fmtDT = (t) => t ? new Date(t * 1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '–';
+  function repRows() {
+    const R = S.rep, q = R.q.trim().toLowerCase();
+    let rows = R.data.rows.filter((x) => (!q || (x.name + ' ' + x.email).toLowerCase().includes(q))
+      && (R.status === 'all' || x.status === R.status)
+      && (R.decision === 'all' || (R.decision === 'none' ? !x.review.decision : x.review.decision === R.decision)));
+    const key = (x) => R.sort.startsWith('skill:') ? x.skills[R.sort.slice(6)] : R.sort === 'decision' ? (x.review.decision || '') : x[R.sort];
+    rows = rows.slice().sort((a, b) => { const va = key(a), vb = key(b); if (va == null && vb == null) return 0; if (va == null) return 1; if (vb == null) return -1; return (va > vb ? 1 : va < vb ? -1 : 0) * R.dir; });
+    return rows;
+  }
+  function renderReport() {
+    const R = S.rep, D = R.data, main = $('repMain'); main.textContent = '';
+    const st = D.stats, skills = D.agent.skills;
+    main.append(
+      h('div', { class: 'reptitle' }, h('h1', { text: D.agent.title }),
+        h('p', { text: D.agent.type_label + ' · ' + D.agent.purpose + ' · published v' + D.agent.published_version + ' · AI scores are backed by quotes; the decision column is yours.' })),
+      h('div', { class: 'reptiles' }, [
+        ['Attempts', st.attempts], ['People', st.people], ['Invited by email', st.invited], ['Evaluated', st.evaluated],
+        ['Average score', st.average == null ? '–' : Math.round(st.average)], ['Reviewed', st.reviewed + ' of ' + st.attempts]
+      ].map(([k, v]) => h('div', { class: 'reptile' }, h('span', { text: k }), h('b', { text: String(v) })))),
+      h('div', { class: 'repskills', 'aria-label': 'Average by skill' }, skills.map((k) => h('span', null, k.name + ' · ' + Math.round(k.weight) + '%', h('b', { text: st.skills[k.name] == null ? '–' : String(Math.round(st.skills[k.name])) })))));
+    const search = h('input', { type: 'search', placeholder: 'Search by name or email', value: R.q, 'aria-label': 'Search participants', oninput: (e) => { R.q = e.target.value; renderGrid(); } });
+    const selStatus = h('select', { 'aria-label': 'Status', onchange: (e) => { R.status = e.target.value; renderGrid(); } },
+      [['all', 'All statuses'], ['Evaluated', 'Evaluated'], ['Evaluating', 'Evaluating'], ['In progress', 'In progress'], ['Not evaluated', 'Not evaluated']].map(([v, l]) => h('option', { value: v, text: l, selected: R.status === v })));
+    const selDec = h('select', { 'aria-label': 'Decision', onchange: (e) => { R.decision = e.target.value; renderGrid(); } },
+      [['all', 'All decisions'], ['none', 'Not reviewed']].concat(D.decisions.map((d) => [d, d])).map(([v, l]) => h('option', { value: v, text: l, selected: R.decision === v })));
+    main.append(h('div', { class: 'reptools' }, search, selStatus, selDec));
+    const body = h('div', { class: 'repbody' + (R.sel ? ' open' : ''), id: 'repBody' }, h('div', { class: 'repgridwrap', id: 'repGridWrap' }), h('aside', { class: 'repdrawer', id: 'repDrawer', hidden: !R.sel, 'aria-label': 'Attempt report' }));
+    main.append(body);
+    renderGrid();
+  }
+  function renderGrid() {
+    const R = S.rep, D = R.data, wrap = $('repGridWrap'); wrap.textContent = '';
+    const rows = repRows();
+    if (!rows.length) { wrap.append(h('div', { class: 'repempty', text: D.rows.length ? 'No attempts match these filters.' : 'No one has taken this role-play yet. Invite people from the role-play screen.' })); return; }
+    const cols = [['name', 'Participant'], ['attempt', 'Attempt'], ['ended_at', 'Date'], ['duration_sec', 'Duration'], ['overall', 'Score'], ['band', 'Band'], ['ai_recommendation', 'AI recommendation']]
+      .concat(D.agent.skills.map((k) => ['skill:' + k.name, k.name])).concat([['decision', 'Your decision'], ['notes', 'Notes']]);
+    const head = h('tr', null, cols.map(([k, l]) => h('th', { scope: 'col', 'aria-sort': R.sort === k ? (R.dir > 0 ? 'ascending' : 'descending') : 'none',
+      onclick: () => { if (k === 'notes') return; R.dir = R.sort === k ? -R.dir : (k === 'name' || k === 'band' ? 1 : -1); R.sort = k; renderGrid(); } }, l)));
+    const decIdx = (d) => D.decisions.indexOf(d);
+    const tb = h('tbody', null, rows.map((x) => h('tr', { 'aria-selected': String(R.sel === x.session_id), tabindex: '0',
+      onclick: () => openAttempt(x.session_id), onkeydown: (e) => { if (e.key === 'Enter') openAttempt(x.session_id); } },
+      h('td', null, h('b', { text: x.name || 'Participant' }), h('small', { text: x.email })),
+      h('td', { class: 'num', text: String(x.attempt) }),
+      h('td', { text: fmtDT(x.ended_at || x.started_at) }),
+      h('td', { class: 'num', text: mmssLong(x.duration_sec) }),
+      h('td', { class: 'num' }, x.overall == null ? h('span', { class: 'na', text: x.status }) : h('b', { text: String(Math.round(x.overall)) })),
+      h('td', { text: x.band || '–' }),
+      h('td', { class: 'rec', text: x.ai_recommendation || (x.problems.length ? 'Not evaluated: ' + x.problems.join('; ') : '–') }),
+      D.agent.skills.map((k) => h('td', { class: 'num' + (x.skills[k.name] == null ? ' na' : ''), text: x.skills[k.name] == null ? (x.overall == null ? '–' : 'N/A') : String(x.skills[k.name]) })),
+      h('td', null, x.review.decision ? h('span', { class: 'decpill d' + decIdx(x.review.decision), text: x.review.decision }) : h('span', { class: 'na', text: 'Not reviewed' })),
+      h('td', { class: 'rec', text: x.review.notes ? (x.review.notes.length > 60 ? x.review.notes.slice(0, 60) + '…' : x.review.notes) : '' }))));
+    wrap.append(h('table', { class: 'repgrid' }, h('thead', null, head), tb));
+  }
+  async function openAttempt(sid, keep) {
+    const R = S.rep; R.sel = sid;
+    $('repBody').className = 'repbody open';
+    const dr = $('repDrawer'); dr.hidden = false; if (!keep) dr.textContent = '';
+    renderGrid();
+    let d;
+    try { d = await api('/agents/' + encodeURIComponent(S.agentId) + '/attempts/' + encodeURIComponent(sid) + '/report'); } catch (e) { toast(e.message); return; }
+    dr.textContent = '';
+    const notes = h('textarea', { 'aria-label': 'Evaluation notes', placeholder: 'Your evaluation notes: what you saw, what to follow up, anything the score doesn\'t capture.', value: d.review.notes || '' });
+    let decision = d.review.decision || '';
+    const decSeg = h('div', { role: 'group', 'aria-label': 'Your decision', class: 'seg' });
+    const paintDec = () => { decSeg.textContent = ''; R.data.decisions.forEach((o) => decSeg.append(h('button', { type: 'button', 'aria-pressed': String(decision === o), text: o, onclick: () => { decision = decision === o ? '' : o; paintDec(); } }))); };
+    paintDec();
+    const save = h('button', { class: 'cwt', type: 'button', text: 'Save review', onclick: async () => {
+      save.disabled = true;
+      try { const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/attempts/' + encodeURIComponent(sid) + '/review', { method: 'PUT', body: { decision, notes: notes.value } });
+        const row = R.data.rows.find((x) => x.session_id === sid); if (row) row.review = r;
+        toast('Review saved.'); await loadReport();
+      } catch (e) { toast(e.message); }
+      save.disabled = false;
+    } });
+    const meta = h('p', { class: 'meta', text: d.review.at ? 'Saved by ' + d.review.by + ' · ' + fmtDT(d.review.at) : 'Not reviewed yet' });
+    dr.append(
+      h('div', { style: 'display:flex;justify-content:space-between;gap:10px;align-items:flex-start' },
+        h('div', null, h('h2', { text: (d.name || 'Participant') + (d.attempt > 1 ? ' · attempt ' + d.attempt : '') }), h('p', { class: 'meta', text: d.email })),
+        h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Close report', html: ICON.x, onclick: () => { R.sel = null; $('repBody').className = 'repbody'; dr.hidden = true; renderGrid(); } })),
+      d.evaluation ? h('div', { class: 'airec' }, h('b', { text: 'AI recommendation: ' }), d.evaluation.recommendation)
+        : h('div', { style: 'display:flex;flex-direction:column;gap:8px;align-items:flex-start' },
+          h('p', { class: 'meta', text: d.evaluation_error ? 'Not evaluated: ' + (d.evaluation_error.problems || []).join('; ') : d.status === 'complete' ? 'Not evaluated yet.' : 'This attempt is still in progress.' }),
+          d.status === 'complete' ? h('button', { class: 'obtn ghost', type: 'button', text: 'Evaluate now', onclick: async (e) => {
+            const b = e.currentTarget; b.disabled = true; b.textContent = 'Evaluating… (about a minute)';
+            try { await api('/agents/' + encodeURIComponent(S.agentId) + '/attempts/' + encodeURIComponent(sid) + '/evaluate', { method: 'POST' }); toast('Evaluated.'); await loadReport(); }
+            catch (x) { toast(x.message); b.disabled = false; b.textContent = 'Evaluate now'; }
+          } }) : null),
+      h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Your decision' }), decSeg),
+      h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Evaluation notes' }), notes),
+      h('div', { style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap' }, save, meta));
+    if (d.evaluation) dr.append(resultView(d.evaluation));
+    if ((d.transcript || []).length) {
+      const who = S.agent ? S.agent.persona.name : 'Persona';
+      dr.append(h('details', { class: 'resskill' }, h('summary', null, h('b', { text: 'Transcript (' + d.transcript.length + ' turns)' })),
+        h('div', { class: 'reptx' }, d.transcript.map((t) => h('p', null, h('b', { text: (t.role === 'agent' ? who : d.name || 'Participant') + (t.t != null ? ' · ' + Math.floor(t.t / 60) + ':' + String(Math.round(t.t % 60)).padStart(2, '0') : '') + ': ' }), t.text)))));
+    }
+  }
+  function exportCsv() {
+    const D = S.rep && S.rep.data; if (!D) return;
+    const esc = (v) => { const t = v == null ? '' : String(v); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const head = ['Name', 'Email', 'Attempt', 'Status', 'Date', 'Duration (s)', 'Score', 'Band', 'AI recommendation'].concat(D.agent.skills.map((k) => k.name)).concat(['Decision', 'Notes', 'Reviewed by']);
+    const lines = [head].concat(repRows().map((x) => [x.name, x.email, x.attempt, x.status, x.ended_at ? new Date(x.ended_at * 1000).toISOString() : '', x.duration_sec, x.overall, x.band, x.ai_recommendation]
+      .concat(D.agent.skills.map((k) => x.skills[k.name])).concat([x.review.decision || '', x.review.notes || '', x.review.by || ''])));
+    const blob = new Blob(['\ufeff' + lines.map((l) => l.map(esc).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = (D.agent.title || 'report').replace(/[^\w-]+/g, '_') + '_report.csv'; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
   /* ---------- Results: every participant's attempts, with the evidence-backed report ---------- */
   async function loadResults() {
     if (!S.agentId) return;
@@ -575,7 +724,8 @@
     const sec = h('section', { id: 'results', class: 'card', 'aria-labelledby': 'res-h' },
       h('div', { class: 'ch2' }, h('div', { class: 'tt' }, h('h2', { id: 'res-h', text: 'Results' }),
         h('p', { class: 'sub', text: 'Every participant who has taken the published version. Scores are backed by quotes from what they said; skills the conversation didn\'t reach are Not assessed.' })),
-        h('button', { class: 'obtn ghost', type: 'button', text: 'Refresh', onclick: loadResults })));
+        h('span', { style: 'display:flex;gap:8px' }, S.row && S.row.published_version ? h('button', { class: 'obtn ghost', type: 'button', text: 'Open reports', onclick: () => $('repBtn').click() }) : null,
+          h('button', { class: 'obtn ghost', type: 'button', text: 'Refresh', onclick: loadResults }))));
     if (!list.length) { sec.append(h('p', { class: 'resnote', text: S.row && S.row.published_version ? 'No one has taken it yet. Share the candidate link from the sidebar.' : 'Publish this agent and share its link to collect results.' })); return sec; }
     const fmtDate = (t) => t ? new Date(t * 1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
     list.forEach((x) => {
@@ -664,6 +814,7 @@
     S.genBusy = false; renderMain(); renderSide();
   }
   $('pubBtn').addEventListener('click', async () => {
+    if (S.row && S.row.locked) { duplicateAgent(); return; }
     const missing = readiness().filter((i) => !i.opt && !i.done);
     if (missing.length) { toast('Finish ' + missing.map((i) => i.label.toLowerCase()).join(', ') + ' before publishing.'); const t = $(missing[0].id); if (t) t.scrollIntoView({ behavior: 'smooth' }); return; }
     try {

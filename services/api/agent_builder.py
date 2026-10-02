@@ -65,6 +65,19 @@ def _org(request: Request) -> str:
     return p.organization_id if p else "local"
 
 
+LOCKED = ("This role-play is published, so it's locked: you can test it, invite people and read its reports, "
+          "but not change it. Duplicate it to make an editable copy.")
+
+
+def _editable(agent_id: str, request: Request) -> dict[str, Any]:
+    """The agent, if it may still be changed. A published role-play is locked:
+    every result already collected must stay tied to exactly what people took."""
+    row = _row(agent_id, request)
+    if row.get("published"):
+        raise HTTPException(409, {"error": "locked", "message": LOCKED})
+    return row
+
+
 def _row(agent_id: str, request: Request) -> dict[str, Any]:
     row = store.load(agent_id)
     # Another organization's agent is indistinguishable from one that does not
@@ -211,6 +224,7 @@ def public(row: dict[str, Any]) -> dict[str, Any]:
         "reviewed": bool(row.get("reviewed")),
         "version": int(row.get("version") or 0),
         "published_version": int((row.get("published") or {}).get("version") or 0),
+        "locked": bool(row.get("published")),
         "readiness": readiness(row),
         "length": {"target_minutes": target, "cap_minutes": cap},
         "call_config": body,
@@ -347,7 +361,7 @@ class SaveBody(BaseModel):
 
 @router.put("/agents/{agent_id}")
 def save_agent(agent_id: str, body: SaveBody, request: Request) -> dict[str, Any]:
-    row = _row(agent_id, request)
+    row = _editable(agent_id, request)
     row["agent"] = clean_agent(body.agent)
     row["cfg"] = clean_cfg(body.cfg)
     row["agent"]["depth"], row["agent"]["voice"] = row["cfg"]["depth"], row["cfg"]["voice"]
@@ -371,7 +385,7 @@ def _no_model() -> HTTPException:
 @router.post("/agents/{agent_id}/revise")
 def revise(agent_id: str, body: ReviseBody, request: Request,
            _: None = Depends(ratelimit.limiter("generation"))) -> dict[str, Any]:
-    row = _row(agent_id, request)
+    row = _editable(agent_id, request)
     try:
         out = ab.revise(row, body.instruction.strip())
     except LLMError as exc:
@@ -412,7 +426,7 @@ class SkillNames(BaseModel):
 def draft_skills(agent_id: str, body: SkillNames, request: Request,
                  _: None = Depends(ratelimit.limiter("generation"))) -> dict[str, Any]:
     """Anchors and questions for skills just added from the Skill Master."""
-    row = _row(agent_id, request)
+    row = _editable(agent_id, request)
     have = {r["name"].lower(): r for r in row["agent"]["rubric"]}
     names = [n.strip() for n in body.names if n.strip().lower() in have][:12]
     if not names:
@@ -435,7 +449,7 @@ def draft_skills(agent_id: str, body: SkillNames, request: Request,
 @router.post("/agents/{agent_id}/questions/generate")
 def generate_questions(agent_id: str, request: Request,
                        _: None = Depends(ratelimit.limiter("generation"))) -> dict[str, Any]:
-    row = _row(agent_id, request)
+    row = _editable(agent_id, request)
     try:
         added = ab.more_questions(row)
     except LLMError as exc:
@@ -580,7 +594,7 @@ async def score(agent_id: str, body: ScoreBody, request: Request) -> dict[str, A
 # --------------------------------------------------------------------------- #
 @router.post("/agents/{agent_id}/publish")
 def publish(agent_id: str, request: Request) -> dict[str, Any]:
-    row = _row(agent_id, request)
+    row = _editable(agent_id, request)
     # Re-apply today's rules before freezing: an agent saved under older ones
     # (video, chat, "Interview") must not publish them.
     row["cfg"] = clean_cfg(row["cfg"])
@@ -647,6 +661,23 @@ def invitation_email(row: dict[str, Any], name: str, code: str, link: str, note:
         "Sign in with your name and this email address, choose a time, check your microphone, and start when you're ready.\n"
     )
     return subject, text
+
+
+@router.post("/agents/{agent_id}/duplicate")
+def duplicate(agent_id: str, request: Request) -> dict[str, Any]:
+    """An editable draft copy of a role-play (published or not). It starts with no
+    versions, invites, open link, tests or results: those stay with the original."""
+    import copy
+
+    src = _row(agent_id, request)
+    agent = copy.deepcopy(src["agent"])
+    agent["title"] = (agent["title"] + " (copy)")[:120]
+    row = {
+        "agent_id": store.new_id(agent["title"]), "org_id": src["org_id"], "brief": src.get("brief", ""),
+        "mode": src.get("mode", "roleplay"), "fields": copy.deepcopy(src["fields"]), "agent": agent,
+        "cfg": copy.deepcopy(src["cfg"]), "reviewed": False, "version": 0, "duplicated_from": agent_id,
+    }
+    return public(store.save(row))
 
 
 @router.post("/agents/{agent_id}/invites")
@@ -737,6 +768,138 @@ def participant_sessions(agent_id: str, request: Request) -> dict[str, Any]:
          "booking": r.get("booking")}
         for r in agent_sessions.for_agent(agent_id)
     ]}
+
+
+# --------------------------------------------------------------------------- #
+#  Reports: one grid per role-play, a report per attempt, admin review
+# --------------------------------------------------------------------------- #
+#: The admin's own recommendation, by purpose. The AI's recommendation sits next
+#: to it and is never overwritten: the decision is a person's.
+DECISIONS = {
+    "Hiring": ("Advance", "Hold", "Reject"),
+    "HR": ("No action", "Follow up", "Escalate"),
+    "L&D": ("Ready", "Needs practice", "Coaching recommended"),
+}
+
+
+def _purpose(row: dict[str, Any]) -> str:
+    """As published; for a version published before Purpose existed, the agent's (inferred) purpose."""
+    return ((row.get("published") or {}).get("cfg") or {}).get("purpose") or row["cfg"].get("purpose") or "L&D"
+
+
+def _report_row(r: dict[str, Any], skills: list[str]) -> dict[str, Any]:
+    ev = r.get("evaluation") or {}
+    by = {x["name"]: x for x in ev.get("skills") or []}
+    started, ended = r.get("created_at"), r.get("ended_at")
+    recent = (time.time() - (r.get("ended_at") or 0)) < 600
+    status = ("Evaluated" if ev else "In progress" if r["status"] != "complete"
+              else "Evaluating" if recent and not r.get("evaluation_error") else "Not evaluated")
+    return {
+        "session_id": r["session_id"], "name": r.get("name", ""), "email": r.get("email", ""),
+        "attempt": int(r.get("attempt") or 1), "version": r.get("version"), "status": status,
+        "started_at": started, "ended_at": ended,
+        "duration_sec": int(r.get("elapsed_sec") or 0) or (int(ended - started) if ended and started else 0),
+        "early": bool(r.get("early")),
+        "overall": ev.get("overall"), "band": ev.get("band", ""), "ai_recommendation": ev.get("recommendation", ""),
+        "coverage": ev.get("weight_coverage"),
+        "skills": {n: (by[n]["score"] if n in by else None) for n in skills},
+        "review": r.get("review") or {},
+        "problems": (r.get("evaluation_error") or {}).get("problems", []),
+    }
+
+
+@router.get("/agents/{agent_id}/report")
+def report(agent_id: str, request: Request) -> dict[str, Any]:
+    """Every attempt at this role-play as one grid, with totals for the top of the page."""
+    from services.data import agent_sessions
+
+    row = _row(agent_id, request)
+    a = (row.get("published") or {}).get("agent") or row["agent"]
+    purpose = _purpose(row)
+    skills = [{"name": r["name"], "weight": r["weight"]} for r in a["rubric"]]
+    names = [x["name"] for x in skills]
+    rows = [_report_row(r, names) for r in agent_sessions.for_agent(agent_id)]
+    done = [x for x in rows if x["overall"] is not None]
+    avg = lambda vals: round(sum(vals) / len(vals), 1) if vals else None  # noqa: E731
+    invited = sum(1 for i in row.get("invites") or [] if not i.get("shared"))
+    return {
+        "agent": {"agent_id": agent_id, "title": a["title"], "type_label": a.get("type_label", ""), "purpose": purpose,
+                  "published_version": int((row.get("published") or {}).get("version") or 0), "skills": skills},
+        "decisions": DECISIONS.get(purpose, DECISIONS["L&D"]),
+        "stats": {
+            "invited": invited, "attempts": len(rows),
+            "people": len({x["email"] for x in rows if x["email"]}),
+            "completed": sum(1 for x in rows if x["status"] in ("Evaluated", "Not evaluated", "Evaluating")),
+            "evaluated": len(done), "average": avg([x["overall"] for x in done]),
+            "skills": {n: avg([x["skills"][n] for x in done if x["skills"][n] is not None]) for n in names},
+            "decisions": {d: sum(1 for x in rows if x["review"].get("decision") == d) for d in DECISIONS.get(purpose, ())},
+            "reviewed": sum(1 for x in rows if x["review"].get("decision")),
+        },
+        "rows": rows,
+    }
+
+
+def _session_of(agent_id: str, session_id: str, request: Request) -> tuple[dict[str, Any], dict[str, Any]]:
+    from services.data import agent_sessions
+
+    row = _row(agent_id, request)
+    s = agent_sessions.load(session_id)
+    if s is None or s.get("agent_id") != agent_id:
+        raise HTTPException(404, "No such attempt.")
+    return row, s
+
+
+# "attempt_id", not "session_id": a session_id path parameter is checked against
+# the interview product's sessions; a role-play attempt is checked by _session_of.
+@router.get("/agents/{agent_id}/attempts/{attempt_id}/report")
+def session_report(agent_id: str, attempt_id: str, request: Request) -> dict[str, Any]:
+    _, s = _session_of(agent_id, attempt_id, request)
+    return {"session_id": attempt_id, "name": s.get("name", ""), "email": s.get("email", ""),
+            "attempt": int(s.get("attempt") or 1), "status": s["status"], "evaluation": s.get("evaluation"),
+            "evaluation_error": s.get("evaluation_error"), "transcript": s.get("transcript") or [],
+            "review": s.get("review") or {}, "feedback": s.get("feedback")}
+
+
+@router.post("/agents/{agent_id}/attempts/{attempt_id}/evaluate")
+async def evaluate_now(agent_id: str, attempt_id: str, request: Request) -> dict[str, Any]:
+    """Run (or re-run) the evaluation of one finished attempt, e.g. one taken before
+    the evaluation engine existed, or one whose evaluation failed."""
+    from services.api import participant as part
+    from services.data import agent_sessions
+
+    _, s = _session_of(agent_id, attempt_id, request)
+    if s["status"] != "complete":
+        raise HTTPException(409, "This attempt hasn't finished yet.")
+    if s.get("calls") and config.RETELL_API_KEY:
+        s["transcript"] = await part._transcripts(s["calls"]) or s.get("transcript") or []
+    s.pop("evaluation", None)
+    part.evaluate_session(s)
+    agent_sessions.save(s)
+    if not s.get("evaluation"):
+        raise HTTPException(422, "Couldn't evaluate: " + "; ".join((s.get("evaluation_error") or {}).get("problems") or ["unknown"]))
+    return {"ok": True}
+
+
+class ReviewBody(BaseModel):
+    decision: str = Field(default="", max_length=40)
+    notes: str = Field(default="", max_length=5000)
+
+
+@router.put("/agents/{agent_id}/attempts/{attempt_id}/review")
+def review(agent_id: str, attempt_id: str, body: ReviewBody, request: Request) -> dict[str, Any]:
+    """The admin's evaluation notes and recommendation for one attempt."""
+    from services.data import agent_sessions
+    from services.security import principal as security
+
+    row, s = _session_of(agent_id, attempt_id, request)
+    allowed = DECISIONS.get(_purpose(row), DECISIONS["L&D"])
+    if body.decision and body.decision not in allowed:
+        raise HTTPException(422, "Choose one of: " + ", ".join(allowed) + ".")
+    who = security.optional_principal(request)
+    s["review"] = {"decision": body.decision, "notes": body.notes.strip(),
+                   "by": getattr(who, "email", "") or "Admin", "at": time.time()}
+    agent_sessions.save(s)
+    return s["review"]
 
 
 # --------------------------------------------------------------------------- #

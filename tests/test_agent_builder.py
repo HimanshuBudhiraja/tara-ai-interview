@@ -516,7 +516,7 @@ def test_the_open_link_is_off_until_switched_on(client):
     on = client.post(f"{BASE}/agents/{aid}/open-link", json={"enabled": True}).json()
     assert on["enabled"] and on["link"].endswith(on["path"])
     code = on["code"]
-    assert client.post(f"{BASE}/agents/{aid}/publish").json()["open_link"]["code"] == code   # same link on republish
+    assert client.get(f"{BASE}/agents/{aid}").json()["open_link"]["code"] == code
     a, b = TestClient(app), TestClient(app)
     sa = a.post("/api/participant/sign-in", json={"code": code, "name": "A", "email": "a@x.test", "consent": True}).json()["session_id"]
     sb = b.post("/api/participant/sign-in", json={"code": code, "name": "B", "email": "b@x.test", "consent": True}).json()["session_id"]
@@ -811,3 +811,60 @@ def test_proctoring_is_fields_for_the_suite_and_nothing_else(client):
     row = store.load(aid)
     body = rx.web_call_body(row["published"] | {"agent_id": aid}, "agent_x")
     assert "Strict" not in json.dumps(body) and "proctor" not in json.dumps(body).lower()
+
+
+def test_a_published_role_play_is_locked_and_can_be_duplicated(client, monkeypatch):
+    aid, code = _published_invite(client)
+    row = client.get(f"{BASE}/agents/{aid}").json()
+    assert row["locked"] is True
+    body = {k: row[k] for k in ("fields", "agent", "cfg")}
+    for method, path, payload in [("put", f"/agents/{aid}", body), ("post", f"/agents/{aid}/publish", None),
+                                  ("post", f"/agents/{aid}/revise", {"instruction": "tougher"}),
+                                  ("post", f"/agents/{aid}/questions/generate", None),
+                                  ("post", f"/agents/{aid}/skills/draft", {"names": ["x"]})]:
+        r = getattr(client, method)(BASE + path, json=payload) if payload is not None else getattr(client, method)(BASE + path)
+        assert r.status_code == 409 and r.json()["detail"]["error"] == "locked", path
+    # Still usable: invite, open link, results.
+    assert client.post(f"{BASE}/agents/{aid}/invites", json={"name": "B"}).status_code == 200
+    assert client.post(f"{BASE}/agents/{aid}/open-link", json={"enabled": True}).status_code == 200
+    assert client.get(f"{BASE}/agents/{aid}/sessions").status_code == 200
+    # Duplicate: an editable draft with none of the original's people or results.
+    dup = client.post(f"{BASE}/agents/{aid}/duplicate").json()
+    assert dup["agent_id"] != aid and dup["locked"] is False and dup["published_version"] == 0
+    assert dup["agent"]["title"].endswith("(copy)") and dup["open_link"]["enabled"] is False
+    assert client.put(f"{BASE}/agents/{dup['agent_id']}", json={k: dup[k] for k in ("fields", "agent", "cfg")}).status_code == 200
+
+
+def test_the_report_grid_and_an_admin_review(client, monkeypatch):
+    from services.api import participant as part
+    from services.data import agent_sessions
+    from tests.test_simulation_evaluation import EVIDENCE, JUDGED, TRANSCRIPT, FakeLLM
+
+    aid, code = _published_invite(client)
+    p = TestClient(app)
+    sid = p.post("/api/participant/sign-in", json={"code": code, "name": "Asha", "email": "asha@x.test", "consent": True}).json()["session_id"]
+    s = agent_sessions.load(sid)
+    s["snapshot"]["agent"]["rubric"] = [{"name": r["name"], "anchor": "x", "weight": r["weight"]} for r in s["snapshot"]["agent"]["rubric"]]
+    first = s["snapshot"]["agent"]["rubric"][0]["name"]
+    ev = [dict(e, skill=first) for e in EVIDENCE]
+    s.update(status="complete", transcript=TRANSCRIPT, calls=["c1"], elapsed_sec=310)
+    monkeypatch.setattr(ab, "_complete", FakeLLM(ev, [dict(JUDGED[0], name=first)]))
+    part.evaluate_session(s)
+    agent_sessions.save(s)
+    rep = client.get(f"{BASE}/agents/{aid}/report").json()
+    assert rep["agent"]["purpose"] == "Hiring" and rep["decisions"] == ["Advance", "Hold", "Reject"]
+    row = rep["rows"][0]
+    assert row["name"] == "Asha" and row["status"] == "Evaluated" and row["duration_sec"] == 310
+    assert row["skills"][first] is not None and rep["stats"]["evaluated"] == 1 and rep["stats"]["average"] == row["overall"]
+    assert client.put(f"{BASE}/agents/{aid}/attempts/{sid}/review", json={"decision": "Maybe"}).status_code == 422
+    r = client.put(f"{BASE}/agents/{aid}/attempts/{sid}/review", json={"decision": "Advance", "notes": "Strong discovery."}).json()
+    assert r["decision"] == "Advance" and r["by"]
+    again = client.get(f"{BASE}/agents/{aid}/report").json()
+    assert again["rows"][0]["review"]["notes"] == "Strong discovery." and again["stats"]["decisions"]["Advance"] == 1
+    detail = client.get(f"{BASE}/agents/{aid}/attempts/{sid}/report").json()
+    assert detail["evaluation"]["overall"] == row["overall"] and detail["transcript"]
+    # The AI's recommendation is kept beside the admin's decision, never replaced.
+    assert detail["evaluation"]["recommendation"] and detail["review"]["decision"] == "Advance"
+    # Another agent's attempt is not reachable through this agent.
+    other = client.post(f"{BASE}/agents/{aid}/duplicate").json()["agent_id"]
+    assert client.get(f"{BASE}/agents/{other}/attempts/{sid}/report").status_code == 404

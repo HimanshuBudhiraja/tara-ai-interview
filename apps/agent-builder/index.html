@@ -608,6 +608,56 @@ body{padding-left:var(--rail)}
 .helplist{margin:0;padding:6px 24px 22px 44px;display:flex;flex-direction:column;gap:12px;font-size:14.5px;line-height:1.55;color:var(--ink-2)}
 .imrail a.off{opacity:.55}
 .me-ava{display:inline-flex;align-items:center;justify-content:center}
+
+/* ===== locked (published) role-play ===== */
+.lockbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:14px;border:1px solid #B2DDFF;background:#EFF8FF}
+.lockbar > div{display:flex;flex-direction:column;gap:2px;flex:1 1 320px}
+.lockbar b{font-size:14.5px;color:#175CD3}
+.lockbar span{font-size:13.5px;color:var(--ink-3);line-height:1.45}
+#main3 :is(input,textarea,select):disabled{background:var(--uu-gray-50,#F9FAFB);color:var(--ink-3);cursor:not-allowed}
+#main3 button:disabled{cursor:not-allowed}
+
+/* ===== reports ===== */
+.repmain{padding:24px 32px 64px;display:flex;flex-direction:column;gap:18px;max-width:1600px}
+@media (max-width:760px){.repmain{padding:16px}}
+.reptitle h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em}
+.reptitle p{margin:4px 0 0;color:var(--muted-2);font-size:14px}
+.reptiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.reptile{border:1px solid var(--line);border-radius:12px;background:var(--white);padding:14px 16px}
+.reptile span{display:block;font-size:12.5px;color:var(--muted-2)}
+.reptile b{font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.repskills{display:flex;flex-wrap:wrap;gap:8px}
+.repskills span{font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--white)}
+.repskills b{font-variant-numeric:tabular-nums;margin-left:6px}
+.reptools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.reptools input,.reptools select{height:38px;border:1px solid var(--uu-gray-300,#D0D5DD);border-radius:8px;padding:0 12px;font:inherit;font-size:14px;background:#fff}
+.reptools input{flex:1 1 240px;max-width:360px}
+.repbody{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+.repbody.open{grid-template-columns:minmax(0,1fr) minmax(340px,440px)}
+@media (max-width:1100px){.repbody.open{grid-template-columns:minmax(0,1fr)}}
+.repgridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--white)}
+table.repgrid{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+.repgrid th{position:sticky;top:0;background:var(--uu-gray-50,#F9FAFB);text-align:left;font-size:12px;font-weight:600;color:var(--muted-2);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+.repgrid th[aria-sort="ascending"]::after{content:" ▲";font-size:10px}
+.repgrid th[aria-sort="descending"]::after{content:" ▼";font-size:10px}
+.repgrid td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+.repgrid tbody tr{cursor:pointer}
+.repgrid tbody tr:hover{background:var(--uu-gray-50,#F9FAFB)}
+.repgrid tbody tr[aria-selected="true"]{background:#EFF8FF}
+.repgrid td.num{text-align:right}
+.repgrid td small{display:block;color:var(--muted-2);font-size:12px}
+.repgrid .rec{white-space:normal;min-width:180px;max-width:260px}
+.repgrid .na{color:var(--faint)}
+.decpill{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--uu-gray-100,#F2F4F7);color:var(--uu-gray-700,#344054)}
+.decpill.d0{background:#ECFDF3;color:#067647}.decpill.d1{background:#FFFAEB;color:#B54708}.decpill.d2{background:#FEF3F2;color:#B42318}
+.repdrawer{border:1px solid var(--line);border-radius:12px;background:var(--white);padding:16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:84px;max-height:calc(100vh - 100px);overflow-y:auto}
+.repdrawer h2{margin:0;font-size:17px}
+.repdrawer textarea{width:100%;box-sizing:border-box;min-height:110px;border:1px solid var(--uu-gray-300,#D0D5DD);border-radius:8px;padding:10px 12px;font:inherit;font-size:14px;resize:vertical}
+.repdrawer .airec{font-size:13.5px;padding:10px 12px;border-radius:8px;background:var(--soft-2);color:var(--accent-ink)}
+.repdrawer .meta{font-size:12.5px;color:var(--muted-2)}
+.reptx{display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.5}
+.reptx p{margin:0}.reptx b{font-weight:600}
+.repempty{padding:28px;text-align:center;color:var(--muted-2)}
 </style>
 </head>
 <body>
@@ -744,6 +794,7 @@ body{padding-left:var(--rail)}
     </div>
     <div class="hr" style="gap:10px">
       <button class="tbtn ghost" type="button" id="testBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg>Test agent</button>
+      <button class="tbtn ghost" type="button" id="repBtn" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</button>
       <button class="tbtn ghost" type="button" id="invBtn" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Invite participant</button>
       <button class="pubbtn" type="button" id="pubBtn">Publish</button>
     </div>
@@ -775,7 +826,22 @@ body{padding-left:var(--rail)}
   </div>
 </div>
 
+<!-- ================= SCREEN 4 · REPORTS FOR ONE ROLE-PLAY ================= -->
+<div class="view" id="v4" hidden>
+  <header class="hdr s3hdr">
+    <div class="hl">
+      <button class="s3brand" type="button" data-go="1"><span class="bmark" data-icon="spark16"></span><b>Tara</b></button>
+      <nav class="crumb" aria-label="Breadcrumb"><button type="button" data-go="1">Agents</button><span class="sep" aria-hidden="true">/</span><button type="button" id="repBack">—</button><span class="sep" aria-hidden="true">/</span><b>Reports</b></nav>
+    </div>
+    <div class="hr" style="gap:10px">
+      <button class="tbtn ghost" type="button" id="repRefresh">Refresh</button>
+      <button class="tbtn ghost" type="button" id="repCsv">Export CSV</button>
+    </div>
+  </header>
+  <main class="repmain" id="repMain"></main>
+</div>
+
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003k"></script>
+<script src="/agent-builder/app.js?v=20261003n"></script>
 </body>
 </html>
