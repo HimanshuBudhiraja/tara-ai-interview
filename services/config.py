@@ -153,6 +153,20 @@ LLM_PROBES_ENABLED = (
 # --------------------------------------------------------------------------- #
 RETELL_API_KEY = os.environ.get("RETELL_API_KEY", "").strip()
 RETELL_AGENT_ID = os.environ.get("RETELL_AGENT_ID", "").strip()
+#: The ONE generic role-play agent. Separate from `RETELL_AGENT_ID` because that
+#: agent's LLM is our websocket (the interview path); this one runs a Retell-
+#: hosted prompt filled per call from a scenario's dynamic variables.
+RETELL_ROLEPLAY_AGENT_ID = os.environ.get("RETELL_ROLEPLAY_AGENT_ID", "").strip()
+#: The ONE generic Agent Builder agent: every agent a recruiter builds runs on
+#: it, with per-call dynamic variables and `agent_override` (voice, length,
+#: who speaks first). Its global prompt is section C of
+#: `content/retell/tara_agent_builder_prompt.md`; `tools/retell_agent_builder.py`
+#: checks the live agent against that file and can push it.
+RETELL_AGENT_BUILDER_AGENT_ID = os.environ.get("RETELL_AGENT_BUILDER_AGENT_ID", "").strip()
+RETELL_AGENT_BUILDER_LLM_ID = os.environ.get("RETELL_AGENT_BUILDER_LLM_ID", "").strip()
+#: Set when the one agent is a Retell conversation flow rather than a single
+#: prompt. It changes which per-call override sets who speaks first.
+RETELL_AGENT_BUILDER_FLOW_ID = os.environ.get("RETELL_AGENT_BUILDER_FLOW_ID", "").strip()
 
 
 # --------------------------------------------------------------------------- #
@@ -176,6 +190,13 @@ ENVIRONMENT = _first("TARA_ENV", default="development").lower()
 
 def is_production() -> bool:
     return ENVIRONMENT in {"production", "staging"}
+
+
+#: Local prototype only: lets the Scenario Builder run without a sign-in, so a
+#: person trying it on their own laptop lands on the chat, not a login form.
+#: Off unless set, ignored in production and staging whatever it says, and
+#: honoured only for requests from this machine — see `builder.builder_scope`.
+LOCAL_NO_LOGIN = _flag("TARA_LOCAL_NO_LOGIN", False)
 
 
 # Recruiter routes now require an authenticated session in every deployment.

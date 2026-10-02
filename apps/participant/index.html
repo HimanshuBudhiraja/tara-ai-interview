@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/participant/support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tara · Role-play simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:var(--page,#F1F3F7); }
+  body { font-family:'Manrope', system-ui, sans-serif; -webkit-font-smoothing:antialiased; color:var(--ink,#171B24); }
+  * { box-sizing:border-box; }
+  a { color:var(--blueInk,#2456DB); text-decoration:none; }
+  a:hover { color:#1B41A8; }
+  input, textarea, button { font-family:inherit; }
+  button:focus-visible { outline:2px solid #4C7CF8; outline-offset:2px; }
+  @keyframes taraIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+  @keyframes taraFade { from { opacity:0 } to { opacity:1 } }
+  @keyframes taraPulse { 0%,100% { opacity:.35 } 50% { opacity:1 } }
+  @keyframes taraSpin { to { transform:rotate(360deg) } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration:1ms !important; } }
+</style>
+</helmet>
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="01 Entry" style="min-height:100vh; display:flex; flex-wrap:wrap; background:var(--surface,#FFFFFF);">
+    <section aria-label="Scenario" style="flex:1 1 480px; min-width:0; display:flex; flex-direction:column; padding:32px clamp(24px,5vw,72px); background:var(--hero,linear-gradient(160deg,#EEF3FF 0%,#F4F1FF 100%)); border-right:1px solid rgba(var(--ln),.06);">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+        <div style="display:flex; align-items:center; gap:10px;"><sc-if value="{{ isLight }}"><img src="/participant/assets/tara-logo.png" alt="" width="28" height="28" style="display:block;"></sc-if><sc-if value="{{ isDark }}"><img src="/participant/assets/tara-logo-white.png" alt="" width="28" height="28" style="display:block;"></sc-if><span style="font-size:16px; font-weight:800; letter-spacing:-.025em;">Tara</span></div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink4,#767F93);">{{ refCode }}</span>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:56px 0 40px; max-width:520px; animation:taraIn 450ms cubic-bezier(0,0,.2,1);">
+        <div style="font-size:13px; font-weight:700; color:var(--violetInk,#6741E0);">Role-play simulation</div>
+        <h2 style="font-size:clamp(28px,3vw,36px); font-weight:800; letter-spacing:-.035em; line-height:1.15; margin:10px 0 14px; text-wrap:balance;">How it works</h2>
+        <p style="font-size:15.5px; line-height:1.65; color:var(--ink2,#3B4252); margin:0 0 32px; max-width:48ch; text-wrap:pretty;">You'll interact with Tara in a realistic workplace scenario. Tara will play a defined role/persona and respond dynamically based on the conversation.</p>
+        <ol style="margin:0; padding:0; list-style:none; border-top:1px solid rgba(var(--ln),.08);">
+          <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">1</span><div><div style="font-weight:600;">Sign in</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">Use the name, email and access code from your invitation.</div></div></div>
+          <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">2</span><div><div style="font-weight:600;">Read the scenario</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">You'll see who Tara plays and what the conversation is about.</div></div></div>
+          <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">3</span><div><div style="font-weight:600;">Run a quick setup check</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">We check your microphone, speakers and connection, and your camera if it's needed.</div></div></div>
+          <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">4</span><div><div style="font-weight:600;">Have the conversation</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">Speak naturally, as you would in the real situation. There's no script.</div></div></div>
+          <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">5</span><div><div style="font-weight:600;">Submit</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">Your conversation is sent to the team that invited you.</div></div></div>
+        </ol>
+        <p style="font-size:13px; line-height:1.6; color:var(--ink4,#767F93); margin:20px 0 0; max-width:52ch;">For the best experience, use Chrome or Edge in a quiet place, with headphones if you have them.</p>
+      </div>
+      <div style="font-size:13px; color:var(--ink3,#545C6E);">Powered by <span style="font-weight:700; color:var(--ink,#0D1017);">Tara</span> · iMocha</div>
+    </section>
+
+    <section aria-label="Sign in" style="flex:1 1 440px; min-width:0; display:flex; flex-direction:column; padding:32px clamp(24px,5vw,72px);">
+      <div style="display:flex; justify-content:flex-end; align-items:center; gap:16px; min-height:28px; font-size:13.5px; color:var(--ink4,#767F93);"><span style="display:flex; gap:6px;">Need help?<a href="#support" style="font-weight:600;">Contact support</a></span><button type="button" role="switch" aria-checked="{{ isDark }}" aria-label="Dark mode" onClick="{{ toggleTheme }}" style="display:flex; align-items:center; gap:8px; height:36px; padding:0 11px 0 8px; border-radius:10px; background:transparent; border:1px solid rgba(var(--ln),.12); color:var(--ink2,#3B4252); font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; flex:none;"><span style="position:relative; width:32px; height:18px; border-radius:999px; background:{{ switchTrack }}; transition:background 200ms; flex:none;"><span style="position:absolute; top:2px; left:{{ switchKnob }}; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:left 200ms;"></span></span>Dark mode</button></div>
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; width:100%; max-width:400px; margin:0 auto; padding:48px 0; animation:taraIn 400ms cubic-bezier(0,0,.2,1);">
+        <h1 style="font-size:28px; font-weight:800; letter-spacing:-.03em; line-height:1.15; margin:0 0 8px;">Access your role-play</h1>
+        <p style="font-size:15px; line-height:1.6; color:var(--ink3,#545C6E); margin:0 0 28px;">Use the details from your invitation email.</p>
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <label style="display:flex; flex-direction:column; gap:7px;">
+            <span style="font-size:13px; font-weight:600; color:var(--ink2,#3B4252);">Full name</span>
+            <input value="{{ name }}" onChange="{{ onName }}" placeholder="As shown on your invitation" style="font-size:15px; color:var(--ink,#0D1017); height:46px; padding:0 14px; border-radius:10px; background:var(--surface,#fff); border:1px solid {{ nameBorder }}; outline:none;" style-focus="border-color:#4C7CF8; box-shadow:0 0 0 3px rgba(76,124,248,.24);">
+            <sc-if value="{{ errName }}"><span style="font-size:12.5px; color:var(--redInk,#B42318);">{{ errName }}</span></sc-if>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:7px;">
+            <span style="font-size:13px; font-weight:600; color:var(--ink2,#3B4252);">Email</span>
+            <input value="{{ email }}" onChange="{{ onEmail }}" type="email" placeholder="you@example.com" style="font-size:15px; color:var(--ink,#0D1017); height:46px; padding:0 14px; border-radius:10px; background:var(--surface,#fff); border:1px solid {{ emailBorder }}; outline:none;" style-focus="border-color:#4C7CF8; box-shadow:0 0 0 3px rgba(76,124,248,.24);">
+            <sc-if value="{{ errEmail }}"><span style="font-size:12.5px; color:var(--redInk,#B42318);">{{ errEmail }}</span></sc-if>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:7px;">
+            <span style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; color:var(--ink2,#3B4252);"><span>Access code</span><span style="font-weight:500; color:#A3ABBD;">From your invitation</span></span>
+            <input value="{{ code }}" onChange="{{ onCode }}" placeholder="XX-0000-XX" style="font-size:15px; font-family:'JetBrains Mono',monospace; letter-spacing:.06em; color:var(--ink,#0D1017); height:46px; padding:0 14px; border-radius:10px; background:var(--surface,#fff); border:1px solid {{ codeBorder }}; outline:none;" style-focus="border-color:#4C7CF8; box-shadow:0 0 0 3px rgba(76,124,248,.24);">
+            <sc-if value="{{ errCode }}"><span style="font-size:12.5px; color:var(--redInk,#B42318);">{{ errCode }}</span></sc-if>
+          </label>
+          <div onClick="{{ toggleConsent }}" style="display:flex; gap:12px; cursor:pointer;">
+            <span style="width:18px; height:18px; margin-top:2px; border-radius:5px; flex:none; display:flex; align-items:center; justify-content:center; background:{{ consentBg }}; border:1.5px solid {{ consentBorder }};">
+              <sc-if value="{{ consent }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4 10-10"></path></svg></sc-if>
+            </span>
+            <span style="font-size:13px; line-height:1.55; color:var(--ink3,#545C6E);">{{ consentText }} <a href="#privacy" style="font-weight:600;">Privacy notice</a></span>
+          </div>
+          <sc-if value="{{ errConsent }}"><span style="font-size:12.5px; color:var(--redInk,#B42318); margin-top:-8px;">{{ errConsent }}</span></sc-if>
+          <button type="button" onClick="{{ submitLogin }}" style="display:flex; align-items:center; justify-content:center; gap:9px; width:100%; height:48px; margin-top:4px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(135deg,#4C7CF8,#1B3FB0); border:none; border-radius:10px; cursor:pointer; box-shadow:0 8px 20px -10px rgba(27,63,176,.7);">
+            <sc-if value="{{ submitting }}"><span style="width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:taraSpin 700ms linear infinite; display:inline-block;"></span></sc-if>{{ loginLabel }}
+          </button>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:12.5px; color:#A3ABBD;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Encrypted session · The conversation is saved as you go</div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isShell }}" hint-placeholder-val="{{ false }}">
+  <div style="min-height:100vh; background:var(--page,#F1F3F7);">
+    <header style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; padding:14px clamp(20px,4vw,40px); background:var(--surface,#FFFFFF); border-bottom:1px solid rgba(var(--ln),.07); position:sticky; top:0; z-index:10;">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        <sc-if value="{{ isLight }}"><img src="/participant/assets/tara-logo.png" alt="" width="28" height="28" style="display:block; flex:none;"></sc-if><sc-if value="{{ isDark }}"><img src="/participant/assets/tara-logo-white.png" alt="" width="28" height="28" style="display:block; flex:none;"></sc-if>
+        <span style="font-size:16px; font-weight:800; letter-spacing:-.025em;">Tara</span>
+        <span style="width:1px; height:18px; background:rgba(var(--ln),.12); margin:0 6px;"></span>
+        <span style="font-size:13.5px; font-weight:600; color:var(--ink3,#545C6E); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ agentTitle }}</span>
+      </div>
+      <nav aria-label="Steps" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <sc-for list="{{ steps }}" as="st" hint-placeholder-count="5">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:{{ st.labelColor }};">
+              <span style="width:20px; height:20px; border-radius:50%; font-size:10.5px; font-weight:700; display:flex; align-items:center; justify-content:center; background:{{ st.circleBg }}; color:{{ st.circleColor }}; border:{{ st.circleBorder }};">
+                <sc-if value="{{ st.done }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4 10-10"></path></svg></sc-if>
+                <sc-if value="{{ st.notDone }}">{{ st.n }}</sc-if>
+              </span>{{ st.label }}
+            </span>
+            <sc-if value="{{ st.notLast }}"><span style="width:16px; height:1px; background:rgba(var(--ln),.14);"></span></sc-if>
+          </div>
+        </sc-for>
+      </nav>
+      <div style="display:flex; align-items:center; gap:10px;"><button type="button" role="switch" aria-checked="{{ isDark }}" aria-label="Dark mode" onClick="{{ toggleTheme }}" style="display:flex; align-items:center; gap:8px; height:36px; padding:0 11px 0 8px; border-radius:10px; background:transparent; border:1px solid rgba(var(--ln),.12); color:var(--ink2,#3B4252); font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; flex:none;"><span style="position:relative; width:32px; height:18px; border-radius:999px; background:{{ switchTrack }}; transition:background 200ms; flex:none;"><span style="position:absolute; top:2px; left:{{ switchKnob }}; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:left 200ms;"></span></span>Dark mode</button><button type="button" onClick="{{ toggleHelp }}" style="display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--ink2,#3B4252); background:var(--surface,#fff); border:1px solid rgba(var(--ln),.14); border-radius:10px; height:36px; padding:0 13px; cursor:pointer;" style-hover="background:var(--subtle,#F8F9FB);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.01"></path></svg>Help</button></div>
+    </header>
+
+    <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ false }}">
+      <main data-screen-label="02 Scenario" style="max-width:1200px; margin:0 auto; padding:48px clamp(20px,4vw,40px) 96px; display:flex; flex-wrap:wrap; gap:40px 56px; align-items:flex-start; animation:taraIn 400ms cubic-bezier(0,0,.2,1);">
+        <div style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column; gap:44px;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:var(--violetInk,#6741E0);">Scenario</div>
+            <h1 style="font-size:clamp(26px,3vw,34px); font-weight:800; letter-spacing:-.035em; line-height:1.15; margin:10px 0 14px;">{{ scenarioLine }}</h1>
+            <p style="font-size:15.5px; line-height:1.7; color:var(--ink2,#3B4252); margin:0; max-width:64ch; text-wrap:pretty;">{{ description }}</p>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); border-radius:14px; overflow:hidden;">
+            <div style="padding:20px 22px; border-right:1px solid rgba(var(--ln),.06);">
+              <div style="font-size:12px; font-weight:700; color:var(--ink4,#767F93); margin-bottom:12px;">You</div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="width:40px; height:40px; border-radius:50%; background:var(--tintB,#EEF3FF); color:var(--blueInk,#1B3FB0); font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; flex:none;">{{ initials }}</span>
+                <div><div style="font-size:15px; font-weight:700;">{{ youRole }}</div><div style="font-size:13px; color:var(--ink4,#767F93);">{{ youSub }}</div></div>
+              </div>
+              <p style="font-size:13.5px; line-height:1.6; color:var(--ink3,#545C6E); margin:14px 0 0;">{{ youGoal }}</p>
+            </div>
+            <div style="padding:20px 22px;">
+              <div style="font-size:12px; font-weight:700; color:var(--ink4,#767F93); margin-bottom:12px;">Persona Tara will play</div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="width:40px; height:40px; border-radius:50%; background:var(--tintP,#F4F1FF); color:var(--violetInk,#6741E0); font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; flex:none;">PR</span>
+                <div><div style="font-size:15px; font-weight:700;">{{ personaName }}</div><div style="font-size:13px; color:var(--ink4,#767F93);">{{ personaRole }}</div></div>
+              </div>
+              <p style="font-size:13.5px; line-height:1.6; color:var(--ink3,#545C6E); margin:14px 0 0;">{{ personaDesc }}</p>
+            </div>
+          </div>
+
+          <section>
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding-bottom:12px; border-bottom:1px solid rgba(var(--ln),.1);"><h2 style="font-size:16px; font-weight:700; letter-spacing:-.01em; margin:0;">Skill coverage</h2></div>
+            <p style="font-size:14px; line-height:1.6; color:var(--ink3,#545C6E); margin:14px 0 8px; max-width:64ch;">This role-play is designed to assess the skills most relevant to the scenario. The conversation will naturally explore these skills through the interaction.</p>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:0 32px;">
+              <sc-for list="{{ skills }}" as="sk" hint-placeholder-count="5">
+                <div style="display:flex; gap:12px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.06);">
+                  <span style="width:8px; height:8px; border-radius:50%; background:{{ sk.color }}; margin-top:7px; flex:none;"></span>
+                  <div><div style="font-size:14.5px; font-weight:700;">{{ sk.name }}</div><div style="font-size:13px; color:var(--ink4,#767F93); line-height:1.5; margin-top:2px;">{{ sk.desc }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <sc-if value="{{ hasRefs }}" hint-placeholder-val="{{ false }}"><section>
+            <div style="padding-bottom:12px; border-bottom:1px solid rgba(var(--ln),.1);"><h2 style="font-size:16px; font-weight:700; letter-spacing:-.01em; margin:0;">Visual references</h2></div>
+            <p style="font-size:14px; line-height:1.6; color:var(--ink3,#545C6E); margin:14px 0 16px; max-width:64ch;">Some scenarios may include images, graphs, charts or other visual references. Review the information carefully before responding.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <sc-for list="{{ refTypes }}" as="rt" hint-placeholder-count="6">
+                <span style="display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--ink2,#3B4252); background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); border-radius:8px; height:32px; padding:0 11px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#767F93" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M0 0"></path></svg>{{ rt.label }}</span>
+              </sc-for>
+            </div>
+            <p style="font-size:13px; color:var(--ink4,#767F93); margin:14px 0 0;">In this scenario, {{ personaFirst }} will share a document, a screenshot, an image, a table, a chart and a graph. They stay available in the side panel once shared.</p>
+          </section></sc-if>
+        </div>
+
+        <aside style="flex:1 1 320px; min-width:0; position:sticky; top:88px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); border-radius:14px;">
+          <div style="padding:20px 22px 4px; font-size:15px; font-weight:700;">Before you start</div>
+          <dl style="margin:0; padding:0 22px;">
+            <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Conversation language</dt><dd style="margin:0; font-weight:600;">English</dd></div>
+            <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Estimated duration</dt><dd style="margin:0; font-weight:600;">{{ durationShort }}</dd></div>
+            <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; font-size:14px;"><dt style="color:var(--ink4,#767F93);">Format</dt><dd style="margin:0; font-weight:600;">{{ formatLabel }}</dd></div>
+          </dl>
+          <div style="margin:6px 22px 0; padding:16px; border-radius:12px; background:var(--subtle,#F8F9FB); border:1px solid rgba(var(--ln),.06);">
+            <div style="font-size:14px; font-weight:700;">How would you like Tara to speak?</div>
+            <div style="font-size:12.5px; color:var(--ink4,#767F93); margin:3px 0 12px;">A comfort setting, applied when the conversation starts.</div>
+            <div role="radiogroup" aria-label="Rate of speech" style="display:grid; grid-template-columns:repeat(3,1fr); padding:3px; border-radius:10px; background:rgba(var(--ln),.06);">
+              <sc-for list="{{ speeds }}" as="sp" hint-placeholder-count="3">
+                <button type="button" role="radio" aria-checked="{{ sp.sel }}" onClick="{{ sp.on }}" style="height:34px; font-size:13px; font-weight:600; border:none; border-radius:8px; cursor:pointer; background:{{ sp.bg }}; color:{{ sp.color }}; box-shadow:{{ sp.shadow }}; transition:all 150ms;">{{ sp.label }}</button>
+              </sc-for>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; min-height:24px;">
+              <button type="button" onClick="{{ playSample }}" style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--blueInk,#2456DB); background:transparent; border:none; padding:0; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg>{{ sampleLabel }}</button>
+              <div style="width:96px;">{{ sampleWave }}</div>
+            </div>
+          </div>
+          <div style="margin:12px 22px 0;">{{ slotPicker }}</div>
+          <div style="padding:20px 22px 22px;">
+            <button type="button" onClick="{{ startRoleplay }}" aria-disabled="{{ startBlocked }}" style="display:flex; align-items:center; justify-content:center; gap:9px; width:100%; height:48px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(135deg,#4C7CF8,#1B3FB0); border:none; border-radius:10px; cursor:pointer; opacity:{{ startOpacity }}; box-shadow:0 8px 20px -10px rgba(27,63,176,.7);">{{ startLabel }}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+            <p style="font-size:12.5px; color:var(--ink4,#767F93); text-align:center; margin:10px 0 0;">{{ startHint }}</p>
+          </div>
+        </aside>
+      </main>
+    </sc-if>
+
+    <sc-if value="{{ isCheck }}" hint-placeholder-val="{{ false }}">
+      <main data-screen-label="03 Setup check" style="max-width:1120px; margin:0 auto; padding:48px clamp(20px,4vw,40px) 96px; animation:taraIn 400ms cubic-bezier(0,0,.2,1);">
+        <h1 style="font-size:clamp(24px,2.8vw,30px); font-weight:800; letter-spacing:-.03em; line-height:1.15; margin:0 0 8px;">Setup check</h1>
+        <p style="font-size:15px; line-height:1.6; color:var(--ink3,#545C6E); margin:0 0 28px; max-width:56ch;">Tara needs to hear you clearly for the conversation to flow. If anything needs fixing, we'll show you what to do.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr)); gap:24px; align-items:start;">
+          <div style="background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); border-radius:14px; padding:14px;">
+            <div style="position:relative; aspect-ratio:16/10; border-radius:10px; overflow:hidden; background:{{ camPreviewBg }}; display:flex; align-items:center; justify-content:center;">
+              <sc-if value="{{ camLive }}">
+                <div style="position:absolute; inset:0;">{{ camVideo }}</div>
+                <span style="position:absolute; top:10px; left:10px; display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:#F8F9FB; background:rgba(13,16,23,.55); border-radius:999px; padding:3px 9px;"><span style="width:6px; height:6px; border-radius:50%; background:#12B76A;"></span>Camera on</span>
+              </sc-if>
+              <sc-if value="{{ camNotLive }}"><span style="font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink4,#767F93);">{{ camPlaceholder }}</span></sc-if>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:14px 4px 4px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#545C6E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+              <div style="flex:1; min-width:0;">{{ micWave }}</div>
+              <span style="font-size:12.5px; font-weight:600; color:{{ micMeterColor }}; white-space:nowrap;">{{ micMeterLabel }}</span>
+            </div>
+            <div style="display:flex; gap:8px; padding:10px 4px 2px; flex-wrap:wrap;">
+              <button type="button" onClick="{{ testMic }}" style="font-size:13px; font-weight:600; color:var(--ink,#0D1017); background:var(--surface,#fff); border:1px solid rgba(var(--ln),.14); border-radius:10px; height:36px; padding:0 13px; cursor:pointer;" style-hover="background:var(--subtle,#F8F9FB);">{{ testMicLabel }}</button>
+              <button type="button" onClick="{{ testCam }}" style="font-size:13px; font-weight:600; color:var(--ink,#0D1017); background:var(--surface,#fff); border:1px solid rgba(var(--ln),.14); border-radius:10px; height:36px; padding:0 13px; cursor:pointer;" style-hover="background:var(--subtle,#F8F9FB);">{{ testCamLabel }}</button>
+            </div>
+          </div>
+          <div style="background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); border-radius:14px; overflow:hidden;">
+            <sc-for list="{{ checkRows }}" as="ck" hint-placeholder-count="5">
+              <div style="display:flex; align-items:center; gap:14px; padding:16px 20px; border-bottom:1px solid rgba(var(--ln),.06);">
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <span style="font-size:14.5px; font-weight:700;">{{ ck.name }}</span>
+                    <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:{{ ck.badgeColor }}; background:{{ ck.badgeBg }}; border:1px solid {{ ck.badgeBorder }}; border-radius:999px; padding:2px 9px;">
+                      <sc-if value="{{ ck.isChecking }}"><span style="width:9px; height:9px; border-radius:50%; border:1.5px solid rgba(84,92,110,.3); border-top-color:#545C6E; animation:taraSpin 700ms linear infinite; display:inline-block;"></span></sc-if>
+                      <sc-if value="{{ ck.isReady }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4 10-10"></path></svg></sc-if>{{ ck.badge }}
+                    </span>
+                  </div>
+                  <div style="font-size:13px; color:var(--ink4,#767F93); margin-top:4px; line-height:1.5;">{{ ck.msg }}</div>
+                </div>
+                <sc-if value="{{ ck.hasAction }}"><button type="button" onClick="{{ ck.onAction }}" style="font-size:13px; font-weight:600; color:{{ ck.actionColor }}; background:{{ ck.actionBg }}; border:1px solid {{ ck.actionBorder }}; border-radius:9px; height:34px; padding:0 12px; cursor:pointer; white-space:nowrap; flex:none;">{{ ck.action }}</button></sc-if>
+              </div>
+            </sc-for>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:18px 20px; background:var(--subtle,#F8F9FB);">
+              <span style="font-size:13.5px; font-weight:600; color:{{ checkSummaryColor }};">{{ checkSummary }}</span>
+              <button type="button" onClick="{{ continueFromCheck }}" disabled="{{ checkBlocked }}" style="font-size:14.5px; font-weight:700; color:#fff; background:linear-gradient(135deg,#4C7CF8,#1B3FB0); border:none; border-radius:10px; height:44px; padding:0 18px; cursor:pointer; opacity:{{ checkBtnOpacity }};">{{ continueLabel }}</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </sc-if>
+
+    <sc-if value="{{ isComplete }}" hint-placeholder-val="{{ false }}">
+      <main data-screen-label="05 Complete + feedback" style="display:flex; flex-wrap:wrap; min-height:calc(100vh - 65px);">
+        <section style="flex:1 1 440px; min-width:0; padding:56px clamp(24px,5vw,72px) 80px; display:flex; justify-content:flex-end; animation:taraIn 400ms cubic-bezier(0,0,.2,1);">
+          <div style="width:100%; max-width:500px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="width:26px; height:26px; border-radius:50%; background:#12B76A; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4 10-10"></path></svg></span>
+              <span style="font-size:13px; font-weight:700; color:var(--greenInk,#05603A);">Conversation submitted</span>
+            </div>
+            <h1 style="font-size:clamp(26px,3vw,34px); font-weight:800; letter-spacing:-.035em; line-height:1.12; margin:18px 0 10px;">Role-play completed</h1>
+            <p style="font-size:15.5px; line-height:1.65; color:var(--ink3,#545C6E); margin:0 0 28px; max-width:46ch;">{{ completeLead }}</p>
+            <dl style="margin:0; border-top:1px solid rgba(var(--ln),.1);">
+              <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Scenario</dt><dd style="margin:0; font-weight:600; text-align:right;">{{ scenarioLine }}</dd></div>
+              <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Tara played</dt><dd style="margin:0; font-weight:600; text-align:right;">{{ personaFull }}</dd></div>
+              <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Conversation length</dt><dd style="margin:0; font-weight:600;">{{ durationLabel }}</dd></div>
+              <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Submitted</dt><dd style="margin:0; font-weight:600;">{{ submittedAt }}</dd></div>
+              <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Reference</dt><dd style="margin:0; font-family:'JetBrains Mono',monospace; font-size:13px;">{{ refCode }}</dd></div>
+            </dl>
+            <h2 style="font-size:15px; font-weight:700; margin:32px 0 12px;">Skills this conversation explored</h2>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <sc-for list="{{ skills }}" as="sk" hint-placeholder-count="5"><span style="display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--ink2,#3B4252); background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); border-radius:8px; height:30px; padding:0 10px;"><span style="width:7px; height:7px; border-radius:50%; background:{{ sk.color }};"></span>{{ sk.name }}</span></sc-for>
+            </div>
+            <h2 style="font-size:15px; font-weight:700; margin:32px 0 4px;">What happens next</h2>
+            <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--blueInk,#2456DB); padding-top:2px;">01</span><div><strong style="color:var(--ink,#0D1017);">{{ orgName }} reviews your conversation</strong> with {{ personaFirst }}.</div></div>
+            <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--blueInk,#2456DB); padding-top:2px;">02</span><div><strong style="color:var(--ink,#0D1017);">You'll hear from them by email</strong> at {{ email }}.</div></div>
+            <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--greenInk,#05603A); padding-top:2px;">—</span><div><strong style="color:var(--ink,#0D1017);">Nothing else is needed from you.</strong> It's safe to close this window.</div></div>
+          </div>
+        </section>
+        <section aria-label="Feedback" style="flex:1 1 440px; min-width:0; padding:56px clamp(24px,5vw,72px) 80px; background:var(--surface,#FFFFFF); border-left:1px solid rgba(var(--ln),.07);">
+          <div style="width:100%; max-width:500px;">
+            <sc-if value="{{ fbNotDone }}">
+              <div style="animation:taraIn 400ms cubic-bezier(0,0,.2,1);">
+                <div style="font-size:12.5px; font-weight:600; color:#A3ABBD;">Optional · under a minute</div>
+                <h2 style="font-size:clamp(22px,2.6vw,28px); font-weight:800; letter-spacing:-.03em; line-height:1.15; margin:12px 0 26px;">How was the conversation?</h2>
+                <div style="padding-bottom:22px; border-bottom:1px solid rgba(var(--ln),.07);">
+                  <div style="display:flex; justify-content:space-between; gap:12px; margin-bottom:10px;"><span style="font-size:14px; font-weight:700;">Overall experience</span><span style="font-size:13px; font-weight:600; color:var(--blueInk,#2456DB);">{{ ratingLabel }}</span></div>
+                  <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px;">
+                    <sc-for list="{{ ratings }}" as="r" hint-placeholder-count="5"><button type="button" onClick="{{ r.onClick }}" aria-label="{{ r.label }}" style="height:44px; font-size:15px; font-weight:700; border-radius:10px; cursor:pointer; background:{{ r.bg }}; color:{{ r.color }}; border:1px solid {{ r.border }};">{{ r.n }}</button></sc-for>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; font-size:12px; color:#A3ABBD; margin-top:7px;"><span>Poor</span><span>Excellent</span></div>
+                </div>
+                <sc-for list="{{ fbQuestions }}" as="fq" hint-placeholder-count="4">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px 0; border-bottom:1px solid rgba(var(--ln),.07);">
+                    <span style="font-size:14px; font-weight:600; color:var(--ink2,#3B4252);">{{ fq.q }}</span>
+                    <div style="display:inline-flex; padding:3px; border-radius:10px; background:rgba(var(--ln),.05);">
+                      <sc-for list="{{ fq.opts }}" as="op" hint-placeholder-count="3"><button type="button" onClick="{{ op.onClick }}" style="font-size:13px; font-weight:600; padding:6px 12px; border-radius:8px; border:none; cursor:pointer; background:{{ op.bg }}; color:{{ op.color }}; box-shadow:{{ op.shadow }};">{{ op.label }}</button></sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+                <label style="display:flex; flex-direction:column; gap:8px; padding-top:18px;">
+                  <span style="font-size:14px; font-weight:600; color:var(--ink2,#3B4252);">Anything else? <span style="font-weight:500; color:#A3ABBD;">Optional</span></span>
+                  <textarea value="{{ comment }}" onChange="{{ onComment }}" rows="3" placeholder="What worked, or what could be better" style="font-size:14.5px; color:var(--ink,#0D1017); padding:12px 14px; border-radius:10px; background:var(--surface,#fff); border:1px solid rgba(var(--ln),.14); outline:none; resize:vertical; line-height:1.5;" style-focus="border-color:#4C7CF8; box-shadow:0 0 0 3px rgba(76,124,248,.24);"></textarea>
+                </label>
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:22px;">
+                  <button type="button" onClick="{{ submitFeedback }}" disabled="{{ fbBlocked }}" style="display:flex; align-items:center; gap:9px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(135deg,#4C7CF8,#1B3FB0); border:none; border-radius:10px; height:46px; padding:0 20px; cursor:pointer; opacity:{{ fbBtnOpacity }};"><sc-if value="{{ fbSubmitting }}"><span style="width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:taraSpin 700ms linear infinite; display:inline-block;"></span></sc-if>{{ fbLabel }}</button>
+                  <span style="font-size:13px; color:var(--ink4,#767F93);">{{ fbHint }}</span>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ fbDone }}">
+              <div data-screen-label="06 Feedback submitted" style="animation:taraIn 400ms cubic-bezier(0,0,.2,1);">
+                <div style="font-size:13px; font-weight:700; color:var(--greenInk,#05603A);">Feedback received</div>
+                <h2 style="font-size:clamp(22px,2.6vw,28px); font-weight:800; letter-spacing:-.03em; margin:12px 0 12px;">Thanks, {{ firstName }}</h2>
+                <p style="font-size:15px; line-height:1.65; color:var(--ink3,#545C6E); margin:0 0 24px; max-width:42ch;">Your feedback helps us make these conversations better. It isn't shared with {{ orgLower }}.</p>
+                <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-top:1px solid rgba(var(--ln),.1); border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><span style="color:var(--ink4,#767F93);">Your rating</span><span style="font-weight:600;">{{ ratingSummary }}</span></div>
+                <p style="font-size:14px; color:var(--ink4,#767F93); margin:24px 0 0;">You're all done. You can close this window.</p>
+              </div>
+            </sc-if>
+          </div>
+        </section>
+      </main>
+    </sc-if>
+  </div>
+</sc-if>
+
+
+<sc-if value="{{ isLive }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="04 Role-play" style="height:100vh; display:flex; flex-direction:column; background:var(--page,#F1F3F7); color:var(--ink,#0D1017);">
+    <header style="flex:none; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:20px; height:64px; padding:0 clamp(16px,2.5vw,28px); background:var(--surface,#FFFFFF); border-bottom:1px solid rgba(var(--ln),.07);">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        <sc-if value="{{ isLight }}"><img src="/participant/assets/tara-logo.png" alt="" width="26" height="26" style="display:block; flex:none;"></sc-if><sc-if value="{{ isDark }}"><img src="/participant/assets/tara-logo-white.png" alt="" width="26" height="26" style="display:block; flex:none;"></sc-if>
+        <span style="font-size:15px; font-weight:800; letter-spacing:-.025em;">Tara</span>
+        <span style="width:1px; height:18px; background:rgba(var(--ln),.12); margin:0 4px; flex:none;"></span>
+        <span style="font-size:13.5px; font-weight:600; color:var(--ink3,#545C6E); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:{{ headerTitleDisplay }};">{{ scenarioLine }}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="display:flex; flex-direction:column; gap:6px; width:clamp(160px,22vw,280px);">
+          <div style="display:flex; justify-content:space-between; gap:10px; font-size:12px;"><span style="font-weight:700; color:var(--ink,#0D1017);">{{ stageLabel }}</span><span style="font-family:'JetBrains Mono',monospace; color:var(--ink4,#767F93);">{{ progressPct }}</span></div>
+          <div role="progressbar" aria-label="Conversation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progressNum }}" style="position:relative; height:6px; border-radius:999px; background:var(--track,#E4E7EE);">
+            <div style="height:100%; width:{{ progressPct }}; border-radius:999px; background:linear-gradient(90deg,#4C7CF8,#7C5CFC); transition:width 600ms cubic-bezier(.2,0,0,1);"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; min-width:0;">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink3,#545C6E); white-space:nowrap; display:{{ liveTimeDisplay }};">{{ elapsed }} · {{ remaining }}</span>
+        <button type="button" role="switch" aria-checked="{{ isDark }}" aria-label="Dark mode" title="Dark mode" onClick="{{ toggleTheme }}" style="display:flex; align-items:center; gap:8px; height:36px; padding:0 8px; width:48px; justify-content:center; border-radius:10px; background:transparent; border:1px solid rgba(var(--ln),.12); color:var(--ink2,#3B4252); font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; flex:none;"><span style="position:relative; width:32px; height:18px; border-radius:999px; background:{{ switchTrack }}; transition:background 200ms; flex:none;"><span style="position:absolute; top:2px; left:{{ switchKnob }}; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:left 200ms;"></span></span></button>
+        <button type="button" onClick="{{ askEnd }}" style="font-size:13px; font-weight:600; color:var(--redInk,#B42318); background:var(--surface,#FFFFFF); border:1px solid rgba(240,68,56,.3); border-radius:10px; height:36px; padding:0 13px; cursor:pointer; white-space:nowrap;" style-hover="background:var(--tintR,#FEF3F2);">End conversation</button>
+      </div>
+    </header>
+
+    <div style="flex:1; min-height:0; display:flex;">
+      <section style="flex:7 1 0; min-width:0; min-height:0; overflow-y:auto; display:flex; flex-direction:column; align-items:center; padding:12px clamp(20px,4vw,48px) 16px; position:relative; background:radial-gradient(60% 50% at 50% 28%, rgba(92,123,249,.13), transparent 70%), radial-gradient(40% 40% at 62% 22%, rgba(154,107,255,.09), transparent 70%);">
+        <div style="position:absolute; top:14px; right:clamp(14px,2.5vw,28px); width:124px; aspect-ratio:3/2; border-radius:12px; overflow:hidden; background:repeating-linear-gradient(135deg, rgba(var(--ln),.03) 0 8px, rgba(var(--ln),.07) 8px 16px); border:1px solid rgba(var(--ln),.12); display:flex; align-items:center; justify-content:center; z-index:2;">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink4,#767F93);">camera</span>
+          <span style="position:absolute; left:6px; bottom:6px; display:flex; align-items:center; gap:4px; font-size:10.5px; font-weight:600; color:#F8F9FB; background:rgba(13,16,23,.6); border-radius:999px; padding:2px 7px;">{{ firstName }}</span>
+        </div>
+
+        <div style="flex:1 0 auto; width:100%; max-width:820px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:clamp(4px,1.5vh,24px) 0 clamp(8px,2vh,20px);">
+          <div style="width:{{ orbSize }}; max-width:50%; flex:none; transition:width 400ms cubic-bezier(.2,0,0,1);">{{ orb }}</div>
+          <div role="status" aria-live="polite" style="display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink2,#3B4252); padding:6px 14px; border-radius:999px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.1); margin-top:6px;">
+            <span style="width:7px; height:7px; border-radius:50%; background:{{ statusDot }}; animation:taraPulse 1.4s ease-in-out infinite;"></span>{{ statusLabel }}
+          </div>
+
+          <sc-if value="{{ isReady }}">
+            <div style="font-size:13px; font-weight:600; color:var(--ink4,#767F93); margin:clamp(14px,3vh,28px) 0 10px;">{{ personaLine }}</div>
+            <h1 style="font-size:clamp(22px,2.8vw,32px); font-weight:800; letter-spacing:-.035em; line-height:1.2; margin:0 0 12px; max-width:24ch; text-wrap:balance;">{{ readyLine }}</h1>
+            <p style="font-size:15px; line-height:1.6; color:var(--ink3,#545C6E); margin:0 0 24px; max-width:46ch;">{{ readyHint }}</p>
+            <button type="button" onClick="{{ beginConversation }}" style="font-size:15px; font-weight:700; color:#fff; background:linear-gradient(135deg,#4C7CF8,#1B3FB0); border:none; border-radius:10px; height:48px; padding:0 24px; cursor:pointer; box-shadow:0 8px 20px -10px rgba(27,63,176,.7);">Start conversation</button>
+          </sc-if>
+
+          <sc-if value="{{ showTaraText }}">
+            <div style="font-size:13px; font-weight:600; color:var(--ink4,#767F93); margin:{{ eyebrowGap }} 0 10px;">{{ stageLabel }} · {{ personaFirst }}, played by Tara</div>
+            <h1 style="font-size:{{ taraFont }}; font-weight:700; letter-spacing:-.03em; line-height:1.3; margin:0; max-width:32ch; text-wrap:pretty;"><span>{{ taraSpoken }}</span><span style="color:var(--mute,#C9CEDA);">{{ taraRest }}</span></h1>
+            <sc-if value="{{ showStageHint }}"><p style="font-size:15px; line-height:1.55; color:var(--ink3,#545C6E); margin:16px 0 0; max-width:48ch;">{{ youHint }}</p></sc-if>
+            <sc-if value="{{ showYouText }}"><p style="font-size:14px; line-height:1.55; color:var(--ink2,#3B4252); margin:10px 0 0; max-width:60ch; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;"><span style="font-weight:700; color:var(--blueInk,#2456DB);">You · </span>{{ youText }}</p></sc-if>
+            <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">{{ chatBox }}</sc-if>
+          </sc-if>
+
+          <sc-if value="{{ showRef }}">
+              <figure style="margin:clamp(12px,2.4vh,22px) auto 0; width:min(620px,100%); text-align:left; border:1px solid rgba(var(--ln),.08); border-radius:12px; overflow:hidden; animation:taraIn 350ms cubic-bezier(0,0,.2,1);">
+                <figcaption style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 14px; background:var(--subtle,#F8F9FB); border-bottom:1px solid rgba(var(--ln),.06); font-size:12.5px;">
+                  <span style="display:flex; align-items:center; gap:8px; min-width:0;"><span style="font-weight:700; color:var(--ink,#0D1017); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ refLabel }}</span><span style="color:#A3ABBD;">{{ refKind }} · shared by {{ personaFirst }}</span></span>
+                  <sc-if value="{{ isPinned }}"><button type="button" onClick="{{ unpin }}" style="font-size:12.5px; font-weight:600; color:var(--blueInk,#2456DB); background:transparent; border:none; cursor:pointer; padding:0; white-space:nowrap;">Close</button></sc-if>
+                </figcaption>
+                <sc-if value="{{ refEmail }}">
+                  <div style="padding:14px 16px; font-size:13px; line-height:1.6; color:var(--ink2,#3B4252);">
+                    <div style="display:flex; flex-wrap:wrap; gap:4px 16px; font-size:12px; color:var(--ink4,#767F93); margin-bottom:8px;"><span><strong style="color:var(--ink2,#3B4252);">From</strong> Dana Whitfield, COO, Northwind</span><span><strong style="color:var(--ink2,#3B4252);">Subject</strong> Renewal requirements</span></div>
+                    <p style="margin:0;">{{ personaFirst }}, our ops team spends most of Monday rebuilding the weekly delivery report from Lumen exports. <span style="background:var(--tintY,#FFFAEB); box-shadow:0 0 0 2px var(--tintY,#FFFAEB);">We need that data flowing into our BI tool automatically.</span> Without it, it's hard to justify renewing at the current price.</p>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ refTable }}">
+                  <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                      <thead><tr style="text-align:left; color:var(--ink4,#767F93); font-size:11.5px;"><th style="padding:8px 16px; font-weight:600;">Initiative</th><th style="padding:8px 12px; font-weight:600;">Team</th><th style="padding:8px 12px; font-weight:600; text-align:right;">Sprints</th><th style="padding:8px 16px; font-weight:600;">Status</th></tr></thead>
+                      <tbody>
+                        <tr style="border-top:1px solid rgba(var(--ln),.06);"><td style="padding:8px 16px; font-weight:600;">Security audit</td><td style="padding:8px 12px; color:var(--ink3,#545C6E);">Platform</td><td style="padding:8px 12px; text-align:right; font-family:'JetBrains Mono',monospace;">3</td><td style="padding:8px 16px; color:var(--redInk,#B42318); font-weight:600;">Required</td></tr>
+                        <tr style="border-top:1px solid rgba(var(--ln),.06); background:var(--tintB,#EEF3FF);"><td style="padding:8px 16px; font-weight:600;">Data pipeline v2</td><td style="padding:8px 12px; color:var(--ink3,#545C6E);">Analytics</td><td style="padding:8px 12px; text-align:right; font-family:'JetBrains Mono',monospace;">4</td><td style="padding:8px 16px; color:var(--blueInk,#1B3FB0); font-weight:600;">In progress</td></tr>
+                        <tr style="border-top:1px solid rgba(var(--ln),.06);"><td style="padding:8px 16px; font-weight:600;">Mobile redesign</td><td style="padding:8px 12px; color:var(--ink3,#545C6E);">Apps</td><td style="padding:8px 12px; text-align:right; font-family:'JetBrains Mono',monospace;">5</td><td style="padding:8px 16px; color:var(--ink3,#545C6E); font-weight:600;">Planned</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ refChart }}">
+                  <div style="padding:14px 16px 12px;">
+                    <div style="display:flex; align-items:flex-end; gap:10px; height:clamp(70px,14vh,120px); border-bottom:1px solid rgba(var(--ln),.1);">
+                      <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%;"><div style="height:29%; background:var(--bar1,#DBE6FE); border-radius:4px 4px 0 0;"></div></div>
+                      <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%;"><div style="height:43%; background:var(--bar1,#DBE6FE); border-radius:4px 4px 0 0;"></div></div>
+                      <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%;"><div style="height:57%; background:#B3C8FD; border-radius:4px 4px 0 0;"></div></div>
+                      <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%;"><div style="height:71%; background:#7FA2FB; border-radius:4px 4px 0 0;"></div></div>
+                      <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%;"><div style="height:100%; background:#3B6FF6; border-radius:4px 4px 0 0;"></div></div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink4,#767F93);"><span style="flex:1; text-align:center;">Jan · 4</span><span style="flex:1; text-align:center;">Feb · 6</span><span style="flex:1; text-align:center;">Mar · 8</span><span style="flex:1; text-align:center;">Apr · 10</span><span style="flex:1; text-align:center; color:var(--blueInk,#1B3FB0); font-weight:500;">May · 14</span></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ refShot }}">
+                  <div style="padding:12px; background:var(--subtle,#F8F9FB);">
+                    <div style="border-radius:8px; overflow:hidden; border:1px solid rgba(var(--ln),.12); background:var(--surface,#FFFFFF); box-shadow:0 6px 16px -10px rgba(13,16,23,.35);">
+                      <div style="display:flex; align-items:center; gap:6px; padding:6px 10px; background:rgba(var(--ln),.05); border-bottom:1px solid rgba(var(--ln),.08);"><span style="width:7px; height:7px; border-radius:50%; background:#F04438;"></span><span style="width:7px; height:7px; border-radius:50%; background:#F79009;"></span><span style="width:7px; height:7px; border-radius:50%; background:#12B76A;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink4,#767F93); margin-left:8px;">app.lumen.io/reports/export</span></div>
+                      <div style="padding:10px 12px; display:flex; flex-direction:column; gap:6px; text-align:left;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><span style="font-size:12px; font-weight:700;">Export data</span><span style="font-size:10.5px; font-weight:600; color:var(--ink4,#767F93); border:1px dashed rgba(var(--ln),.25); border-radius:5px; padding:2px 7px;">Schedule · not available</span></div>
+                        <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px;">
+                          <span style="font-size:10.5px; padding:4px 6px; border-radius:5px; background:var(--tintY,#FFFAEB); border:1px solid rgba(247,144,9,.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">deliveries.csv</span>
+                          <span style="font-size:10.5px; padding:4px 6px; border-radius:5px; background:var(--tintY,#FFFAEB); border:1px solid rgba(247,144,9,.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">routes.csv</span>
+                          <span style="font-size:10.5px; padding:4px 6px; border-radius:5px; background:var(--tintY,#FFFAEB); border:1px solid rgba(247,144,9,.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">drivers.csv</span>
+                          <span style="font-size:10.5px; padding:4px 6px; border-radius:5px; background:var(--tintY,#FFFAEB); border:1px solid rgba(247,144,9,.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">delays.csv</span>
+                          <span style="font-size:10.5px; padding:4px 6px; border-radius:5px; background:var(--tintY,#FFFAEB); border:1px solid rgba(247,144,9,.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">costs.csv</span>
+                          <span style="font-size:10.5px; padding:4px 6px; border-radius:5px; background:var(--tintY,#FFFAEB); border:1px solid rgba(247,144,9,.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">regions.csv</span>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end;"><span style="font-size:10.5px; font-weight:700; color:#fff; background:#1B3FB0; border-radius:5px; padding:3px 10px;">Download</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ refImage }}">
+                  <div style="padding:clamp(10px,2vh,16px) 16px; background:linear-gradient(180deg,#E9ECF2,#DDE1E9);">
+                    <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; align-items:start;">
+                      <span style="font-size:11px; line-height:1.35; font-weight:600; color:#3B4252; background:#FEF0C7; padding:8px; border-radius:2px; transform:rotate(-2deg); box-shadow:0 3px 6px -3px rgba(13,16,23,.35); text-align:left;">Reports every Monday take 3 hours</span>
+                      <span style="font-size:11px; line-height:1.35; font-weight:600; color:#3B4252; background:#FEF0C7; padding:8px; border-radius:2px; transform:rotate(1.5deg); box-shadow:0 3px 6px -3px rgba(13,16,23,.35); text-align:left;">Want data in our BI tool automatically</span>
+                      <span style="font-size:11px; line-height:1.35; font-weight:600; color:#3B4252; background:#DBE6FE; padding:8px; border-radius:2px; transform:rotate(-1deg); box-shadow:0 3px 6px -3px rgba(13,16,23,.35); text-align:left;">Custom fields for regions</span>
+                      <span style="font-size:11px; line-height:1.35; font-weight:600; color:#3B4252; background:#FEF0C7; padding:8px; border-radius:2px; transform:rotate(2deg); box-shadow:0 3px 6px -3px rgba(13,16,23,.35); text-align:left;">Schedule exports weekly</span>
+                      <span style="font-size:11px; line-height:1.35; font-weight:600; color:#3B4252; background:#D1FADF; padding:8px; border-radius:2px; transform:rotate(-1.5deg); box-shadow:0 3px 6px -3px rgba(13,16,23,.35); text-align:left;">Fewer CSV files</span>
+                    </div>
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#767F93; margin-top:10px; text-align:left;">Photo · ops workshop, 12 Aug</div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ refGraph }}">
+                  <div style="padding:12px 16px 10px;">
+                    <div style="position:relative; height:clamp(70px,14vh,120px);">
+                      <div style="position:absolute; inset:0; background:repeating-linear-gradient(180deg, rgba(var(--ln),.07) 0 1px, transparent 1px 25%);"></div>
+                      <svg viewBox="0 0 100 40" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; overflow:visible;">
+                        <polyline points="0,8 16,7 33,9 50,14 66,21 83,27 100,32" fill="none" stroke="#7C5CFC" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
+                        <line x1="50" y1="0" x2="50" y2="40" stroke="#F79009" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"></line>
+                      </svg>
+                      <span style="position:absolute; left:51%; top:2px; font-size:10.5px; font-weight:600; color:var(--ink3,#545C6E); text-align:left;">Team grew 2×</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink4,#767F93);"><span>Mar · 412</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span style="color:var(--violetInk,#6741E0); font-weight:500;">Sep · 236</span></div>
+                  </div>
+                </sc-if>
+              </figure>
+            </sc-if>
+
+          <sc-if value="{{ isNoHear }}">
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:18px; flex-wrap:wrap;">
+              <button type="button" onClick="{{ tryAgain }}" style="font-size:14px; font-weight:700; color:#fff; background:#1B3FB0; border:none; border-radius:10px; height:42px; padding:0 18px; cursor:pointer;">Try again</button>
+              <button type="button" onClick="{{ repeatLast }}" style="font-size:14px; font-weight:600; color:var(--ink,#0D1017); background:var(--surface,#fff); border:1px solid rgba(var(--ln),.14); border-radius:10px; height:42px; padding:0 18px; cursor:pointer;">Ask {{ personaFirst }} to repeat</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isWrap }}">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin:22px auto 0; padding:16px 18px; border-radius:12px; background:var(--tintG,#ECFDF3); border:1px solid rgba(18,183,106,.22); width:min(620px,100%); text-align:left;">
+                <div><div style="font-size:14px; font-weight:700; color:var(--greenInk,#05603A);">The conversation has come to a close</div><div style="font-size:13px; color:var(--greenInk,#05603A); margin-top:2px;">{{ wrapLine }}</div></div>
+                <button type="button" onClick="{{ finishRoleplay }}" style="font-size:14px; font-weight:700; color:#fff; background:#05603A; border:none; border-radius:10px; height:42px; padding:0 18px; cursor:pointer; white-space:nowrap;">Finish role-play</button>
+              </div>
+            </sc-if>
+        </div>
+
+        <div style="flex:none; position:relative; z-index:4; margin-top:8px; display:flex; align-items:center; gap:6px; padding:6px; border-radius:18px; background:var(--subtle,#F8F9FB); border:1px solid rgba(var(--ln),.1); box-shadow:0 18px 40px -22px rgba(13,16,23,.45); max-width:100%; overflow-x:auto;">
+          <button type="button" onClick="{{ toggleMute }}" aria-pressed="{{ muted }}" style="flex:none; display:flex; align-items:center; gap:8px; height:44px; padding:0 14px; border-radius:12px; background:{{ muteBg }}; border:1px solid {{ muteBorder }}; color:{{ muteColor }}; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;"><sc-if value="{{ muted }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M9 9v2a3 3 0 0 0 5.1 2.1M15 9.3V6a3 3 0 0 0-5.7-1.3M19 11a7 7 0 0 1-1.1 3.8M5 11a7 7 0 0 0 11 5.7M12 18v3"></path></svg></sc-if><sc-if value="{{ notMuted }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></sc-if>{{ muteLabel }}</button>
+          <button type="button" onClick="{{ repeatLast }}" style="flex:none; display:flex; align-items:center; gap:8px; height:44px; padding:0 14px; border-radius:12px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.1); color:var(--ink2,#3B4252); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; " style-hover="background:var(--subtle,#F8F9FB);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg>Repeat</button>
+          <button type="button" onClick="{{ cycleSpeed }}" style="flex:none; display:flex; align-items:center; gap:8px; height:44px; padding:0 14px; border-radius:12px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.1); color:var(--ink2,#3B4252); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; " style-hover="background:var(--subtle,#F8F9FB);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg>{{ speedLabel }}</button>
+          <sc-if value="{{ showFinish }}"><button type="button" onClick="{{ finishResponse }}" style="flex:none; display:flex; align-items:center; gap:8px; height:44px; padding:0 18px; font-size:13.5px; font-weight:700; color:#fff; background:linear-gradient(135deg,#4C7CF8,#1B3FB0); border:none; border-radius:12px; cursor:pointer; white-space:nowrap;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4 10-10"></path></svg>Finish response</button></sc-if>
+          <button type="button" onClick="{{ toggleTranscript }}" style="flex:none; display:flex; align-items:center; gap:8px; height:44px; padding:0 14px; border-radius:12px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.1); color:var(--ink2,#3B4252); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; " style-hover="background:var(--subtle,#F8F9FB);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"></path></svg>{{ transcriptBtnLabel }}</button>
+          <button type="button" onClick="{{ toggleHelp }}" style="flex:none; display:flex; align-items:center; gap:8px; height:44px; padding:0 14px; border-radius:12px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.1); color:var(--ink2,#3B4252); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; " style-hover="background:var(--subtle,#F8F9FB);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.01"></path></svg>Help</button>
+          <button type="button" onClick="{{ toggleIssue }}" style="flex:none; display:flex; align-items:center; gap:8px; height:44px; padding:0 14px; border-radius:12px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.1); color:var(--ink2,#3B4252); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; " style-hover="background:var(--subtle,#F8F9FB);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"></path><path d="M12 10v4M12 17v.01"></path></svg>Issue</button>
+        </div>
+        <div style="position:relative; z-index:5; width:0; height:0; align-self:center;"><div style="position:absolute; right:-290px; bottom:64px; width:0;"><sc-if value="{{ issueOpen }}">
+              <div style="position:absolute; right:0; bottom:0; width:290px; border-radius:12px; padding:6px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); box-shadow:0 18px 40px -16px rgba(13,16,23,.3); z-index:6; animation:taraIn 200ms cubic-bezier(0,0,.2,1);">
+                <div style="font-size:12px; font-weight:700; color:var(--ink4,#767F93); padding:9px 10px 5px;">What's happening?</div>
+                <button type="button" onClick="{{ openErr.cantHearTara }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">I can't hear Tara</button>
+                <button type="button" onClick="{{ openErr.cantHearYou }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">Tara can't hear me</button>
+                <button type="button" onClick="{{ openErr.camUnavailable }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">My camera isn't working</button>
+                <button type="button" onClick="{{ openErr.poorNet }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">My connection is slow</button>
+                <div style="height:1px; background:rgba(var(--ln),.07); margin:5px 8px;"></div>
+                <button type="button" onClick="{{ contactSupport }}" style="display:block; width:100%; text-align:left; font-size:13.5px; font-weight:600; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--blueInk,#1B3FB0); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">Something else · Contact support</button>
+              </div>
+            </sc-if></div></div>
+      </section>
+
+      <sc-if value="{{ transcriptOpen }}">
+        <aside aria-label="Conversation details" style="flex:3 1 0; min-width:260px; display:flex; flex-direction:column; background:var(--surface,#FFFFFF); border-left:1px solid rgba(var(--ln),.07);">
+          <div style="flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px 14px; border-bottom:1px solid rgba(var(--ln),.06);">
+            <div role="tablist" aria-label="Side panel" style="display:flex; gap:2px; padding:3px; border-radius:10px; background:var(--page,#F1F3F7);">
+              <button type="button" role="tab" aria-selected="{{ showDetails }}" onClick="{{ pickDetails }}" style="font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:8px; border:none; cursor:pointer; background:{{ detailsTabBg }}; color:{{ detailsTabColor }}; box-shadow:{{ detailsTabShadow }};">Details</button>
+              <button type="button" role="tab" aria-selected="{{ showTranscript }}" onClick="{{ pickTranscript }}" style="font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:8px; border:none; cursor:pointer; background:{{ transcriptTabBg }}; color:{{ transcriptTabColor }}; box-shadow:{{ transcriptTabShadow }};">Transcript</button>
+            </div>
+            <sc-if value="{{ transcriptLive }}"><span style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--blueInk,#2456DB);"><span style="width:6px; height:6px; border-radius:50%; background:#3B6FF6; animation:taraPulse 1.2s ease-in-out infinite;"></span>Live</span></sc-if>
+          </div>
+          <div style="flex:1; min-height:0; display:flex; flex-direction:column; padding:6px 0;">
+            <sc-if value="{{ showDetails }}" hint-placeholder-val="{{ true }}"><div style="flex:1; min-height:0; overflow-y:auto;">
+            <div style="padding:14px 20px; border-bottom:1px solid rgba(var(--ln),.06);">
+              <div style="font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#A3ABBD; margin-bottom:8px;">You're talking with</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="width:34px; height:34px; border-radius:50%; background:var(--tintP,#F4F1FF); color:#6741E0; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; flex:none;">{{ personaInitials }}</span>
+                <div><div style="font-size:13.5px; font-weight:700; color:var(--ink,#171B24);">{{ personaName }}</div><div style="font-size:12px; color:var(--ink4,#767F93);">{{ personaRole }} · played by Tara</div></div>
+              </div>
+            </div>
+            <div style="padding:14px 20px; border-bottom:1px solid rgba(var(--ln),.06);">
+              <div style="font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#A3ABBD; margin-bottom:6px;">Scenario</div>
+              <div style="font-size:13.5px; font-weight:700; color:var(--ink,#171B24);">{{ agentTitle }}</div>
+              <div style="font-size:12.5px; line-height:1.55; color:var(--ink3,#545C6E); margin-top:4px;">{{ scenarioLine }}</div>
+            </div>
+            <div style="padding:14px 20px; border-bottom:1px solid rgba(var(--ln),.06);">
+              <div style="font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#A3ABBD; margin-bottom:8px;">Time</div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink3,#545C6E); padding:3px 0;"><span>Elapsed</span><span style="font-family:'JetBrains Mono',monospace; color:var(--ink,#171B24);">{{ elapsed }}</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink3,#545C6E); padding:3px 0;"><span>Planned length</span><span style="color:var(--ink,#171B24);">{{ durationShort }}</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink3,#545C6E); padding:3px 0;"><span>Remaining</span><span style="color:var(--ink,#171B24);">{{ remaining }}</span></div>
+            </div>
+            <div style="padding:14px 20px; border-bottom:1px solid rgba(var(--ln),.06);">
+              <div style="font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#A3ABBD; margin-bottom:8px;">Skills this conversation explores</div>
+              <sc-for list="{{ skills }}" as="sk" hint-placeholder-count="4">
+                <div style="display:flex; align-items:center; gap:9px; padding:4px 0; font-size:13px; color:var(--ink,#171B24);"><span style="width:7px; height:7px; border-radius:50%; background:{{ sk.color }}; flex:none;"></span>{{ sk.name }}</div>
+              </sc-for>
+            </div>
+            <div style="padding:14px 20px; border-bottom:1px solid rgba(var(--ln),.06);">
+              <div style="font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#A3ABBD; margin-bottom:8px;">Format</div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink3,#545C6E); padding:3px 0;"><span>Type</span><span style="color:var(--ink,#171B24);">{{ formatLabel }}</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink3,#545C6E); padding:3px 0;"><span>Language</span><span style="color:var(--ink,#171B24);">{{ language }}</span></div>
+            </div>
+            <div style="padding:14px 20px;">
+              <div style="font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#A3ABBD; margin-bottom:8px;">Tips</div>
+              <sc-for list="{{ tips }}" as="tp" hint-placeholder-count="3">
+                <div style="display:flex; gap:9px; padding:4px 0; font-size:12.5px; line-height:1.55; color:var(--ink3,#545C6E);"><span style="color:#12B76A; flex:none;">✓</span><span>{{ tp.text }}</span></div>
+              </sc-for>
+            </div>
+          </div></sc-if>
+            <sc-if value="{{ showTranscript }}" hint-placeholder-val="{{ false }}">
+            <div ref="{{ transcriptRef }}" style="flex:1; min-height:0; overflow-y:auto;">
+            <sc-if value="{{ noEntries }}"><p style="font-size:13px; line-height:1.6; color:var(--ink4,#767F93); padding:16px 20px; margin:0;">Everything you and {{ personaFirst }} say will appear here, so you can look back at any point.</p></sc-if>
+            <sc-for list="{{ entries }}" as="en" hint-placeholder-count="2">
+              <div style="padding:12px 20px; background:{{ en.bg }};">
+                <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:4px;">
+                  <span style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:12.5px; font-weight:700; color:{{ en.whoColor }};">{{ en.who }}</span><span style="font-size:11.5px; color:#A3ABBD;">{{ en.sub }}</span><sc-if value="{{ en.isNow }}"><span style="font-size:11px; font-weight:700; color:var(--blueInk,#1B3FB0);">Now</span></sc-if></span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#A3ABBD;">{{ en.time }}</span>
+                </div>
+                <div style="font-size:13.5px; line-height:1.6; color:var(--ink,#171B24);">{{ en.text }}</div>
+              </div>
+            </sc-for>
+            </div>
+            </sc-if>
+          </div>
+        </aside>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ helpOpen }}">
+  <div onClick="{{ toggleHelp }}" style="position:fixed; inset:0; background:rgba(13,16,23,.35); z-index:40; animation:taraFade 200ms;"></div>
+  <aside aria-label="Help" style="position:fixed; top:12px; right:12px; bottom:12px; width:min(380px, calc(100% - 24px)); border-radius:16px; background:var(--surface,#fff); box-shadow:0 30px 60px -26px rgba(13,16,23,.45); z-index:41; display:flex; flex-direction:column; overflow:hidden; animation:taraIn 250ms cubic-bezier(0,0,.2,1);">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 22px 8px;">
+      <div style="font-size:18px; font-weight:700; letter-spacing:-.02em;">Help</div>
+      <button type="button" onClick="{{ toggleHelp }}" aria-label="Close help" style="width:34px; height:34px; border-radius:9px; border:none; background:transparent; color:var(--ink4,#767F93); cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:var(--page,#F1F3F7);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    </div>
+    <sc-if value="{{ isLive }}"><div style="margin:4px 22px 6px; font-size:13px; font-weight:600; color:var(--blueInk,#1B3FB0); background:var(--tintB,#EEF3FF); border-radius:9px; padding:9px 12px;">The conversation is paused while Help is open.</div></sc-if>
+    <div style="flex:1; overflow-y:auto; padding:6px 22px;">
+      <div style="padding:14px 0; border-bottom:1px solid rgba(var(--ln),.06);"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">How does the role-play work?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">Tara plays {{ personaFirst }} and responds to what you say. There's no script to follow. Speak as you would in a real meeting.</div></div>
+      <div style="padding:14px 0; border-bottom:1px solid rgba(var(--ln),.06);"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">When should I speak?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">When the status says "Your turn". Speak naturally; when you pause, Tara knows you have finished and replies.</div></div>
+      <div style="padding:14px 0; border-bottom:1px solid rgba(var(--ln),.06);"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">Can I hear something again?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">Yes. Just ask {{ personaFirst }} to repeat, as you would in a real conversation. Everything said is also in the conversation history.</div></div>
+      <div style="padding:14px 0;"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">What if I get disconnected?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">Select Resume conversation and you rejoin at the same point. If you close the window, sign in again with the same access code.</div></div>
+    </div>
+    <div style="padding:16px 22px; border-top:1px solid rgba(var(--ln),.06);"><button type="button" onClick="{{ contactSupport }}" style="width:100%; font-size:14px; font-weight:600; color:var(--ink,#0D1017); background:var(--surface,#fff); border:1px solid rgba(var(--ln),.14); border-radius:10px; height:42px; cursor:pointer;" style-hover="background:var(--subtle,#F8F9FB);">Contact support</button></div>
+  </aside>
+</sc-if>
+
+<sc-if value="{{ hasError }}">
+  <div style="position:fixed; inset:0; background:rgba(13,16,23,.45); z-index:50; display:flex; align-items:center; justify-content:center; padding:20px; animation:taraFade 200ms;">
+    <div role="alertdialog" aria-labelledby="err-title" style="width:min(480px,100%); border-radius:16px; overflow:hidden; background:var(--surface,#FFFFFF); box-shadow:0 30px 60px -26px rgba(13,16,23,.5); animation:taraIn 250ms cubic-bezier(0,0,.2,1);">
+      <sc-if value="{{ errCompact }}">
+        <div style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px 32px 28px;">
+          <div style="width:88px; height:88px;">{{ errOrb }}</div>
+          <div id="err-title" style="font-size:19px; font-weight:700; letter-spacing:-.02em; margin:14px 0 8px;">{{ err.title }}</div>
+          <p style="font-size:14.5px; line-height:1.55; color:var(--ink3,#545C6E); margin:0; max-width:34ch; text-wrap:pretty;">{{ err.what }}</p>
+          <div style="display:flex; flex-direction:column; gap:8px; width:100%; max-width:280px; margin-top:24px;">
+            <button type="button" onClick="{{ errPrimary }}" style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:14px; font-weight:600; color:#fff; background:linear-gradient(135deg,#4C7CF8,#1B3FB0); border:none; border-radius:10px; height:44px; cursor:pointer;"><sc-if value="{{ recovering }}"><span style="width:13px; height:13px; border-radius:50%; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:taraSpin 700ms linear infinite; display:inline-block;"></span></sc-if>{{ errPrimaryLabel }}</button>
+            <sc-if value="{{ hasSecondary }}"><button type="button" onClick="{{ errSecondary }}" style="font-size:14px; font-weight:600; color:var(--ink,#0D1017); background:transparent; border:1px solid rgba(var(--ln),.14); border-radius:10px; height:44px; cursor:pointer;" style-hover="background:var(--subtle,#F8F9FB);">{{ err.secondary }}</button></sc-if>
+          </div>
+          <button type="button" onClick="{{ contactSupport }}" style="margin-top:14px; font-size:13px; font-weight:600; color:var(--blueInk,#2456DB); background:transparent; border:none; cursor:pointer;">Contact support</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ errFull }}">
+      <div style="padding:24px 26px 4px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+          <span style="width:38px; height:38px; border-radius:10px; background:{{ err.iconBg }}; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ err.iconColor }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"></path><path d="M12 10v4M12 17v.01"></path></svg></span>
+          <div id="err-title-full" style="font-size:18px; font-weight:700; letter-spacing:-.02em;">{{ err.title }}</div>
+        </div>
+        <div style="display:grid; grid-template-columns:120px minmax(0,1fr); gap:12px 16px; font-size:14px; line-height:1.55;">
+          <span style="font-size:12.5px; font-weight:700; color:var(--ink4,#767F93); padding-top:1px;">What happened</span><span style="color:var(--ink2,#3B4252);">{{ err.what }}</span>
+          <span style="font-size:12.5px; font-weight:700; color:var(--ink4,#767F93); padding-top:1px;">What to do</span><span style="color:var(--ink2,#3B4252);">{{ err.todo }}</span>
+          <span style="font-size:12.5px; font-weight:700; color:var(--greenInk,#05603A); padding-top:1px;">Can I continue?</span><span style="color:var(--ink2,#3B4252);">{{ err.cont }}</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:16px 26px; margin-top:20px; background:var(--subtle,#F8F9FB); border-top:1px solid rgba(var(--ln),.06);">
+        <button type="button" onClick="{{ errPrimary }}" style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#fff; background:#1B3FB0; border:none; border-radius:10px; height:40px; padding:0 16px; cursor:pointer;"><sc-if value="{{ recovering }}"><span style="width:13px; height:13px; border-radius:50%; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:taraSpin 700ms linear infinite; display:inline-block;"></span></sc-if>{{ errPrimaryLabel }}</button>
+        <sc-if value="{{ hasSecondary }}"><button type="button" onClick="{{ errSecondary }}" style="font-size:14px; font-weight:600; color:var(--ink,#0D1017); background:var(--surface,#fff); border:1px solid rgba(var(--ln),.14); border-radius:10px; height:40px; padding:0 16px; cursor:pointer;">{{ err.secondary }}</button></sc-if>
+        <button type="button" onClick="{{ contactSupport }}" style="margin-left:auto; font-size:13.5px; font-weight:600; color:var(--blueInk,#2456DB); background:transparent; border:none; padding:0 4px; height:40px; cursor:pointer;">Contact support</button>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ confirmEnd }}">
+  <div style="position:fixed; inset:0; background:rgba(13,16,23,.45); z-index:50; display:flex; align-items:center; justify-content:center; padding:20px; animation:taraFade 200ms;">
+    <div role="alertdialog" style="width:min(440px,100%); border-radius:16px; padding:24px 26px; background:var(--surface,#fff); box-shadow:0 30px 60px -26px rgba(13,16,23,.5); animation:taraIn 250ms cubic-bezier(0,0,.2,1);">
+      <div style="font-size:18px; font-weight:700; letter-spacing:-.02em; margin-bottom:8px;">End the conversation now?</div>
+      <div style="font-size:14px; color:var(--ink3,#545C6E); line-height:1.6; margin-bottom:22px;">{{ endBody }}</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" onClick="{{ cancelEnd }}" style="font-size:14px; font-weight:600; color:#fff; background:#1B3FB0; border:none; border-radius:10px; height:40px; padding:0 16px; cursor:pointer;">Continue conversation</button>
+        <button type="button" onClick="{{ confirmEndNow }}" style="font-size:14px; font-weight:600; color:var(--redInk,#B42318); background:var(--surface,#fff); border:1px solid rgba(240,68,56,.3); border-radius:10px; height:40px; padding:0 16px; cursor:pointer;" style-hover="background:var(--tintR,#FEF3F2);">End and submit</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ toast }}">
+  <div role="status" style="position:fixed; left:50%; top:18px; transform:translateX(-50%); z-index:60; display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:12px; background:#171B24; box-shadow:0 18px 40px -18px rgba(13,16,23,.6); max-width:calc(100% - 32px); animation:taraIn 220ms cubic-bezier(0,0,.2,1);">
+    <span style="width:18px; height:18px; border-radius:50%; background:#12B76A; display:flex; align-items:center; justify-content:center; flex:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4 10-10"></path></svg></span>
+    <span style="font-size:13.5px; font-weight:500; color:#F8F9FB;">{{ toast }}</span>
+  </div>
+</sc-if>
+
+<sc-if value="{{ showNav }}">
+  <div style="position:fixed; left:12px; bottom:12px; z-index:70;">
+    <sc-if value="{{ navOpen }}">
+      <div style="width:300px; max-height:calc(100vh - 80px); overflow-y:auto; margin-bottom:8px; padding:14px; border-radius:14px; background:#171B24; box-shadow:0 24px 48px -20px rgba(0,0,0,.6); color:#F8F9FB;">
+        <div style="font-size:11px; font-weight:700; color:rgba(248,249,251,.5); margin-bottom:8px;">Screens</div>
+        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px;"><sc-for list="{{ navScreens }}" as="ns" hint-placeholder-count="5"><button type="button" onClick="{{ ns.on }}" style="font-size:11.5px; font-weight:600; color:{{ ns.color }}; background:{{ ns.bg }}; border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:4px 10px; cursor:pointer;">{{ ns.label }}</button></sc-for></div>
+        <div style="font-size:11px; font-weight:700; color:rgba(248,249,251,.5); margin-bottom:8px;">Conversation states</div>
+        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px;"><sc-for list="{{ navPhases }}" as="np" hint-placeholder-count="9"><button type="button" onClick="{{ np.on }}" style="font-size:11.5px; font-weight:600; color:{{ np.color }}; background:{{ np.bg }}; border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:4px 10px; cursor:pointer;">{{ np.label }}</button></sc-for></div>
+        <div style="font-size:11px; font-weight:700; color:rgba(248,249,251,.5); margin-bottom:8px;">Errors</div>
+        <div style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px;"><sc-for list="{{ navErrors }}" as="ne" hint-placeholder-count="8"><button type="button" onClick="{{ ne.on }}" style="font-size:11.5px; font-weight:600; color:rgba(248,249,251,.86); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:4px 10px; cursor:pointer;">{{ ne.label }}</button></sc-for></div>
+        <div style="font-size:11px; font-weight:700; color:rgba(248,249,251,.5); margin-bottom:8px;">Setup check</div>
+        <div style="display:flex; flex-wrap:wrap; gap:5px;">
+          <button type="button" onClick="{{ scenarioDefault }}" style="font-size:11.5px; font-weight:600; color:rgba(248,249,251,.86); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:4px 10px; cursor:pointer;">Camera permission</button>
+          <button type="button" onClick="{{ scenarioIssues }}" style="font-size:11.5px; font-weight:600; color:rgba(248,249,251,.86); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:4px 10px; cursor:pointer;">Multiple issues</button>
+          <button type="button" onClick="{{ scenarioOk }}" style="font-size:11.5px; font-weight:600; color:rgba(248,249,251,.86); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:4px 10px; cursor:pointer;">All ready</button>
+        </div>
+      </div>
+    </sc-if>
+    <button type="button" onClick="{{ toggleNav }}" style="display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700; color:#F8F9FB; background:#171B24; border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:7px 13px; cursor:pointer; box-shadow:0 10px 24px -10px rgba(0,0,0,.5);"><span style="width:6px; height:6px; border-radius:50%; background:#7C5CFC;"></span>{{ navToggleLabel }}</button>
+  </div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showPrototypeNav&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;autoAdvance&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Conversation behaviour&quot;},&quot;showContextPanel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Conversation behaviour&quot;}}">
+class Component extends DCLogic {
+  /* Tara participant experience, live.
+   * The screens are the approved design, unchanged. Underneath, every scripted
+   * piece is now real: sign-in checks the access code, the overview shows the
+   * PUBLISHED agent (persona, description, skills, length, format), the setup
+   * check reads the actual microphone, camera, speakers and connection, and the
+   * conversation is a Retell web call on the one Tara agent. Scoring happens on
+   * the server and is never shown here. */
+  static STAGES = ['Opening', 'Conversation', 'Wrap-up'];
+  static SKILL_COLORS = ['#3B6FF6', '#7C5CFC', '#14B8C4', '#12B76A', '#F79009', '#F04438', '#6741E0'];
+  static REFS = { email: { label: '', kind: '' }, shot: { label: '', kind: '' }, image: { label: '', kind: '' }, table: { label: '', kind: '' }, chart: { label: '', kind: '' }, graph: { label: '', kind: '' } };
+  static SPEEDS = { slow: { label: 'Slow', rate: 0.85 }, normal: { label: 'Normal', rate: 1 }, fast: { label: 'Fast', rate: 1.15 } };
+  static SDK = 'https://cdn.jsdelivr.net/npm/retell-client-js-sdk@3/+esm';
+  static KEY = 'tara-participant-session';
+
+  static errs(p, org) {
+    return {
+      micUnavailable: { label: 'Mic unavailable', sev: 'error', title: "Your microphone isn't available", what: "Tara can't find a microphone. It may be unplugged, or another app is using it.", todo: 'Reconnect your microphone or close other apps using it, then try again.', cont: p + " will pick up from the last point. Nothing you've said is lost.", primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: 'Microphone reconnected' },
+      camUnavailable: { label: 'Camera unavailable', sev: 'warn', title: "Your camera isn't available", what: 'Your camera was disconnected, or another app is using it.', todo: 'Reconnect your camera or close other apps using it, then try again.', cont: 'You can also continue with audio only. ' + org + ' will see a note that your camera was off.', primary: 'Try again', pa: 'retry', secondary: 'Continue without camera', sa: 'continue', ok: 'Camera reconnected' },
+      permission: { label: 'Permission issue', sev: 'error', title: 'Microphone access is blocked', what: 'Your browser is blocking Tara from using your microphone.', todo: "Select the lock icon in your browser's address bar, set Microphone to Allow, then try again.", cont: 'The conversation resumes as soon as access is allowed.', primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: 'Microphone access allowed' },
+      poorNet: { label: 'Poor connection', sev: 'warn', title: 'Your connection is unstable', what: 'Your internet speed dropped, so ' + p + "'s replies may be delayed.", todo: 'Move closer to your router or pause other downloads.', cont: 'You can keep going. Everything you say is saved as you go.', primary: 'Keep going', pa: 'continue', secondary: 'Test again', sa: 'check', ok: 'Connection is stable again' },
+      cantHearYou: { label: "Tara can't hear you", sev: 'warn', title: "Tara can't hear you", what: 'No sound is reaching Tara from your microphone.', todo: "Check you're not muted and that the right microphone is selected.", cont: 'Once your audio is back, ' + p + ' will pick up where you left off.', primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: 'Tara can hear you again' },
+      cantHearTara: { label: "Can't hear Tara", sev: 'warn', title: "You can't hear Tara", what: p + "'s voice isn't playing through your speakers or headphones.", todo: 'Turn up your volume and check your output device. Replies are also shown on screen.', cont: 'After a test sound, the conversation carries on.', primary: 'Play test sound', pa: 'tone', secondary: 'Check devices', sa: 'check', ok: 'Audio is working' },
+      interrupted: { label: 'Conversation interrupted', sev: 'error', title: 'The conversation was interrupted', what: 'The connection to Tara dropped unexpectedly.', todo: 'Check your internet connection, then resume.', cont: "You'll rejoin at the same point with " + p + '. Everything so far is saved.', primary: 'Resume conversation', pa: 'resume', secondary: null, sa: null, ok: 'Conversation resumed' },
+      authFail: { label: 'Authentication failed', sev: 'error', pre: true, compact: true, orb: 'alert', title: 'This access code is not valid', what: 'It may have expired or been entered incorrectly. Check your invitation email, or ask ' + org + ' for a new one.', primary: 'Back to sign in', pa: 'toLogin', secondary: null, sa: null, ok: '' },
+      busy: { label: 'Too many users', sev: 'warn', pre: true, compact: true, orb: 'alert', title: 'All sessions are in use', what: 'Please try again in a few minutes. Your progress is safe.', primary: 'Try again', pa: 'waitRetry', secondary: null, sa: null, ok: '' },
+      expired: { label: 'Session expired', sev: 'error', title: 'Your session has expired', what: 'For your security, this session has ended.', todo: 'Sign in again with the access code from your invitation email.', cont: 'The conversation so far is saved.', primary: 'Sign in again', pa: 'login', secondary: null, sa: null, ok: '' }
+    };
+  }
+
+  static hex(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+
+  static Orb = function (props) {
+    const ref = React.useRef(null);
+    const pr = React.useRef(props); pr.current = props;
+    React.useEffect(() => {
+      const c = ref.current; if (!c) return;
+      const ctx = c.getContext('2d'); const S = pr.current.size || 200; const dpr = window.devicePixelRatio || 1;
+      c.width = S * dpr; c.height = S * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const PAL = { ready: ['#5C7BF9', '#9A6BFF'], speaking: ['#5C7BF9', '#9A6BFF'], waiting: ['#3B6FF6', '#93B0FC'], listening: ['#3B6FF6', '#14B8C4'], thinking: ['#7C5CFC', '#B9A7FD'], processing: ['#6741E0', '#9A6BFF'], noHear: ['#F79009', '#FDB022'], alert: ['#F04438', '#F79009'], muted: ['#545C6E', '#A3ABBD'] };
+      const H = Component.hex;
+      let c1 = H('#5C7BF9'), c2 = H('#9A6BFF'), lvl = 0, raf; const t0 = performance.now();
+      const rgba = (a, al) => `rgba(${a[0] | 0},${a[1] | 0},${a[2] | 0},${al})`;
+      const draw = (now) => {
+        const t = (now - t0) / 1000; const p = pr.current;
+        const key = p.muted && (p.phase === 'listening' || p.phase === 'waiting') ? 'muted' : (PAL[p.phase] ? p.phase : 'ready');
+        const tc1 = H(PAL[key][0]), tc2 = H(PAL[key][1]);
+        for (let i = 0; i < 3; i++) { c1[i] += (tc1[i] - c1[i]) * 0.06; c2[i] += (tc2[i] - c2[i]) * 0.06; }
+        let target = 0.05 + 0.03 * Math.sin(t * 1.6);
+        if (key === 'speaking') target = 0.35 + 0.45 * Math.abs(Math.sin(t * 5.3) * Math.sin(t * 2.1 + 1));
+        else if (key === 'listening') target = (0.25 + 0.6 * Math.abs(Math.sin(t * 4.1) * Math.cos(t * 1.7))) * (Math.sin(t * 0.8) > -0.5 ? 1 : 0.25);
+        else if (key === 'waiting') target = 0.1 + 0.05 * Math.sin(t * 2);
+        else if (key === 'thinking') target = 0.12;
+        lvl += (target - lvl) * 0.14;
+        ctx.clearRect(0, 0, S, S);
+        const cx = S / 2, cy = S / 2, R = S * 0.27;
+        const g = ctx.createRadialGradient(cx, cy, R * 0.5, cx, cy, S / 2);
+        g.addColorStop(0, rgba(c2, 0.32 + lvl * 0.3)); g.addColorStop(1, rgba(c2, 0));
+        ctx.fillStyle = g; ctx.fillRect(0, 0, S, S);
+        if (key === 'listening' || key === 'waiting') {
+          for (let i = 0; i < 3; i++) {
+            const f = ((t * 0.45) + i / 3) % 1; const r = R * (1.08 + f * 0.62);
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(c2, (1 - f) * (key === 'listening' ? 0.18 + lvl * 0.5 : 0.16)); ctx.lineWidth = 1.5; ctx.stroke();
+          }
+        }
+        const amp = 0.03 + lvl * 0.12; const N = 96;
+        ctx.beginPath();
+        for (let i = 0; i <= N; i++) {
+          const a = (i / N) * Math.PI * 2;
+          const n = Math.sin(a * 3 + t * 2.2) * 0.5 + Math.sin(a * 5 - t * 1.4) * 0.3 + Math.sin(a * 2 + t * 0.7) * 0.2;
+          const r = R * (1 + amp * n + lvl * 0.06);
+          const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        }
+        ctx.closePath();
+        const rot = t * 0.4;
+        const lg = ctx.createLinearGradient(cx + Math.cos(rot) * R, cy + Math.sin(rot) * R, cx - Math.cos(rot) * R, cy - Math.sin(rot) * R);
+        lg.addColorStop(0, rgba(c1, 1)); lg.addColorStop(1, rgba(c2, 1));
+        ctx.fillStyle = lg; ctx.fill();
+        ctx.save(); ctx.clip();
+        const hl = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.45, 0, cx - R * 0.35, cy - R * 0.45, R * 1.2);
+        hl.addColorStop(0, 'rgba(255,255,255,.55)'); hl.addColorStop(0.5, 'rgba(255,255,255,.08)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = hl; ctx.fillRect(0, 0, S, S); ctx.restore();
+        if (key === 'thinking') {
+          for (let i = 0; i < 3; i++) {
+            const a = t * 1.6 + i * (Math.PI * 2 / 3);
+            ctx.beginPath(); ctx.arc(cx + Math.cos(a) * R * 1.32, cy + Math.sin(a) * R * 1.32, 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = rgba(c2, 0.5 + 0.5 * Math.sin(t * 3 + i)); ctx.fill();
+          }
+        }
+        if (key === 'processing') {
+          ctx.beginPath(); ctx.arc(cx, cy, R * 1.3, t * 3.2, t * 3.2 + Math.PI * 0.65);
+          ctx.strokeStyle = rgba(c2, 0.9); ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke();
+        }
+        raf = requestAnimationFrame(draw);
+      };
+      raf = requestAnimationFrame(draw);
+      return () => cancelAnimationFrame(raf);
+    }, []);
+    const S = props.size || 200;
+    return React.createElement('canvas', { ref, 'aria-hidden': true, style: { width: '100%', maxWidth: S, height: 'auto', aspectRatio: '1', display: 'block', margin: '0 auto' } });
+  };
+
+  /* The wave follows a real level when one is given (the mic test), else animates while active. */
+  static Wave = function (props) {
+    const ref = React.useRef(null);
+    const pr = React.useRef(props); pr.current = props;
+    React.useEffect(() => {
+      let raf; const t0 = performance.now();
+      const f = (now) => {
+        const el = ref.current; if (!el) return;
+        const t = (now - t0) / 1000; const p = pr.current; const H = p.height || 24;
+        const lv = typeof p.level === 'function' ? p.level() : null;
+        Array.from(el.children).forEach((b, i) => {
+          let v = 0.08;
+          if (p.active) v = lv != null ? Math.max(0.08, Math.min(1, lv * (0.6 + 0.4 * Math.abs(Math.sin(t * 6 + i * 0.7))))) : Math.max(0.1, Math.abs(Math.sin(t * 6 + i * 0.6) * Math.sin(t * 2.2 + i * 0.25)) * (0.65 + 0.35 * Math.sin(t * 1.3)));
+          b.style.height = Math.max(3, v * H) + 'px';
+          b.style.background = p.active ? p.color : '#D5D9E2';
+        });
+        raf = requestAnimationFrame(f);
+      };
+      raf = requestAnimationFrame(f);
+      return () => cancelAnimationFrame(raf);
+    }, []);
+    const n = props.bars || 24;
+    return React.createElement('div', { ref, 'aria-hidden': true, style: { display: 'flex', alignItems: 'center', justifyContent: props.align || 'flex-start', gap: 3, height: props.height || 24, overflow: 'hidden' } },
+      Array.from({ length: n }, (_, i) => React.createElement('span', { key: i, style: { width: 3, flex: 'none', borderRadius: 2, height: 3, background: '#D5D9E2' } })));
+  };
+
+  /* Slot picker: days, then times in the participant's own time zone. A full
+   * time can't be picked; the server re-checks every booking anyway. */
+  static SlotPicker = function (props) {
+    const E = React.createElement;
+    const { data, booking, busy, onBook } = props;
+    const [day, setDay] = React.useState(0);
+    const [changing, setChanging] = React.useState(false);
+    const dayKey = (iso) => new Date(iso).toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const dayLabel = (iso) => new Date(iso).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+    const timeLabel = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const card = (kids) => E('div', { style: { padding: 16, borderRadius: 12, background: 'var(--subtle,#F8F9FB)', border: '1px solid rgba(var(--ln),.06)' } }, kids);
+    const head = E('div', { key: 'h' }, E('div', { style: { fontSize: 14, fontWeight: 700 } }, 'Choose your time'),
+      E('div', { style: { fontSize: 12.5, color: 'var(--ink4,#767F93)', margin: '3px 0 12px' } }, 'Each time has a limited number of places so every conversation runs smoothly. Times are shown in your time zone.'));
+    if (booking && !changing) {
+      return card([head, E('div', { key: 'b', style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'var(--surface,#fff)', border: '1px solid rgba(18,183,106,.3)' } },
+        E('div', null, E('div', { style: { fontSize: 13.5, fontWeight: 700, color: '#05603A' } }, 'Booked'),
+          E('div', { style: { fontSize: 13, color: 'var(--ink2,#3B4252)' } }, dayLabel(booking.start) + ', ' + timeLabel(booking.start) + ' · up to ' + booking.minutes + ' min')),
+        E('button', { type: 'button', onClick: () => setChanging(true), style: { fontSize: 13, fontWeight: 600, color: 'var(--blueInk,#2456DB)', background: 'transparent', border: 'none', cursor: 'pointer' } }, 'Change'))]);
+    }
+    if (!data) return card([head, E('div', { key: 'l', style: { fontSize: 13, color: 'var(--ink4,#767F93)' } }, 'Loading times…')]);
+    const days = [];
+    data.slots.forEach((sl) => { const k = dayKey(sl.start); let d = days.find((x) => x.k === k); if (!d) { d = { k, label: dayLabel(sl.start), slots: [] }; days.push(d); } d.slots.push(sl); });
+    if (!days.length) return card([head, E('div', { key: 'n', style: { fontSize: 13, color: 'var(--ink4,#767F93)' } }, 'No times are open right now. Check back later.')]);
+    const cur = days[Math.min(day, days.length - 1)];
+    return card([head,
+      E('div', { key: 'd', role: 'tablist', 'aria-label': 'Day', style: { display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6, marginBottom: 10 } },
+        days.map((d, i) => { const on = d === cur; const free = d.slots.filter((x) => x.left > 0).length;
+          return E('button', { key: d.k, type: 'button', role: 'tab', 'aria-selected': on, onClick: () => setDay(i),
+            style: { flex: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid ' + (on ? 'transparent' : 'rgba(var(--ln),.12)'), background: on ? '#1B3FB0' : 'var(--surface,#fff)', color: on ? '#fff' : 'var(--ink2,#3B4252)', cursor: 'pointer', textAlign: 'left' } },
+            E('div', { style: { fontSize: 12.5, fontWeight: 700 } }, d.label), E('div', { style: { fontSize: 11, opacity: .8 } }, free ? free + ' open' : 'Full')); })),
+      E('div', { key: 't', style: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, maxHeight: 176, overflowY: 'auto' } },
+        cur.slots.map((sl) => { const full = sl.left <= 0; const mine = booking && booking.start === sl.start;
+          return E('button', { key: sl.start, type: 'button', disabled: full || busy, onClick: () => { onBook(sl.start); setChanging(false); },
+            'aria-label': timeLabel(sl.start) + (full ? ', full' : ', ' + sl.left + ' places left'),
+            style: { height: 36, fontSize: 13, fontWeight: 600, borderRadius: 8, cursor: full ? 'not-allowed' : 'pointer', border: '1px solid ' + (mine ? '#1B3FB0' : 'rgba(var(--ln),.12)'),
+              background: mine ? 'var(--tintB,#EEF3FF)' : full ? 'transparent' : 'var(--surface,#fff)', color: full ? '#A3ABBD' : 'var(--ink,#0D1017)', textDecoration: full ? 'line-through' : 'none' } },
+            full ? timeLabel(sl.start) + ' · Full' : timeLabel(sl.start)); })),
+      booking ? E('button', { key: 'c', type: 'button', onClick: () => setChanging(false), style: { marginTop: 10, fontSize: 12.5, fontWeight: 600, color: 'var(--ink3,#545C6E)', background: 'transparent', border: 'none', cursor: 'pointer' } }, 'Keep my current time') : null]);
+  };
+
+  /* Typed reply box, used only when the published agent's format is Chat. */
+  static ChatBox = function (props) {
+    const [text, setText] = React.useState('');
+    const send = () => { const t = text.trim(); if (!t || props.busy) return; props.onSend(t); setText(''); };
+    return React.createElement('div', { style: { display: 'flex', gap: 8, marginTop: 18, maxWidth: 640, width: '100%' } },
+      React.createElement('label', { htmlFor: 'tara-chat', style: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } }, 'Your reply'),
+      React.createElement('textarea', { id: 'tara-chat', rows: 2, value: text, disabled: props.busy, placeholder: props.busy ? props.persona + ' is typing…' : 'Type your reply…',
+        onChange: (e) => setText(e.target.value), onKeyDown: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } },
+        style: { flex: 1, minWidth: 0, resize: 'none', fontSize: 15, lineHeight: 1.5, padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(var(--ln),.16)', background: 'var(--surface,#fff)', color: 'var(--ink,#171B24)', fontFamily: 'inherit' } }),
+      React.createElement('button', { type: 'button', onClick: send, disabled: props.busy || !text.trim(),
+        style: { flex: 'none', height: 44, alignSelf: 'flex-end', padding: '0 18px', fontSize: 13.5, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#4C7CF8,#1B3FB0)', border: 'none', borderRadius: 12, cursor: 'pointer', opacity: props.busy || !text.trim() ? 0.5 : 1 } }, 'Send'));
+  };
+
+  state = {
+    theme: (() => { try { return localStorage.getItem('tara-v5-theme') || 'light'; } catch (e) { return 'light'; } })(),
+    screen: 'login', name: '', email: '', code: (() => { try { return new URLSearchParams(location.search).get('code') || ''; } catch (e) { return ''; } })(),
+    consent: false, errors: {}, submitting: false, v: null, sid: '', pre: null, asideTab: 'details', slotData: null, booking: false, tick: 0,
+    checks: { mic: 'checking', camera: 'checking', speaker: 'checking', network: 'checking', perms: 'checking' }, devLabels: {},
+    micTesting: false, micHeard: false, camLive: false, speakerPlaying: false, returnToLive: false,
+    phase: 'ready', muted: false, elapsed: 0, speed: 'normal', sample: false,
+    rows: [], stamps: [], inCall: false, chatBusy: false,
+    error: null, recovering: false, confirmEnd: false, helpOpen: false, issueOpen: false, toast: null, net: 'good', transcriptOpen: false,
+    rating: 0, fb: {}, comment: '', fbSubmitting: false, fbDone: false, navOpen: false, early: false, submittedAt: ''
+  };
+  transcriptRef = React.createRef();
+  videoRef = React.createRef();
+
+  /* ---------------- plumbing ---------------- */
+  async api(path, method, body) {
+    const r = await fetch('/api/participant' + path, { method: method || 'GET', credentials: 'same-origin',
+      headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    let data = null; try { data = await r.json(); } catch (e) { /* empty */ }
+    if (!r.ok) { const d = data && data.detail; const err = new Error((d && (d.message || (typeof d === 'string' ? d : ''))) || 'Something went wrong.'); err.status = r.status; err.code = d && d.error; throw err; }
+    return data;
+  }
+  sess(path) { return '/session/' + encodeURIComponent(this.state.sid) + (path || ''); }
+  persona() { const v = this.state.v; return v ? v.agent.persona.name : 'Tara'; }
+  org() { const v = this.state.v; return v ? v.org_label : 'the hiring team'; }
+  isChat() { const v = this.state.v; return !!(v && v.call.format === 'Chat'); }
+  cameraUsed() { const v = this.state.v; return !!(v && v.call.camera_used); }
+
+  componentDidMount() {
+    this.groups = {};
+    this.applyTheme();
+    this.onResize = () => {
+      const vw = window.innerWidth; const was = this.state.vw; const next = { vw };
+      if (vw < 1000 && (was === undefined || was >= 1000)) next.transcriptOpen = false;
+      if (vw >= 1000 && was !== undefined && was < 1000) next.transcriptOpen = true;
+      this.setState(next);
+    };
+    this.onResize(); window.addEventListener('resize', this.onResize);
+    this.clock = setInterval(() => {
+      const s = this.state;
+      if (s.screen === 'live' && s.phase !== 'ready' && s.phase !== 'wrapup' && !this.paused()) {
+        const e = s.elapsed + 1; this.setState({ elapsed: e });
+        const v = s.v;
+        // The call cap ends a Hard-time-limit conversation; this keeps the screen honest about it.
+        if (v && v.call.ending === 'Hard time limit' && e >= v.call.cap_minutes * 60 && s.phase !== 'wrapup') this.setPhase('wrapup');
+      }
+    }, 1000);
+    this.onOffline = () => this.setState({ net: 'weak' }); this.onOnline = () => this.setState({ net: 'good' });
+    window.addEventListener('offline', this.onOffline); window.addEventListener('online', this.onOnline);
+    this.ticker = setInterval(() => { if (this.state.screen === 'overview') this.setState({ tick: Date.now() }); }, 15000);
+    this.onLeave = () => this.stopCall();
+    window.addEventListener('pagehide', this.onLeave);
+    this.restore();
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.onResize); window.removeEventListener('offline', this.onOffline); window.removeEventListener('online', this.onOnline);
+    window.removeEventListener('pagehide', this.onLeave);
+    clearInterval(this.clock); clearInterval(this.ticker); Object.keys(this.groups || {}).forEach(g => this.clearGroup(g)); this.stopCall(); this.stopStreams();
+  }
+  async restore() {
+    let sid = '', saved = {};
+    try { saved = JSON.parse(sessionStorage.getItem(Component.KEY) || '{}') || {}; sid = saved.sid || ''; } catch (e) { /* none */ }
+    // A link with a different access code is a different conversation: start at sign-in.
+    if (!sid || (this.state.code && saved.code && saved.code.toUpperCase() !== this.state.code.toUpperCase())) return;
+    try {
+      this.setState({ sid });
+      const v = await this.api('/session/' + encodeURIComponent(sid));
+      this.setState({ v, name: v.participant.name, email: v.participant.email, consent: true, screen: v.status === 'complete' ? 'complete' : 'overview', submittedAt: v.status === 'complete' ? 'Earlier' : '' });
+      if (v.status !== 'complete') this.loadSlots();
+    } catch (e) { try { sessionStorage.removeItem(Component.KEY); } catch (x) { /* ignore */ } this.setState({ sid: '' }); }
+  }
+  applyTheme() {
+    const d = this.state.theme === 'dark'; const r = document.documentElement.style;
+    const V = { page: '#0D1017', surface: '#161A23', subtle: '#1C212C', ink: '#F1F3F7', ink2: '#CFD4E0', ink3: '#A3ABBD', ink4: '#8A93A6', mute: '#4A5163', ln: '255,255,255', track: '#262B37',
+      tintB: 'rgba(76,124,248,.16)', tintP: 'rgba(124,92,252,.18)', tintG: 'rgba(18,183,106,.14)', tintY: 'rgba(247,144,9,.16)', tintR: 'rgba(240,68,56,.14)', bar1: 'rgba(76,124,248,.35)',
+      blueInk: '#93B0FC', violetInk: '#B9A7FD', greenInk: '#6CE9A6', redInk: '#FDA29B', hero: 'linear-gradient(160deg,#141B33 0%,#1B1733 100%)' };
+    Object.keys(V).forEach(k => d ? r.setProperty('--' + k, V[k]) : r.removeProperty('--' + k));
+    if (!d) r.setProperty('--ln', '13,16,23');
+    r.colorScheme = d ? 'dark' : 'light';
+  }
+  componentDidUpdate(pp, ps) {
+    if (!ps) return;
+    const el = this.transcriptRef.current;
+    if (el && (ps.rows !== this.state.rows || ps.phase !== this.state.phase || el.scrollHeight - el.scrollTop - el.clientHeight < 160)) el.scrollTop = el.scrollHeight;
+    const vid = this.videoRef.current;
+    if (vid && this.camStream && vid.srcObject !== this.camStream) { vid.srcObject = this.camStream; vid.play && vid.play().catch(() => {}); }
+  }
+  later(fn, ms, g = 'phase') { this.groups = this.groups || {}; (this.groups[g] = this.groups[g] || []).push(setTimeout(fn, ms)); }
+  clearGroup(g) { ((this.groups || {})[g] || []).forEach(clearTimeout); if (this.groups) this.groups[g] = []; }
+  paused() { const s = this.state; return !!(s.error || s.confirmEnd); }
+  toastMsg(m) { this.clearGroup('toast'); this.setState({ toast: m }); this.later(() => this.setState({ toast: null }), 3000, 'toast'); }
+  setPhase(phase, extra = {}) { this.setState({ phase, issueOpen: false, ...extra }); }
+
+  /* ---------------- sounds ---------------- */
+  tone(kind) {
+    try {
+      const C = window.AudioContext || window.webkitAudioContext; const ctx = new C(); const now = ctx.currentTime;
+      const notes = { 'Phone ring': [[440, 0, .4], [480, 0, .4], [440, .6, 1], [480, .6, 1]], 'Video join': [[523, 0, .18], [659, .16, .36], [784, .32, .6]], 'Doorbell': [[659, 0, .5], [523, .45, 1.1]], test: [[440, 0, .9]] }[kind] || [];
+      notes.forEach(([f, a, b]) => { const o = ctx.createOscillator(); const gn = ctx.createGain(); o.frequency.value = f; o.connect(gn); gn.connect(ctx.destination);
+        gn.gain.setValueAtTime(0.0001, now + a); gn.gain.exponentialRampToValueAtTime(0.15, now + a + 0.03); gn.gain.exponentialRampToValueAtTime(0.0001, now + b); o.start(now + a); o.stop(now + b + 0.05); });
+      setTimeout(() => ctx.close(), 1600);
+      return notes.length ? 1200 : 0;
+    } catch (e) { return 0; }
+  }
+
+  /* ---------------- setup check: the real devices ---------------- */
+  stopStreams() { [this.micStream, this.camStream].forEach(st => st && st.getTracks().forEach(t => t.stop())); this.micStream = this.camStream = null; }
+  async probe(kind) {
+    try {
+      const st = await navigator.mediaDevices.getUserMedia(kind === 'mic' ? { audio: true } : { video: true });
+      if (kind === 'mic') { this.micStream && this.micStream.getTracks().forEach(t => t.stop()); this.micStream = st; }
+      else { this.camStream && this.camStream.getTracks().forEach(t => t.stop()); this.camStream = st; }
+      const label = (st.getTracks()[0] && st.getTracks()[0].label) || '';
+      this.setState(s => ({ devLabels: { ...s.devLabels, [kind]: label } }));
+      return 'ready';
+    } catch (e) {
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) return 'permission';
+      if (e && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError')) return 'failed';
+      return 'attention';
+    }
+  }
+  async runChecks() {
+    this.setState({ checks: { mic: 'checking', camera: this.cameraUsed() ? 'checking' : 'ready', speaker: 'checking', network: 'checking', perms: 'checking' }, camLive: false, micHeard: false });
+    const t0 = performance.now(); let net = 'attention';
+    try { const r = await fetch('/api/health', { cache: 'no-store' }); const ms = performance.now() - t0; net = r.ok && ms < 1500 && navigator.onLine !== false ? 'ready' : 'attention'; this.setState(s => ({ devLabels: { ...s.devLabels, network: 'Stable · ' + Math.round(ms) + ' ms to Tara' } })); } catch (e) { net = 'failed'; }
+    this.setCheck('network', net);
+    const mic = await this.probe('mic'); this.setCheck('mic', mic);
+    let cam = 'ready'; if (this.cameraUsed()) { cam = await this.probe('camera'); this.setCheck('camera', cam); if (cam === 'ready') this.camStream && this.camStream.getTracks().forEach(t => t.stop()); this.camStream = null; }
+    let spk = 'Default speakers';
+    try { const ds = await navigator.mediaDevices.enumerateDevices(); const o = ds.find(d => d.kind === 'audiooutput' && d.label); if (o) spk = o.label; } catch (e) { /* default */ }
+    this.setState(s => ({ devLabels: { ...s.devLabels, speaker: spk } })); this.setCheck('speaker', 'ready');
+    this.setCheck('perms', mic === 'permission' || cam === 'permission' ? 'permission' : 'ready');
+  }
+  setCheck(k, v) { this.setState(s => ({ checks: { ...s.checks, [k]: v } })); }
+  async checkAction(k) {
+    const st = this.state.checks[k];
+    if (st === 'permission' || st === 'attention' || st === 'failed') {
+      this.setCheck(k, 'checking');
+      if (k === 'network') return this.runChecks();
+      const res = await this.probe(k === 'perms' ? 'mic' : k === 'camera' ? 'camera' : 'mic');
+      this.setCheck(k === 'perms' ? 'mic' : k, res);
+      const c = this.state.checks; this.setCheck('perms', c.mic === 'permission' || c.camera === 'permission' ? 'permission' : 'ready');
+      if (res === 'ready') this.toastMsg('Fixed. ' + ({ mic: 'Microphone', camera: 'Camera', perms: 'Permissions', speaker: 'Speaker' })[k] + ' is ready');
+      return;
+    }
+    if (st === 'ready') {
+      if (k === 'mic') this.testMic();
+      else if (k === 'camera') this.toggleCam();
+      else if (k === 'speaker') { this.setState({ speakerPlaying: true }); this.tone('test'); this.later(() => { this.setState({ speakerPlaying: false }); this.toastMsg('Test sound played'); }, 1200, 'check'); }
+    }
+  }
+  async toggleCam() {
+    if (this.state.camLive) { this.camStream && this.camStream.getTracks().forEach(t => t.stop()); this.camStream = null; this.setState({ camLive: false }); return; }
+    const res = await this.probe('camera'); this.setCheck('camera', res);
+    if (res === 'ready') this.setState({ camLive: true }); else this.toastMsg('Your camera could not be opened');
+  }
+  testMic() {
+    if (this.state.checks.mic !== 'ready' || !this.micStream) return this.checkAction('mic');
+    try {
+      const C = window.AudioContext || window.webkitAudioContext; const ctx = new C(); const src = ctx.createMediaStreamSource(this.micStream); const an = ctx.createAnalyser(); an.fftSize = 1024; src.connect(an);
+      const buf = new Float32Array(an.fftSize); let peak = 0;
+      this.level = () => { an.getFloatTimeDomainData(buf); let s2 = 0; for (let i = 0; i < buf.length; i++) s2 += buf[i] * buf[i]; const rms = Math.sqrt(s2 / buf.length); peak = Math.max(peak, rms); return Math.min(1, rms * 6); };
+      this.setState({ micTesting: true, micHeard: false });
+      this.later(() => { this.level = null; ctx.close(); const heard = peak > 0.02; this.setState({ micTesting: false, micHeard: heard }); this.toastMsg(heard ? 'We heard you clearly' : "We couldn't hear you. Check your microphone."); if (!heard) this.setCheck('mic', 'attention'); }, 3500, 'check');
+    } catch (e) { this.setCheck('mic', 'attention'); }
+  }
+
+  /* ---------------- the conversation ---------------- */
+  stopCall() { const c = this.client; this.client = null; this.userEnded = true; if (c) { try { c.stopCall(); } catch (e) { /* gone */ } } this.setState && this.state.inCall && this.setState({ inCall: false }); }
+  stamp(rows) {
+    const st = this.state.stamps.slice(); while (st.length < rows.length) st.push(this.state.elapsed);
+    return st;
+  }
+  async startCall(resume) {
+    if (this.isChat()) return this.chatStart();
+    this.stopStreams();
+    this.userEnded = false;
+    this.setState({ inCall: true, error: null, recovering: false });
+    this.setPhase(resume ? 'thinking' : 'processing');
+    try {
+      const r = await this.api(this.sess('/call'), 'POST', { speed: this.state.speed });
+      const wait = resume ? 0 : this.tone(this.state.v.call.sound);
+      const mod = await import(Component.SDK);
+      const client = new mod.RetellWebClient(); this.client = client;
+      client.on('call_started', () => { this.setPhase(this.state.v.call.speaker === 'Participant opens' && !r.resumed ? 'waiting' : 'thinking'); });
+      client.on('agent_start_talking', () => this.setPhase('speaking'));
+      client.on('agent_stop_talking', () => { if (this.state.phase === 'speaking') this.setPhase('waiting'); });
+      client.on('update', (u) => {
+        if (!u || !Array.isArray(u.transcript)) return;
+        // Calls before a reconnect stay on screen; this call's rows follow them.
+        const base = this.prevRows || [];
+        const rows = base.concat(u.transcript.filter(x => x && x.content).map(x => ({ role: x.role === 'agent' ? 'agent' : 'user', text: x.content })));
+        const last = rows[rows.length - 1];
+        const next = { rows, stamps: this.stamp(rows) };
+        if (last && last.role === 'user' && this.state.phase !== 'speaking') next.phase = 'listening';
+        this.setState(next);
+      });
+      client.on('call_ended', () => {
+        this.client = null; this.setState({ inCall: false });
+        if (this.userEnded) return;
+        const rows = this.state.rows; const last = rows[rows.length - 1];
+        // The agent hangs up after its closing line; anything else is a dropped call.
+        if (last && last.role === 'agent' && this.state.elapsed > 30) this.setPhase('wrapup');
+        else this.openError('interrupted');
+      });
+      client.on('error', () => { this.client = null; this.setState({ inCall: false }); if (!this.userEnded) this.openError('interrupted'); });
+      this.prevRows = resume ? this.state.rows.slice() : [];
+      if (wait) await new Promise(res => setTimeout(res, wait));
+      await client.startCall({ accessToken: r.access_token });
+      if (this.state.muted) try { client.mute(); } catch (e) { /* ignore */ }
+    } catch (e) {
+      this.setState({ inCall: false });
+      if (e && e.code === 'busy') return this.openError('busy');
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) return this.openError('permission');
+      if (e && e.name === 'NotFoundError') return this.openError('micUnavailable');
+      if (e && e.status === 404) return this.openError('expired');
+      if (e && e.code === 'slot') { this.toastMsg(e.message); return this.go('overview'); }
+      this.toastMsg(e.message || "The conversation couldn't start."); this.setPhase('ready');
+    }
+  }
+  async chatStart() {
+    this.setState({ inCall: true }); this.setPhase('thinking');
+    if (this.state.v.call.speaker === 'Participant opens') { this.setPhase('waiting'); return; }
+    await this.chatTurn(null);
+  }
+  async chatTurn(text) {
+    const rows = text ? this.state.rows.concat([{ role: 'user', text }]) : this.state.rows.slice();
+    this.setState({ rows, stamps: this.stamp(rows), chatBusy: true }); this.setPhase('thinking');
+    try {
+      const r = await this.api(this.sess('/chat'), 'POST', { messages: rows });
+      const next = rows.concat([{ role: 'agent', text: r.reply }]);
+      this.setState({ rows: next, stamps: this.stamp(next), chatBusy: false }); this.setPhase('waiting');
+    } catch (e) { this.setState({ chatBusy: false }); this.setPhase('waiting'); this.toastMsg(e.message); }
+  }
+  async finish(early) {
+    this.stopCall(); this.stopStreams();
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    this.setState({ screen: 'complete', early, fbDone: false, confirmEnd: false, helpOpen: false, issueOpen: false, submittedAt: 'Today, ' + time });
+    try { await this.api(this.sess('/complete'), 'POST', { early: !!early, elapsed_sec: this.state.elapsed }); }
+    catch (e) { this.toastMsg("Couldn't confirm the submission. Keep this window open and try again."); }
+  }
+  openError(key) {
+    const E = Component.errs(this.persona(), this.org());
+    if (E[key].pre) { this.setState({ error: key, recovering: false, issueOpen: false, helpOpen: false, confirmEnd: false, submitting: false }); return; }
+    this.setState({ error: key, recovering: false, issueOpen: false, helpOpen: false, confirmEnd: false, net: key === 'poorNet' ? 'weak' : this.state.net });
+  }
+  async errAction(a) {
+    const E = Component.errs(this.persona(), this.org())[this.state.error]; if (!E) return;
+    if (a === 'resume') { this.setState({ recovering: true }); await this.startCall(true); if (!this.state.error || this.state.error === 'interrupted') this.setState({ error: this.state.inCall ? null : this.state.error, recovering: false }); if (this.state.inCall) this.toastMsg(E.ok); }
+    else if (a === 'retry') {
+      this.setState({ recovering: true });
+      const res = await this.probe('mic');
+      if (res !== 'ready') { this.setState({ recovering: false }); this.toastMsg('Still not available. Check your settings.'); return; }
+      this.stopStreams(); this.setState({ error: null, recovering: false, muted: false });
+      if (this.client) { try { this.client.unmute(); } catch (e) { /* ignore */ } this.toastMsg(E.ok); } else { this.startCall(true); }
+    }
+    else if (a === 'tone') { this.tone('test'); this.setState({ error: null }); this.toastMsg(E.ok); }
+    else if (a === 'continue') { this.setState({ error: null }); }
+    else if (a === 'check') { this.stopCall(); this.setState({ error: null, screen: 'check', returnToLive: true }, () => this.runChecks()); }
+    else if (a === 'toLogin') { this.setState({ error: null, screen: 'login', submitting: false }); }
+    else if (a === 'waitRetry') { this.setState({ recovering: true }); this.later(() => { this.setState({ error: null, recovering: false }); this.startCall(this.state.rows.length > 0); }, 1800, 'err'); }
+    else if (a === 'login') { this.stopCall(); try { sessionStorage.removeItem(Component.KEY); } catch (e) { /* ignore */ } this.setState({ error: null, screen: 'login', consent: false, submitting: false, sid: '', v: null }); }
+  }
+  async loadSlots() {
+    try { const d = await this.api(this.sess('/slots')); this.setState(st => ({ slotData: d, v: st.v ? { ...st.v, booking: d.booking } : st.v })); }
+    catch (e) { this.toastMsg("Couldn't load the available times. Refresh to try again."); }
+  }
+  async bookSlot(start) {
+    this.setState({ booking: true });
+    try { const v = await this.api(this.sess('/booking'), 'POST', { start }); this.setState({ v, booking: false }); this.toastMsg('Booked. See you then.'); }
+    catch (e) { this.setState({ booking: false }); this.toastMsg(e.message || "Couldn't book that time."); }
+    this.loadSlots();
+  }
+  go(screen) {
+    if (screen === 'overview') this.loadSlots();
+    this.setState({ screen, error: null, confirmEnd: false, helpOpen: false, issueOpen: false, returnToLive: false }, () => {
+      if (screen === 'check') this.runChecks();
+      if (screen === 'live') this.setState({ phase: 'ready', elapsed: 0, rows: [], stamps: [] });
+    });
+  }
+
+  renderVals() {
+    const s = this.state; const v = s.v;
+    const P = this.persona(); const PF = P.replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '').split(/\s+/)[0] || P; const ORG = this.org(); const orgCap = ORG.charAt(0).toUpperCase() + ORG.slice(1);
+    const E = Component.errs(PF, ORG);
+    const first = (s.name || '').trim().split(/\s+/)[0] || 'there';
+    const initials = (s.name || '').trim().split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || 'YOU';
+    const setField = (k) => (e) => { const val = e.target.value; this.setState(st => ({ [k]: val, errors: { ...st.errors, [k]: null } })); };
+    const W = (key, active, color, bars, height, align, level) => React.createElement(Component.Wave, { key, active, color, bars, height, align, level });
+    const fmt = (x) => String(Math.floor((x || 0) / 60)).padStart(2, '0') + ':' + String((x || 0) % 60).padStart(2, '0');
+    const vp = v;
+    const call = vp ? { ...{ speaker: 'Tara opens', sound: 'None', camera_required: false }, ...vp.call } : { target_minutes: 20, cap_minutes: 25, format: 'Voice only', speaker: 'Tara opens', sound: 'None', camera_used: false, camera_required: false, recording_consent: true };
+    const chat = call.format === 'Chat';
+    const tgt = call.target_minutes;
+    const durLong = tgt - 5 > 0 ? (tgt - 5) + '–' + tgt + ' minutes' : 'About ' + tgt + ' minutes';
+    const durShort = tgt - 5 > 0 ? (tgt - 5) + '–' + tgt + ' min' : '~' + tgt + ' min';
+
+    const stepIdx = { overview: 1, check: 2, live: 3, complete: 4 }[s.screen] ?? 0;
+    const steps = ['Access', 'Scenario', 'Setup check', 'Role-play', 'Complete'].map((label, i) => {
+      const done = i < stepIdx, cur = i === stepIdx;
+      return { label, n: i + 1, done, notDone: !done, notLast: i < 4, circleBg: done ? '#1B3FB0' : 'var(--surface,#fff)', circleColor: cur ? '#1B3FB0' : '#A3ABBD',
+        circleBorder: done ? 'none' : cur ? '2px solid #1B3FB0' : '1.5px solid rgba(var(--ln),.14)', labelColor: cur || done ? 'var(--ink,#0D1017)' : '#A3ABBD' };
+    });
+    const skills = (v ? v.agent.skills : []).map((name, i) => ({ name, desc: '', color: Component.SKILL_COLORS[i % Component.SKILL_COLORS.length] }));
+    const speeds = Object.keys(Component.SPEEDS).map(k => { const sel = s.speed === k; return { label: Component.SPEEDS[k].label, sel, on: () => this.setState({ speed: k }),
+      bg: sel ? 'var(--surface,#FFFFFF)' : 'transparent', color: sel ? 'var(--ink,#0D1017)' : 'var(--ink3,#545C6E)', shadow: sel ? '0 1px 3px rgba(13,16,23,.14)' : 'none' }; });
+
+    /* setup check */
+    const CM = {
+      checking: { badge: 'Checking', c: 'var(--ink3,#545C6E)', bg: '#F1F3F7', b: 'rgba(var(--ln),.08)' }, ready: { badge: 'Ready', c: '#05603A', bg: '#ECFDF3', b: 'rgba(18,183,106,.22)' },
+      attention: { badge: 'Needs attention', c: '#93370D', bg: '#FFFAEB', b: 'rgba(247,144,9,.24)' }, permission: { badge: 'Permission required', c: '#1B3FB0', bg: 'var(--tintB,#EEF3FF)', b: 'rgba(76,124,248,.22)' },
+      failed: { badge: 'Not detected', c: '#B42318', bg: '#FEF3F2', b: 'rgba(240,68,56,.22)' }
+    };
+    const L = s.devLabels;
+    const MSG = {
+      mic: { checking: 'Looking for your microphone…', ready: s.micTesting ? "Say something. We're listening…" : (L.mic || 'Microphone ready'), attention: 'No sound detected. Check your mic is connected and not muted.', permission: 'Allow microphone access so ' + PF + ' can hear you.', failed: 'No microphone found. Connect one and try again.' },
+      camera: { checking: 'Looking for your camera…', ready: L.camera || 'Camera ready', permission: 'Allow camera access so ' + ORG + " can confirm it's you.", failed: 'No camera found. Connect one, or close apps using it.', attention: 'Your camera is in use by another app.' },
+      speaker: { checking: 'Checking audio output…', ready: s.speakerPlaying ? 'Playing test sound…' : (L.speaker || 'Default speakers') },
+      network: { checking: 'Measuring connection…', ready: L.network || 'Stable', attention: 'Slow connection. Move closer to your router.', failed: "Can't reach Tara. Check your internet connection." },
+      perms: { checking: 'Checking browser access…', ready: this.cameraUsed() ? 'Microphone and camera allowed' : 'Microphone allowed', permission: 'Your browser needs permission to use your ' + (this.cameraUsed() ? 'microphone and camera.' : 'microphone.') }
+    };
+    const NAMES = { mic: 'Microphone', camera: 'Camera', speaker: 'Speaker', network: 'Internet connection', perms: 'Browser permissions' };
+    const order = ['mic'].concat(this.cameraUsed() ? ['camera'] : []).concat(['speaker', 'network', 'perms']);
+    const checkRows = order.map(k => {
+      const st = s.checks[k]; const m = CM[st] || CM.checking; let action = null, primary = false;
+      if (st === 'permission') { action = 'Allow access'; primary = true; }
+      else if (st === 'attention' || st === 'failed') { action = 'Retry'; primary = true; }
+      else if (st === 'ready') action = k === 'mic' ? 'Test' : k === 'camera' ? (s.camLive ? 'Stop preview' : 'Preview') : k === 'speaker' ? 'Play sound' : null;
+      return { name: NAMES[k] + (k === 'camera' && !call.camera_required ? ' (optional)' : ''), badge: m.badge, badgeColor: m.c, badgeBg: m.bg, badgeBorder: m.b, msg: MSG[k][st] || '', isChecking: st === 'checking', isReady: st === 'ready',
+        hasAction: !!action, action, onAction: () => this.checkAction(k), actionColor: primary ? '#fff' : 'var(--ink,#0D1017)', actionBg: primary ? '#1B3FB0' : 'var(--surface,#fff)', actionBorder: primary ? 'transparent' : 'rgba(var(--ln),.14)' };
+    });
+    const needed = order.filter(k => k !== 'camera' || call.camera_required);
+    const vals = order.map(k => s.checks[k]); const checking = vals.includes('checking');
+    const issues = needed.filter(k => s.checks[k] !== 'ready' && s.checks[k] !== 'checking').length; const allReady = needed.every(k => s.checks[k] === 'ready');
+
+    /* live */
+    const rows = s.rows; const lastAgent = [...rows].reverse().find(r => r.role === 'agent'); const lastUser = rows.length && rows[rows.length - 1].role === 'user' ? rows[rows.length - 1] : null;
+    const muted = s.muted;
+    const PH = {
+      ready: { l: 'Ready to begin', d: '#A3ABBD' }, speaking: { l: 'Tara is responding', d: '#7C5CFC' },
+      waiting: muted ? { l: "You're muted", d: '#F04438' } : { l: 'Your turn', d: '#3B6FF6' }, idle: { l: 'Waiting for you', d: '#3B6FF6' },
+      listening: muted ? { l: "You're muted", d: '#F04438' } : { l: 'Tara is listening', d: '#3B6FF6' },
+      processing: { l: chat ? 'Starting' : 'Connecting', d: '#7C5CFC' }, thinking: { l: 'Tara is thinking', d: '#7C5CFC' },
+      noHear: { l: "Tara didn't catch that", d: '#F79009' }, wrapup: { l: 'Conversation wrapped up', d: '#12B76A' }
+    };
+    const pm = PH[s.phase] || PH.ready;
+    const YOU = {
+      ready: ['', ''], speaking: ['Listening to ' + PF, "You'll respond when " + PF + ' finishes.'],
+      waiting: muted ? ["You're muted", 'Unmute your microphone to respond.'] : ['Your turn', chat ? 'Type your reply below.' : "Respond when you're ready. Take your time."],
+      idle: ['Take your time', PF + ' is waiting for your response.'],
+      listening: muted ? ["You're muted", 'Unmute to continue.'] : ['Your response', 'Speak naturally. ' + PF + ' replies when you pause.'],
+      processing: ['', 'Connecting you to ' + PF + '…'], thinking: ['Your response', PF + ' is considering your point.'],
+      noHear: ["Tara didn't catch that", 'Please try again, a little closer to your microphone.'], wrapup: ['', '']
+    };
+    const yu = YOU[s.phase] || YOU.ready;
+    const youActive = s.phase === 'listening' && !muted;
+    const youAccent = s.phase === 'noHear' ? '#F79009' : muted && (s.phase === 'waiting' || s.phase === 'listening') ? '#F04438' : (s.phase === 'waiting' || s.phase === 'idle' || s.phase === 'listening') ? '#3B6FF6' : 'rgba(var(--ln),.08)';
+    const frac = s.phase === 'wrapup' ? 1 : Math.min(0.99, s.elapsed / Math.max(60, tgt * 60));
+    const stage = s.phase === 'wrapup' || frac > 0.85 ? 2 : frac > 0.08 || rows.length > 2 ? 1 : 0;
+    const pNum = s.phase === 'ready' ? 0 : s.phase === 'wrapup' ? 100 : Math.round(frac * 100);
+    const leftMin = Math.max(1, Math.round(tgt - s.elapsed / 60));
+
+    const TA = { who: PF, sub: 'played by Tara', whoColor: '#6741E0' }, YO = { who: 'You', sub: '', whoColor: '#2456DB' };
+    const entries = rows.map((r, i) => {
+      const live = i === rows.length - 1 && (s.phase === 'speaking' || s.phase === 'listening');
+      return { ...(r.role === 'agent' ? TA : YO), time: fmt(s.stamps[i]), text: r.text, hasRef: false, refLabel: '',
+        bg: live ? (r.role === 'agent' ? 'var(--tintP,#F4F1FF)' : 'var(--tintB,#EEF3FF)') : 'transparent', isNow: live };
+    });
+
+    const ek = s.error; const e = ek ? E[ek] : null;
+    const err = e ? { ...e, iconBg: e.sev === 'error' ? '#FEF3F2' : '#FFFAEB', iconColor: e.sev === 'error' ? '#B42318' : '#93370D' } : {};
+    const openErr = {}; Object.keys(E).forEach(k => { openErr[k] = () => this.openError(k); });
+
+    const RL = ['Poor', 'Fair', 'Good', 'Very good', 'Excellent'];
+    const ratings = RL.map((label, i) => { const sel = s.rating === i + 1; return { n: i + 1, label, onClick: () => this.setState({ rating: i + 1 }), bg: sel ? '#1B3FB0' : 'var(--surface,#fff)', color: sel ? '#fff' : 'var(--ink2,#3B4252)', border: sel ? 'transparent' : 'rgba(var(--ln),.12)' }; });
+    const FBQ = [
+      { id: 'clear', q: 'How clear was the conversation?', o: ['Clear', 'Mostly', 'Unclear'] },
+      { id: 'natural', q: "Did Tara's responses feel natural?", o: ['Yes', 'Somewhat', 'No'] },
+      { id: 'scenario', q: 'Was the scenario easy to understand?', o: ['Yes', 'Mostly', 'No'] },
+      { id: 'tech', q: 'Any technical problems?', o: ['None', 'Minor', 'Major'] }
+    ];
+    const fbQuestions = FBQ.map(f => ({ q: f.q, opts: f.o.map(o => { const sel = s.fb[f.id] === o; return { label: o, onClick: () => this.setState(st => ({ fb: { ...st.fb, [f.id]: o } })), bg: sel ? 'var(--surface,#FFFFFF)' : 'transparent', color: sel ? 'var(--ink,#0D1017)' : 'var(--ink3,#545C6E)', shadow: sel ? '0 1px 3px rgba(13,16,23,.16)' : 'none' }; }) }));
+
+    const a = vp ? { description: '', skills: [], ...vp.agent } : { title: '', type_label: '', persona: { name: 'Tara', role: '' }, description: '', skills: [], voice: '', language: 'English' };
+    const fmtLabel = chat ? 'Typed conversation' : call.camera_used ? 'Video & voice conversation' : 'Voice conversation';
+
+    return {
+      /* the published agent, as the participant sees it */
+      refCode: s.code || (v && v.session_id) || '', agentTitle: a.title, scenarioLine: a.type_label, personaFull: P + (a.persona.role ? ', ' + a.persona.role : ''),
+      personaFirst: PF, personaName: P, personaRole: a.persona.role, personaDesc: PF + ' plays this role for the whole conversation and responds to what you say, so there is no fixed script.',
+      language: a.language || 'English', durationLong: durLong, durationShort: durShort, simType: a.type_label + ' · ' + (chat ? 'Chat' : call.camera_used ? 'Video' : 'Voice'),
+      orgName: orgCap, orgLower: ORG, forRole: vp ? 'for ' + (vp.agent.type_label || 'this role') : '',
+      consentText: call.recording_consent ? 'I agree that my ' + (call.camera_used ? 'voice and video' : 'voice') + ' may be recorded for this role-play and shared only with ' + ORG + '.' : 'I agree to take part in this role-play. My responses are shared only with ' + ORG + '.',
+      description: a.description, youRole: 'Participant', youSub: v ? v.participant.name : '', youGoal: 'Speak as you would in the real situation. ' + PF + ' responds to what you say.',
+      formatLabel: fmtLabel, readyLine: PF + ' is ready for about ' + tgt + ' minutes on ' + (a.title || 'this conversation') + '.',
+      readyHint: chat ? 'Type naturally, as you would in a real conversation. ' + PF + ' responds to what you write, so there is no fixed script.' : (call.speaker === 'Participant opens' ? 'You speak first. ' : '') + 'Speak naturally, as you would in a real meeting. ' + PF + ' responds to what you say, so there is no fixed script.',
+      personaLine: P + (a.persona.role ? ' · ' + a.persona.role : '') + ' · played by Tara', wrapLine: PF + " has wrapped up. Submit when you're ready.",
+      hasRefs: false, isChat: chat,
+      showDetails: s.asideTab !== 'transcript', showTranscript: s.asideTab === 'transcript',
+      pickDetails: () => this.setState({ asideTab: 'details' }), pickTranscript: () => this.setState({ asideTab: 'transcript' }),
+      detailsTabBg: s.asideTab !== 'transcript' ? 'var(--surface,#FFFFFF)' : 'transparent', detailsTabColor: s.asideTab !== 'transcript' ? 'var(--ink,#0D1017)' : 'var(--ink3,#545C6E)', detailsTabShadow: s.asideTab !== 'transcript' ? '0 1px 3px rgba(13,16,23,.14)' : 'none',
+      transcriptTabBg: s.asideTab === 'transcript' ? 'var(--surface,#FFFFFF)' : 'transparent', transcriptTabColor: s.asideTab === 'transcript' ? 'var(--ink,#0D1017)' : 'var(--ink3,#545C6E)', transcriptTabShadow: s.asideTab === 'transcript' ? '0 1px 3px rgba(13,16,23,.14)' : 'none',
+      personaInitials: P.replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '').split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || 'T',
+      tips: [
+        { text: chat ? 'Type naturally, as you would in a real conversation.' : 'Speak naturally. ' + PF + ' replies when you pause.' },
+        { text: 'Ask ' + PF + ' to repeat or clarify at any time.' },
+        { text: 'There are no trick questions. Think out loud.' },
+        { text: 'Use Issue if something isn’t working, or End when you’re finished.' }
+      ],
+      chatBox: chat && s.screen === 'live' && s.phase !== 'ready' && s.phase !== 'wrapup' ? React.createElement(Component.ChatBox, { key: 'cb', busy: s.chatBusy, persona: PF, onSend: (t) => this.chatTurn(t) }) : null,
+      camVideo: React.createElement('video', { key: 'cv', ref: this.videoRef, autoPlay: true, muted: true, playsInline: true, style: { width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' } }),
+
+      isLogin: s.screen === 'login', isShell: ['overview', 'check', 'complete'].includes(s.screen), isOverview: s.screen === 'overview', isCheck: s.screen === 'check', isLive: s.screen === 'live', isComplete: s.screen === 'complete',
+      name: s.name, email: s.email, code: s.code, consent: s.consent, firstName: first, initials,
+      onName: setField('name'), onEmail: setField('email'), onCode: setField('code'),
+      errName: s.errors.name, errEmail: s.errors.email, errCode: s.errors.code, errConsent: s.errors.consent,
+      nameBorder: s.errors.name ? '#F04438' : 'rgba(var(--ln),.14)', emailBorder: s.errors.email ? '#F04438' : 'rgba(var(--ln),.14)', codeBorder: s.errors.code ? '#F04438' : 'rgba(var(--ln),.14)',
+      consentBg: s.consent ? '#1B3FB0' : 'var(--surface,#fff)', consentBorder: s.consent ? 'transparent' : 'rgba(var(--ln),.22)',
+      toggleConsent: () => this.setState(st => ({ consent: !st.consent, errors: { ...st.errors, consent: null } })),
+      submitting: s.submitting, loginLabel: s.submitting ? 'Signing in…' : 'Continue',
+      submitLogin: async () => {
+        const er = {};
+        if (!s.name.trim()) er.name = 'Enter your full name.';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email.trim())) er.email = 'Enter a valid email address.';
+        if (s.code.trim().length < 6) er.code = "This access code doesn't look right. Check your invitation email.";
+        if (!s.consent) er.consent = 'Please agree to continue.';
+        if (Object.keys(er).length) return this.setState({ errors: er });
+        this.setState({ submitting: true, errors: {} });
+        try {
+          const view = await this.api('/sign-in', 'POST', { code: s.code.trim(), name: s.name.trim(), email: s.email.trim(), consent: s.consent });
+          try { sessionStorage.setItem(Component.KEY, JSON.stringify({ sid: view.session_id, code: s.code.trim() })); } catch (x) { /* ignore */ }
+          this.setState({ submitting: false, v: view, sid: view.session_id }, () => this.go('overview'));
+        } catch (x) {
+          this.setState({ submitting: false });
+          if (x.code === 'authFail') this.openError('authFail');
+          else if (x.code === 'completed') this.setState({ errors: { code: 'This conversation has already been submitted.' } });
+          else if (x.code === 'consent') this.setState({ errors: { consent: 'Please agree to continue.' } });
+          else this.toastMsg(x.message);
+        }
+      },
+      steps, skills, refTypes: [], speeds,
+      sampleLabel: s.sample ? 'Playing sample…' : 'Hear a sample', sampleWave: W('sw', s.sample, '#7C5CFC', 16, 20, 'flex-end'),
+      playSample: () => {
+        const url = v && v.voice_sample_url; if (!url) return this.toastMsg('A voice sample is not available right now.');
+        try { if (this.sampleAudio) this.sampleAudio.pause(); const au = new Audio(url); au.playbackRate = Component.SPEEDS[s.speed].rate; this.sampleAudio = au; this.setState({ sample: true }); au.onended = au.onerror = () => this.setState({ sample: false }); au.play().catch(() => this.setState({ sample: false })); } catch (x) { this.setState({ sample: false }); }
+      },
+      startRoleplay: () => {
+        const b = v && v.booking;
+        if (!b) return this.toastMsg('Choose a time first.');
+        if (Date.now() < Date.parse(b.join_opens)) return this.toastMsg('Your conversation opens at ' + new Date(b.join_opens).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '.');
+        if (Date.now() > Date.parse(b.join_closes) && !(v.calls > 0)) return this.toastMsg('Your booked time has passed. Choose a new time.');
+        this.go('check');
+      },
+      slotPicker: s.screen === 'overview' ? React.createElement(Component.SlotPicker, { key: 'sp', data: s.slotData, booking: v && v.booking, busy: s.booking, onBook: (t) => this.bookSlot(t) }) : null,
+      ...(() => {
+        const b = v && v.booking; const now = Date.now();
+        if (!b) return { startLabel: 'Choose a time to continue', startOpacity: 0.45, startBlocked: true, startHint: 'Pick a time above. A one-minute setup check comes first.' };
+        const opens = Date.parse(b.join_opens), closes = Date.parse(b.join_closes);
+        const at = new Date(b.start); const when = at.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) + ', ' + at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (now < opens) return { startLabel: 'Opens at ' + new Date(opens).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), startOpacity: 0.45, startBlocked: true, startHint: 'Booked for ' + when + '. Come back then. You can join 5 minutes early.' };
+        if (now > closes && !(v.calls > 0)) return { startLabel: 'Choose a new time', startOpacity: 0.45, startBlocked: true, startHint: 'Your booked time has passed.' };
+        return { startLabel: 'Start role-play', startOpacity: 1, startBlocked: false, startHint: 'A one-minute setup check comes first' };
+      })(),
+      toggleHelp: () => this.setState({ helpOpen: !s.helpOpen, issueOpen: false }),
+
+      camLive: s.camLive, camNotLive: !s.camLive, camPreviewBg: s.camLive ? '#10162C' : 'repeating-linear-gradient(135deg,#F1F3F7 0 10px,#E9ECF2 10px 20px)',
+      camPlaceholder: !this.cameraUsed() ? 'camera not used for this conversation' : s.checks.camera === 'ready' ? 'select Preview to see your camera' : 'camera not available yet',
+      micWave: W('mw', s.micTesting, '#3B6FF6', 40, 24, null, this.level ? () => (this.level ? this.level() : 0) : null),
+      micMeterLabel: s.micTesting ? 'Listening…' : s.micHeard ? 'Sounds good' : 'Not tested', micMeterColor: s.micTesting ? '#2456DB' : s.micHeard ? '#05603A' : 'var(--ink4,#767F93)',
+      testMic: () => this.testMic(), testMicLabel: s.micTesting ? 'Speak now…' : 'Test microphone',
+      testCam: () => { if (!this.cameraUsed()) return this.toastMsg('This conversation does not use your camera.'); this.toggleCam(); }, testCamLabel: s.camLive ? 'Stop preview' : 'Test camera',
+      checkRows, checkBlocked: !allReady, checkBtnOpacity: allReady ? 1 : 0.45,
+      checkSummary: checking ? 'Running checks…' : allReady ? "All set. You're ready to start." : `${issues} ${issues === 1 ? 'item needs' : 'items need'} attention`,
+      checkSummaryColor: checking ? 'var(--ink4,#767F93)' : allReady ? '#05603A' : '#93370D',
+      continueLabel: s.returnToLive ? 'Return to conversation' : 'Enter role-play',
+      continueFromCheck: () => {
+        if (!allReady) return;
+        this.camStream && this.camStream.getTracks().forEach(t => t.stop()); this.camStream = null;
+        if (s.returnToLive) { this.setState({ screen: 'live', returnToLive: false }, () => this.startCall(true)); }
+        else this.setState({ screen: 'live', phase: 'ready', elapsed: 0, rows: [], stamps: [], camLive: false });
+      },
+
+      orb: React.createElement(Component.Orb, { key: 'orb', phase: s.phase === 'idle' ? 'waiting' : s.phase === 'wrapup' ? 'ready' : s.phase, muted, size: 200 }),
+      orbSize: 'clamp(96px,20vh,176px)', taraFont: 'clamp(20px,min(3vw,4.2vh),34px)', eyebrowGap: 'clamp(14px,3vh,28px)',
+      showStageHint: !!yu[1] && !lastUser,
+      stageLabel: s.phase === 'ready' ? 'Not started' : Component.STAGES[stage], progressPct: pNum + '%', progressNum: pNum,
+      stageTicks: Component.STAGES.map((x, i) => ({ left: (i / (Component.STAGES.length - 1)) * 100 + '%', bg: s.phase !== 'ready' && i <= stage ? 'var(--surface,#FFFFFF)' : 'rgba(var(--ln),.16)' })),
+      elapsed: fmt(s.elapsed), remaining: s.phase === 'wrapup' ? 'Wrapping up' : `~${leftMin} min left`,
+      statusLabel: pm.l, statusDot: pm.d, isReady: s.phase === 'ready', notReady: s.phase !== 'ready', isWrap: s.phase === 'wrapup',
+      personaRing: s.phase === 'speaking' ? '#7C5CFC' : 'transparent', taraWave: W('tw', s.phase === 'speaking', '#7C5CFC', 20, 18),
+      showTaraText: s.phase !== 'ready', taraSpoken: lastAgent ? lastAgent.text : (s.phase === 'processing' ? 'Connecting…' : chat ? '' : '…'), taraRest: '',
+      taraThinking: s.phase === 'thinking' || s.phase === 'processing',
+      showRef: false, refEmail: false, refTable: false, refChart: false, refShot: false, refImage: false, refGraph: false,
+      refLabel: '', refKind: '', isPinned: false, unpin: () => {}, sharedRefs: [], noShared: true,
+      showYou: s.phase !== 'ready' && s.phase !== 'wrapup', youLabel: yu[0], youHint: yu[1], youAccent, youWave: W('yw', youActive, '#3B6FF6', 28, 22),
+      youText: lastUser ? lastUser.text : '', showYouText: !!lastUser && ['listening', 'processing', 'thinking'].includes(s.phase),
+      showFinish: false, isNoHear: s.phase === 'noHear', finishResponse: () => {},
+      beginConversation: () => this.startCall(false),
+      tryAgain: () => this.setPhase('waiting'),
+      repeatLast: () => { if (s.phase === 'ready' || s.phase === 'wrapup') return; this.toastMsg(chat ? 'Ask ' + PF + ' to repeat, just as you would in a real conversation.' : 'Just ask ' + PF + ' to repeat, as you would in a real conversation.'); },
+      finishRoleplay: () => this.finish(false),
+      muted, notMuted: !muted, muteLabel: muted ? 'Unmute' : 'Mute', muteBg: muted ? '#FEF3F2' : 'var(--surface,#FFFFFF)', muteColor: muted ? '#B42318' : 'var(--ink2,#3B4252)', muteBorder: muted ? 'rgba(240,68,56,.3)' : 'rgba(var(--ln),.12)',
+      toggleMute: () => { const m = !s.muted; this.setState({ muted: m }); if (this.client) { try { m ? this.client.mute() : this.client.unmute(); } catch (x) { /* ignore */ } } this.toastMsg(m ? 'Microphone muted' : 'Microphone on'); },
+      speedLabel: Component.SPEEDS[s.speed].label,
+      cycleSpeed: () => {
+        if (s.inCall) return this.toastMsg('Speed is set when the conversation starts. You chose ' + Component.SPEEDS[s.speed].label.toLowerCase() + '.');
+        const ks = Object.keys(Component.SPEEDS); const nx = ks[(ks.indexOf(s.speed) + 1) % ks.length]; this.setState({ speed: nx }); this.toastMsg('Tara will speak at ' + Component.SPEEDS[nx].label.toLowerCase() + ' speed');
+      },
+      transcriptOpen: s.transcriptOpen, toggleTranscript: () => this.setState({ transcriptOpen: !s.transcriptOpen }), transcriptBtnLabel: s.transcriptOpen ? 'Hide panel' : 'Details & transcript',
+      showContext: (this.props.showContextPanel ?? true) && this.state.vw >= 1200,
+      headerTitleDisplay: this.state.vw >= 1000 ? 'block' : 'none', liveTimeDisplay: this.state.vw >= 1100 ? 'inline' : 'none',
+      entries, noEntries: entries.length === 0, transcriptRef: this.transcriptRef, transcriptLive: s.phase === 'speaking' || s.phase === 'listening',
+      netColor: s.net === 'weak' ? '#F79009' : '#12B76A', netLabel: s.net === 'weak' ? 'Weak connection' : 'Connected',
+      issueOpen: s.issueOpen, toggleIssue: () => this.setState({ issueOpen: !s.issueOpen }), openErr,
+      askEnd: () => this.setState({ confirmEnd: true, issueOpen: false }),
+      cancelEnd: () => this.setState({ confirmEnd: false }),
+      confirmEndNow: () => this.finish(true),
+      endBody: rows.length < 3 ? "You've only just started. If you end now, " + ORG + " will receive a very short conversation, and you won't be able to restart it." : "What you've covered so far will be submitted to " + ORG + ". You won't be able to return to this conversation.",
+      contactSupport: () => { this.setState({ issueOpen: false }); this.toastMsg('Contact ' + ORG + ' and quote ' + (s.code || 'your access code') + '.'); },
+      helpOpen: s.helpOpen, confirmEnd: s.confirmEnd, toast: s.toast,
+      hasError: !!e, err, recovering: s.recovering, errCompact: !!(e && e.compact), errFull: !!(e && !e.compact),
+      errOrb: e && e.compact ? React.createElement(Component.Orb, { key: 'eo-' + ek, phase: s.recovering ? 'processing' : e.orb, size: 88 }) : null,
+      errPrimaryLabel: s.recovering ? (ek === 'busy' ? 'Checking availability…' : 'Reconnecting…') : (e ? e.primary : ''),
+      errPrimary: () => e && !s.recovering && this.errAction(e.pa), errSecondary: () => e && this.errAction(e.sa), hasSecondary: !!(e && e.secondary),
+
+      completeLead: s.early ? 'You ended the conversation early. What you covered has been submitted.' : 'Your conversation with ' + PF + ' has been submitted. Thanks for taking part.',
+      durationLabel: Math.max(1, Math.round(s.elapsed / 60)) + ' min', submittedAt: s.submittedAt || 'Today',
+      ratings, ratingLabel: s.rating ? RL[s.rating - 1] : 'Select a rating', fbQuestions, comment: s.comment, onComment: (ev) => this.setState({ comment: ev.target.value }),
+      fbBlocked: !s.rating, fbBtnOpacity: s.rating ? 1 : 0.45, fbSubmitting: s.fbSubmitting, fbLabel: s.fbSubmitting ? 'Submitting…' : 'Submit feedback',
+      fbHint: s.rating ? 'Not shared with ' + ORG : 'Choose an overall rating to submit',
+      submitFeedback: async () => {
+        if (!s.rating || s.fbSubmitting) return;
+        this.setState({ fbSubmitting: true });
+        try { await this.api(this.sess('/feedback'), 'POST', { rating: s.rating, answers: s.fb, comment: s.comment }); this.setState({ fbSubmitting: false, fbDone: true }); }
+        catch (x) { this.setState({ fbSubmitting: false }); this.toastMsg("Couldn't send your feedback. Try again."); }
+      },
+      fbDone: s.fbDone, fbNotDone: !s.fbDone, ratingSummary: s.rating ? s.rating + ' / 5 · ' + RL[s.rating - 1] : '—',
+
+      isDark: s.theme === 'dark', switchTrack: s.theme === 'dark' ? '#4C7CF8' : 'rgba(var(--ln),.18)', switchKnob: s.theme === 'dark' ? '16px' : '2px',
+      isLight: s.theme !== 'dark',
+      toggleTheme: () => { const t = s.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('tara-v5-theme', t); } catch (x) {} this.setState({ theme: t }, () => this.applyTheme()); },
+      // The design's prototype controls are for reviewing states, not for participants.
+      showNav: false, navOpen: false, navToggleLabel: '', toggleNav: () => {}, navScreens: [], navPhases: [], navErrors: [],
+      scenarioDefault: () => this.runChecks(), scenarioIssues: () => this.runChecks(), scenarioOk: () => this.runChecks()
+    };
+  }
+}
+</script>
+</body>
+</html>

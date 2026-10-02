@@ -1119,8 +1119,11 @@ def test_no_recruiter_route_is_reachable_without_the_guard():
     unguarded = [
         str(r) for r in matrix.routes(app, include_aliases=True)
         if r.path.startswith(("/api/recruiter", "/api/admin"))
-        and "recruiter_scope" not in r.dependencies
+        and not {"recruiter_scope", "builder_scope"} & set(r.dependencies)
     ]
+    # `builder_scope` calls `recruiter_scope` for every request except a local
+    # prototype's (flag on, not production, loopback) — each of those refusals
+    # is asserted in `test_scenario_builder.py`.
     assert unguarded == [], unguarded
 
 
@@ -1168,6 +1171,13 @@ def test_the_public_surface_is_short_and_deliberate():
         # Public because it is the call that MINTS the session grant, so it
         # cannot require one. Everything it opens is grant-scoped after this.
         ("POST", "/api/roleplay/session/start"),
+        # Retell's call events for the Agent Builder. No principal exists to
+        # check; the handler refuses anything without a valid HMAC signature
+        # (`test_agent_builder.py`) and ignores calls the server did not place.
+        ("POST", "/api/agent-builder/retell-webhook"),
+        # Mints the participant session grant from an access code, so it
+        # cannot require one. Everything after it is grant-scoped.
+        ("POST", "/api/participant/sign-in"),
     }
 
 

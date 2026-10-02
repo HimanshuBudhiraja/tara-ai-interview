@@ -1,0 +1,1240 @@
+<title>Tara Agent Builder</title>
+<meta name="description" content="Working prototype of Tara's create flow: describe a scenario in chat, Tara builds the agent, then refine and test it live.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#FAFAFD; --white:#FFFFFF; --ink:#14142B; --ink-2:#2B2D42; --ink-3:#3D4058; --muted:#4A4D63; --muted-2:#5E6278; --faint:#7A7D93; --faint-2:#A3A5B8;
+  --line:#ECEDF3; --line-2:#F0F0F5; --field:#DEDFE8; --chipline:#E4E5EE;
+  --accent:#7F56D9; --accent-ink:#6941C6; --soft:#F4EBFF; --soft-2:#F9F5FF; --soft-3:#F4EBFF; --lav:#D6BBFB; --lav-2:#E9D7FE; --hover:#F9F5FF;
+  --seg:#F4F4F8; --good:#1E8A5F; --good-bg:#E6F4EE; --good-ink:#146B49;
+  --rev-bg:#FFF1DE; --rev-ink:#8A4300; --warn-bg:#FFF7EC; --warn-line:#FBDDB3; --warn-ink:#6B3600; --bad:#B8392A; --bad-bg:#FBE9E6;
+  --display:Poppins,"Helvetica Neue",Helvetica,sans-serif;
+  --body:"DM Sans","Helvetica Neue",Helvetica,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance}
+p{margin:0}
+button,input,textarea,select{font-family:var(--body);color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.view[hidden]{display:none}
+.spark{display:inline-flex}
+
+/* ===== shared header ===== */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 32px;min-height:68px;border-bottom:1px solid var(--line);background:var(--white);flex-wrap:wrap}
+.hl{display:flex;align-items:center;gap:40px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);border:none;background:none;padding:0}
+.bmark{width:34px;height:34px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.bname{display:flex;flex-direction:column;line-height:1.05;text-align:left}
+.bname b{font-family:var(--display);font-weight:700;font-size:19px}
+.bname small{font-size:11px;color:var(--muted-2);letter-spacing:.02em}
+.pnav{display:flex;gap:4px}
+.pnav a{padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:500;font-size:15px;color:var(--ink-3)}
+.pnav a.on{color:var(--accent-ink);background:var(--soft)}
+.hr{display:flex;align-items:center;gap:12px}
+.ibtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--white);color:var(--ink-3);display:flex;align-items:center;justify-content:center}
+.ibtn:hover{background:var(--hover)}
+.me-ava{width:44px;height:44px;border-radius:50%;border:none;background:var(--soft-3);color:var(--accent-ink);font-weight:700;font-size:14px}
+.ghost:hover:not(:disabled){background:var(--hover)!important}
+
+/* ===== screen 1 ===== */
+.s1{display:flex;flex-direction:column;align-items:center;padding:40px 24px 64px}
+.s1in{width:100%;max-width:1180px;display:flex;flex-direction:column;gap:24px}
+.s1 h1{font-weight:700;font-size:32px;line-height:1.15;letter-spacing:-.02em}
+.s1 h1 span{color:var(--accent)}
+.s1 .lede{font-size:16px;line-height:1.55;color:var(--muted)}
+.s1cols{display:flex;gap:24px;flex-wrap:wrap;align-items:stretch}
+.chat{flex:1 1 560px;min-width:0;height:640px;border-radius:22px;background:var(--white);border:1px solid #EAECF0;box-shadow:0 10px 30px rgba(105,65,198,.06);display:flex;flex-direction:column;overflow:hidden}
+.chd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line-2)}
+.who{display:flex;align-items:center;gap:12px}
+.tava{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.who b{font-family:var(--display);font-weight:600;font-size:15px;display:block}
+.who small{font-size:12px;color:var(--muted-2);display:block}
+.smallbtn{height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--chipline);background:var(--white);color:var(--ink-3);font-size:13px;font-weight:500}
+.log{flex-grow:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.trow{display:flex;gap:10px;align-items:flex-start;max-width:82%}
+.mini{width:28px;height:28px;border-radius:50%;background:var(--soft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none;font-family:var(--display);font-weight:600;font-size:11px}
+.tb{padding:12px 16px;border-radius:4px 16px 16px 16px;background:var(--soft-2);font-size:15px;line-height:1.55;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:anywhere}
+.ub{align-self:flex-end;max-width:78%;padding:12px 16px;border-radius:16px 4px 16px 16px;background:var(--accent);color:#fff;font-size:15px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.eb{align-self:center;font-size:13px;color:var(--bad);background:var(--bad-bg);padding:8px 12px;border-radius:10px;max-width:90%}
+.qchips{display:flex;flex-wrap:wrap;gap:8px;padding-left:38px}
+.qchip{min-height:38px;padding:6px 14px;border-radius:999px;border:1px solid var(--lav-2);background:var(--white);color:var(--accent-ink);font-size:14px;font-weight:500;text-align:left}
+.qchip:hover{background:var(--soft)}
+.typing{display:inline-flex;gap:5px;padding:14px 16px;border-radius:4px 16px 16px 16px;background:var(--soft-2)}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.2s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.comp{padding:14px 16px 16px;border-top:1px solid var(--line-2)}
+.cbox{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;border:1.5px solid var(--lav-2);border-radius:999px;background:var(--white)}
+.cbox:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(127,86,217,.12)}
+.cbox input{flex-grow:1;min-width:0;border:none;background:transparent;font-size:15px;color:var(--ink);height:40px;outline:none}
+.cbox input::placeholder{color:var(--faint)}
+.send{width:44px;height:44px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;flex:none;background:var(--accent);color:#fff}
+.send:disabled{background:#F4EBFF;color:#9A9CB0}
+.sum{flex:1 1 340px;max-width:420px;min-width:0;border-radius:22px;background:var(--white);border:1px solid #EAECF0;padding:24px;display:flex;flex-direction:column;gap:18px}
+.sumh{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.sumh h2{font-weight:600;font-size:18px}
+.sumh span{font-size:13px;color:var(--muted);font-weight:500}
+.pbar{height:6px;border-radius:999px;background:#F4EBFF;overflow:hidden}
+.pbar i{display:block;height:100%;border-radius:999px;background:var(--accent);transition:width .4s ease}
+.flist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;flex-grow:1}
+.flist li{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line-2)}
+.ck{width:22px;height:22px;border-radius:50%;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;border:2px solid #D5D6E2}
+.ck.on{background:var(--good);border-color:var(--good);color:#fff}
+.flab{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted-2)}
+.fval{font-size:15px;line-height:1.45;color:var(--ink);font-weight:500;overflow-wrap:anywhere}
+.fhint{font-size:14px;color:var(--faint)}
+.fresh{animation:fresh .6s ease-out}
+@keyframes fresh{from{background:var(--soft)}to{background:transparent}}
+.cta{height:48px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border-radius:999px;border:none;background:var(--accent);color:#fff;font-family:var(--display);font-weight:600;font-size:15px;box-shadow:0 6px 16px rgba(127,86,217,.30);text-decoration:none}
+.cta:disabled{background:#E6E6EE;color:#6B6E84;box-shadow:none}
+
+/* ===== screen 1 (as designed) ===== */
+.m1{flex-grow:1;display:flex;flex-direction:column;align-items:center;padding:64px 24px 80px}
+.hero{width:100%;max-width:920px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.newb{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;background:var(--soft);color:var(--accent-ink);font-size:13px;font-weight:500}
+.newb span{padding:2px 8px;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;font-size:11px;letter-spacing:.04em}
+.h1big{font-weight:700;font-size:46px;line-height:1.12;letter-spacing:-.02em;text-align:center}
+.h1big span{color:var(--accent)}
+.herop{max-width:640px;text-align:center;font-size:17px;line-height:1.55;color:var(--muted)}
+.pbox{width:100%;margin-top:18px;border:1.5px solid var(--lav-2);border-radius:22px;background:var(--white);box-shadow:0 10px 30px rgba(105,65,198,.07);display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s}
+.pbox:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(127,86,217,.12)}
+.pbox textarea{border:none;resize:none;min-height:128px;padding:22px 24px 8px;font-size:17px;line-height:1.55;color:var(--ink);background:transparent;border-radius:22px;outline:none}
+.pbox textarea::placeholder{color:var(--faint)}
+.pfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 14px 16px;flex-wrap:wrap}
+.modes{display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--seg)}
+.modes button{height:34px;padding:0 12px;border-radius:9px;font-size:13px;font-weight:500;border:none;background:transparent;color:var(--muted)}
+.modes button[aria-pressed="true"]{background:var(--white);color:var(--accent-ink);box-shadow:0 1px 3px rgba(20,20,43,.12)}
+.cwt{height:46px;display:inline-flex;align-items:center;gap:10px;padding:0 22px;border-radius:999px;border:none;background:var(--accent);color:#fff;font-family:var(--display);font-weight:600;font-size:15px;box-shadow:0 6px 16px rgba(127,86,217,.30)}
+.cwt:disabled{background:#E6E6EE;color:#6B6E84;box-shadow:none}
+.try{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.tryl{font-size:13px;color:var(--muted-2);font-weight:500;margin-right:4px}
+.try button{min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid var(--chipline);background:#FAFAFC;color:var(--ink-3);font-size:13px}
+.try button:hover{background:var(--soft);border-color:var(--lav)}
+.tpl{width:100%;max-width:1240px;margin-top:88px;display:flex;flex-direction:column;gap:24px;scroll-margin-top:90px}
+.tplh{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.tplh h2{font-weight:600;font-size:26px;letter-spacing:-.01em}
+.tplh p{color:var(--muted-2);font-size:15px}
+.ttabs{display:flex;gap:6px;flex-wrap:wrap}
+.ttabs button{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:500;background:var(--white);color:var(--ink-3);border:1px solid var(--chipline)}
+.ttabs button i{font-style:normal;font-size:12px;padding:1px 7px;border-radius:999px;background:#F1F1F6;color:var(--muted)}
+.ttabs button[aria-selected="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ttabs button[aria-selected="true"] i{background:rgba(255,255,255,.22);color:#fff}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px}
+.tc{display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:18px;border:1px solid #E8E8F0;background:var(--white);color:var(--ink);min-height:196px;text-align:left;transition:border-color .15s,box-shadow .15s,transform .15s}
+.tc:hover:not(:disabled){border-color:#D6BBFB;box-shadow:0 8px 24px rgba(105,65,198,.10);transform:translateY(-2px)}
+.tc .tr{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%}
+.tc .cat{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.02em}
+.cat.ai{background:var(--soft);color:var(--accent-ink)}.cat.sales{background:#FFF1DE;color:#8A4300}.cat.customer{background:#E3F5F2;color:#0B6158}
+.tc .kind{font-size:12px;color:var(--muted-2);font-weight:500}
+.tc .tt{font-family:var(--display);font-weight:600;font-size:16px;line-height:1.35}
+.tc .td{font-size:14px;line-height:1.5;color:var(--muted);flex-grow:1}
+.tc .tf{display:flex;align-items:center;justify-content:space-between;width:100%;padding-top:12px;border-top:1px solid var(--line-2);font-size:13px;color:var(--muted)}
+.tc .tf>span{display:inline-flex;align-items:center;gap:12px}
+.tc .tf>span span{display:inline-flex;align-items:center;gap:5px}
+.tc .use{color:var(--accent);font-weight:700}
+@media (max-width:620px){.m1{padding:36px 16px 56px}.h1big{font-size:32px}.herop{font-size:16px}.tpl{margin-top:56px}}
+
+/* ===== screen 2 ===== */
+.s2hdr .hl{gap:16px}
+.backb{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink-3);background:var(--white)}
+.s2tag{display:flex;align-items:center;gap:10px}
+.s2tag .bmark{width:30px;height:30px;border-radius:9px}
+.s2tag b{font-family:var(--display);font-weight:600;font-size:16px}
+.s2main{flex-grow:1;display:flex;justify-content:center;padding:48px 24px 72px}
+.s2in{width:100%;max-width:1180px;display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start}
+.s2l{flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.s2l h1{font-weight:700;font-size:34px;letter-spacing:-.02em;line-height:1.15}
+.s2l .lede{color:var(--muted);font-size:16px;line-height:1.55}
+.brief{padding:18px 20px;border-radius:16px;background:var(--white);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted-2)}
+.brief p{font-size:15px;line-height:1.6;color:var(--ink-2)}
+.prog{display:flex;flex-direction:column;gap:10px}
+.prog .top{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-weight:500}
+.prog .pbar{height:8px;background:#F4EBFF}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.steps li{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px}
+.steps li.act{background:var(--soft)}
+.sdot{width:26px;height:26px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.sdot.done{background:var(--good);color:#fff}
+.sdot.act{border:3px solid var(--lav-2);border-top-color:var(--accent);animation:spin .9s linear infinite}
+.sdot.wait{border:2px solid #D5D6E2}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steps b{display:block;font-size:15px;font-weight:500}
+.steps li.wait b{color:#6B6E84}
+.steps small{display:block;font-size:13px;color:var(--muted-2)}
+.s2act{display:flex;gap:12px;flex-wrap:wrap}
+.pill{height:48px;display:inline-flex;align-items:center;gap:10px;padding:0 24px;border-radius:999px;background:var(--accent);color:#fff;border:none;font-family:var(--display);font-weight:600;font-size:15px;box-shadow:0 6px 16px rgba(127,86,217,.30)}
+.pill.o{background:var(--white);border:1.5px solid var(--lav);color:var(--accent-ink);font-family:var(--body);font-weight:700;box-shadow:none;padding:0 20px}
+.errline{font-size:14px;color:var(--bad);background:var(--bad-bg);padding:10px 14px;border-radius:12px}
+.draft{flex:1 1 440px;min-width:0;border-radius:22px;background:var(--white);border:1px solid #EAECF0;box-shadow:0 14px 40px rgba(105,65,198,.08);padding:28px;display:flex;flex-direction:column;gap:20px}
+.dh{display:flex;align-items:center;gap:14px}
+.bigava{width:56px;height:56px;border-radius:50%;background:var(--soft-3);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:600;font-size:19px;flex:none}
+.bigava.ph{background:var(--seg)}
+.dh .t{display:flex;flex-direction:column;gap:6px;flex-grow:1;min-width:0}
+.dtitle{font-family:var(--display);font-weight:600;font-size:19px}
+.dsub{font-size:14px;color:var(--muted)}
+.bone{display:block;border-radius:6px;background:#F1F1F6}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fact{padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--line-2);display:flex;flex-direction:column;gap:4px}
+.fact span{font-size:12px;color:var(--muted-2);font-weight:500}
+.fact b{font-size:15px;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+.dq{padding:12px 14px;border-radius:12px;background:var(--soft-2);font-size:14px;line-height:1.45;color:var(--ink-2)}
+.more{font-size:13px;color:var(--accent-ink);font-weight:700;padding-left:2px}
+.rchips{display:flex;flex-wrap:wrap;gap:8px}
+.rchip{padding:6px 12px;border-radius:999px;background:var(--soft);color:var(--accent-ink);font-size:13px;font-weight:500}
+.fadein{animation:fi .35s ease-out both}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== screen 3 ===== */
+.s3hdr{padding:0 24px}
+.s3hdr .hl{gap:14px}
+.s3brand{display:flex;align-items:center;gap:8px;border:none;background:none;padding:0;color:var(--ink)}
+.s3brand .bmark{width:30px;height:30px;border-radius:9px}
+.s3brand b{font-family:var(--display);font-weight:700;font-size:17px}
+.crumb{display:flex;align-items:center;gap:8px;font-size:15px}
+.crumb button{border:none;background:none;padding:0;color:var(--muted);font-size:15px}
+.crumb span.sep{color:var(--faint-2)}
+.crumb b{font-weight:700}
+.draftpill{padding:3px 10px;border-radius:999px;background:#F1F1F6;color:var(--ink-3);font-size:12px;font-weight:700;letter-spacing:.04em}
+.draftpill.pub{background:var(--good-bg);color:var(--good-ink)}
+.saved{font-size:13px;color:var(--muted-2);display:inline-flex;align-items:center;gap:6px}
+.tbtn{height:44px;display:inline-flex;align-items:center;gap:8px;padding:0 18px;border-radius:12px;border:1.5px solid var(--lav);background:var(--white);color:var(--accent-ink);font-weight:700;font-size:14px}
+.pubbtn{height:44px;padding:0 22px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-family:var(--display);font-weight:600;font-size:14px;box-shadow:0 4px 12px rgba(127,86,217,.28)}
+.s3wrap{display:flex;align-items:flex-start;flex-wrap:wrap;flex-grow:1}
+.side{flex:0 0 272px;padding:24px 16px;border-right:1px solid var(--line);background:var(--white);position:sticky;top:calc(env(safe-area-inset-top,0px) + 68px);min-height:calc(100vh - 68px);display:flex;flex-direction:column;gap:22px}
+.sid{display:flex;align-items:center;gap:12px;padding:0 8px}
+.sid .bigava{width:48px;height:48px;font-size:16px}
+.sid b{font-family:var(--display);font-weight:600;font-size:15px;line-height:1.3;display:block}
+.sid small{font-size:13px;color:var(--accent-ink);font-weight:500;display:block}
+.ready{margin:0 8px;padding:14px;border-radius:14px;background:var(--soft-2);display:flex;flex-direction:column;gap:8px}
+.ready .top{display:flex;justify-content:space-between;font-size:13px;font-weight:500}
+.ready .top b{color:var(--accent-ink)}
+.ready .pbar{background:#E9D7FE}
+.ngroup{display:flex;flex-direction:column;gap:2px}
+.ngroup>span{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted-2);padding:0 12px 6px}
+.navi{min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;border-radius:10px;text-decoration:none;color:var(--ink-2);font-size:15px;font-weight:500}
+.navi:hover{background:var(--hover)}
+.okdot{width:20px;height:20px;border-radius:50%;background:var(--good);color:#fff;display:flex;align-items:center;justify-content:center}
+.revpill{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--rev-bg);color:var(--rev-ink)}
+.main3{flex:1 1 560px;min-width:0;padding:28px 28px 80px;display:flex;flex-direction:column;gap:20px}
+.askbox{border-radius:18px;background:var(--white);border:1.5px solid var(--lav-2);box-shadow:0 8px 24px rgba(105,65,198,.06);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.askrow{display:flex;align-items:center;gap:12px}
+.askic{width:36px;height:36px;border-radius:10px;background:var(--soft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
+.askrow input{flex-grow:1;min-width:0;height:44px;border:none;font-size:16px;color:var(--ink);background:transparent;outline:none}
+.askrow input::placeholder{color:var(--faint)}
+.sq{width:44px;height:44px;border-radius:12px;border:none;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.sq:disabled{background:#F4EBFF;color:#9A9CB0}
+.askchips{display:flex;gap:8px;flex-wrap:wrap;padding-left:48px}
+.askchips button{min-height:34px;padding:4px 12px;border-radius:999px;border:1px solid var(--chipline);background:var(--white);color:var(--ink-3);font-size:13px}
+.askstat{padding-left:48px;font-size:13px;color:var(--muted-2)}
+.askstat.ok{color:var(--good-ink)}
+.askstat.bad{color:var(--bad)}
+.card{border-radius:18px;background:var(--white);border:1px solid var(--line);padding:28px;display:flex;flex-direction:column;gap:18px;scroll-margin-top:90px}
+.card.flash{animation:flash 1.2s ease-out}
+@keyframes flash{from{box-shadow:0 0 0 3px var(--lav)}to{box-shadow:0 0 0 0 transparent}}
+.ch2{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.ch2 .tt{display:flex;flex-direction:column;gap:6px}
+.card h2{font-weight:600;font-size:21px}
+.card h2 small{font-family:var(--body);font-weight:500;font-size:14px;color:var(--muted-2)}
+.card .sub{font-size:14px;color:var(--muted-2)}
+.obtn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:10px;border:1px solid var(--chipline);background:var(--white);color:var(--accent-ink);font-weight:700;font-size:14px}
+.obtn:disabled{color:var(--faint)}
+.dashbtn{align-self:flex-start;height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:10px;border:1.5px dashed var(--lav);background:var(--white);color:var(--accent-ink);font-weight:700;font-size:14px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.fld{display:flex;flex-direction:column;gap:8px;min-width:0}
+.fld label,.lbl{font-size:13px;font-weight:700;color:var(--ink-2)}
+.inp{height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--field);font-size:15px;color:var(--ink);background:var(--white);width:100%}
+select.inp{padding:0 12px}
+textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
+.inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(127,86,217,.12)}
+.privpill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#F1F1F6;color:var(--ink-3);font-size:12px;font-weight:700}
+.prow{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.pava{position:relative;flex:none}
+.pava .bigava{width:84px;height:84px;font-size:26px}
+.pgrid{flex:1 1 360px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.segs2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.segwrap{display:flex;flex-direction:column;gap:10px}
+.seg{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--seg);width:fit-content;flex-wrap:wrap;max-width:100%}
+.seg button{min-height:40px;padding:0 16px;border-radius:9px;font-size:14px;font-weight:500;border:none;background:transparent;color:var(--ink-3)}
+.seg button[aria-pressed="true"]{background:var(--white);color:var(--accent-ink);box-shadow:0 1px 3px rgba(20,20,43,.14)}
+.totpill{padding:6px 12px;border-radius:999px;background:var(--good-bg);color:var(--good-ink);font-size:13px;font-weight:700}
+.totpill.off{background:var(--rev-bg);color:var(--rev-ink)}
+.warnbox{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:12px;background:var(--warn-bg);border:1px solid var(--warn-line);flex-wrap:wrap}
+.warnbox span{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--warn-ink)}
+.fillbtn{height:40px;padding:0 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-weight:700;font-size:14px}
+.rtab{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.rr{display:grid;grid-template-columns:minmax(140px,1.1fr) minmax(200px,2fr) 96px 40px;gap:12px;padding:12px 16px;border-top:1px solid var(--line-2);align-items:center}
+.rr.hd{background:var(--bg);font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted-2);border-top:none}
+.rr .ed{border:1px solid transparent;border-radius:8px;padding:6px 8px;width:100%;background:transparent;font-size:15px;color:var(--ink);resize:none;line-height:1.45}
+.rr .ed:hover{border-color:var(--line)}
+.rr .ed:focus{outline:none;border-color:var(--accent);background:var(--white)}
+.rr .ed.n{font-weight:700}
+.rr .ed.a{font-size:14px;color:var(--muted)}
+.wbox{display:flex;justify-content:flex-end;align-items:center;gap:2px}
+.wbox input{width:64px;height:38px;padding:0 8px;border-radius:10px;border:1px solid var(--field);font-size:15px;font-weight:700;text-align:right}
+.wbox span{font-weight:700}
+.xbtn{width:40px;height:40px;border-radius:10px;border:none;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.xbtn:hover{background:var(--hover)}
+.qlist{display:flex;flex-direction:column;gap:10px}
+.qrow{display:flex;align-items:center;gap:12px;padding:14px 10px 14px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--line-2)}
+.qrow:hover{border-color:var(--lav-2)}
+.qrow.dragging{opacity:.5}
+.qrow.over{border-color:var(--accent)}
+.grip{color:var(--faint-2);cursor:grab;display:flex}
+.qbody{flex-grow:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.qbody .qt{font-size:15px;line-height:1.5;color:var(--ink)}
+.qbody textarea{font-size:15px;line-height:1.5;border:1px solid var(--accent);border-radius:8px;padding:6px 8px;resize:vertical;width:100%}
+.qtag{align-self:flex-start;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--accent-ink)}
+.togrow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);flex-wrap:wrap}
+.togrow b{font-size:15px;display:block}
+.togrow small{font-size:13px;color:var(--muted-2);display:block}
+.sw{width:52px;height:30px;border-radius:999px;border:none;padding:3px;display:flex;background:#C9CAD6;justify-content:flex-start}
+.sw[aria-checked="true"]{background:var(--accent);justify-content:flex-end}
+.sw i{width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.srow{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--line-2);flex-wrap:wrap}
+.srow .tt{display:flex;flex-direction:column;gap:3px;flex:1 1 240px}
+.srow b{font-size:15px}
+.srow small{font-size:13px;color:var(--muted-2)}
+.durbox{display:inline-flex;align-items:center;gap:10px}
+.durbox input{width:84px;height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--field);font-size:15px}
+.adv{border-radius:18px;background:var(--white);border:1px solid var(--line)}
+.adv>button{width:100%;min-height:72px;padding:0 28px;border:none;background:transparent;display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ink);border-radius:18px;text-align:left}
+.adv>button b{font-family:var(--display);font-weight:600;font-size:19px;display:block}
+.adv>button small{font-size:13px;color:var(--muted-2);display:block}
+.advbody{padding:0 28px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.testp{flex:1 0 360px;max-width:420px;padding:28px 24px 28px 4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 68px)}
+.tcard{border-radius:20px;background:var(--white);border:1px solid var(--line);box-shadow:0 10px 30px rgba(20,20,43,.05);display:flex;flex-direction:column;overflow:hidden}
+.thd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 18px;border-bottom:1px solid var(--line-2)}
+.thd b{font-family:var(--display);font-weight:600;font-size:16px}
+.thd .r{display:flex;gap:6px;align-items:center}
+.tabs{display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--seg)}
+.tabs button{height:34px;padding:0 14px;border-radius:8px;font-size:13px;font-weight:500;border:none;background:transparent;color:var(--ink-3)}
+.tabs button[aria-selected="true"]{background:var(--white);color:var(--accent-ink);box-shadow:0 1px 3px rgba(20,20,43,.14)}
+.tid{display:flex;flex-direction:column;align-items:center;gap:6px;padding:22px 18px 16px;background:var(--bg)}
+.tid .bigava{width:64px;height:64px;font-size:21px}
+.tid b{font-size:15px}
+.tid small{font-size:13px;color:var(--muted-2);text-align:center}
+.tlog{display:flex;flex-direction:column;gap:12px;padding:18px;height:340px;overflow-y:auto}
+.tlog .a{align-self:flex-start;max-width:88%;padding:12px 14px;border-radius:4px 16px 16px 16px;background:var(--seg);font-size:14px;line-height:1.5;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.tlog .u{align-self:flex-end;max-width:80%;padding:12px 14px;border-radius:16px 4px 16px 16px;background:var(--accent);color:#fff;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.tlog .typing{align-self:flex-start;background:var(--seg)}
+.tlog .empty{margin:auto;font-size:13px;color:var(--muted-2);text-align:center}
+.tin{display:flex;gap:8px;padding:14px 16px;border-top:1px solid var(--line-2)}
+.tin input{flex-grow:1;min-width:0;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--field);font-size:14px;background:var(--white)}
+.tin input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(127,86,217,.12)}
+.voice{display:flex;flex-direction:column;align-items:center;gap:18px;padding:36px 18px;min-height:340px;justify-content:center}
+.wave{display:flex;align-items:center;gap:5px;height:48px}
+.wave i{width:6px;border-radius:3px;background:var(--accent)}
+.voice p{font-size:14px;color:var(--muted);text-align:center;max-width:30ch}
+.tfoot{padding:12px 18px 16px;font-size:12px;color:var(--muted-2);text-align:center;border-top:1px solid var(--line-2);display:flex;flex-direction:column;gap:10px;align-items:center}
+.scorebox{padding:16px 18px;border-top:1px solid var(--line-2);display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.scr{display:flex;gap:10px;align-items:flex-start}
+.scp{min-width:40px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;flex:none}
+.scp.hi{background:var(--good-bg);color:var(--good-ink)}.scp.mid{background:var(--rev-bg);color:var(--rev-ink)}.scp.lo{background:var(--bad-bg);color:var(--bad)}.scp.na{background:#F1F1F6;color:var(--muted-2)}
+.scr b{display:block;font-size:13.5px}
+.scr span{display:block;font-size:13px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+.ainote{background:var(--warn-bg);border-bottom:1px solid var(--warn-line);color:var(--warn-ink);font-size:14px;padding:10px 24px;text-align:center}
+
+/* voice + length + call config */
+.vnote{font-size:13px;color:var(--muted-2);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.vnote b{color:var(--ink-2);font-weight:600}
+.vchip{padding:2px 8px;border-radius:999px;background:var(--seg);color:var(--ink-3);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.est{display:flex;align-items:baseline;gap:8px;justify-content:flex-end}
+.est b{font-family:var(--display);font-weight:600;font-size:26px;color:var(--ink);font-variant-numeric:tabular-nums}
+.est span{font-size:14px;color:var(--muted)}
+.estcalc{font-size:13px;color:var(--muted-2);text-align:right;max-width:340px}
+.codewrap{position:relative;margin:0 28px 24px;border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:auto;max-height:420px}
+.codewrap pre{margin:0;padding:16px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.55;color:var(--ink-2);white-space:pre}
+.copyb{position:sticky;float:right;top:10px;right:10px;margin:10px 10px 0 0;height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--chipline);background:var(--white);color:var(--accent-ink);font-weight:700;font-size:12.5px}
+.cfgnote{margin:0 28px 14px;font-size:13px;color:var(--muted-2)}
+@media (max-width:620px){.codewrap{margin:0 16px 20px}.cfgnote{margin:0 16px 12px}.est{justify-content:flex-start}.estcalc{text-align:left}}
+@media (max-width:1180px){.testp{position:static;max-width:none;flex:1 1 100%;padding:0 28px 40px}}
+@media (max-width:860px){.side{position:static;flex:1 1 100%;min-height:0;border-right:none;border-bottom:1px solid var(--line)}}
+@media (max-width:620px){
+  .hdr,.s3hdr{padding:10px 16px}.hl{gap:12px}.pnav{display:none}
+  .s1,.s2main{padding:28px 16px 48px}.s1 h1{font-size:26px}.s2l h1{font-size:27px}
+  .chat{height:560px}.trow{max-width:94%}.qchips,.askchips,.askstat{padding-left:0}
+  .main3{padding:20px 16px 48px}.card{padding:20px}.testp{padding:0 16px 40px}
+  .rr{grid-template-columns:minmax(0,1fr) 84px 40px}.rr .a-cell{grid-column:1 / -1;order:3}.rr.hd .a-cell{display:none}
+  .facts{grid-template-columns:minmax(0,1fr)}
+  .crumb b{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.tstat{font-size:12.5px;color:var(--muted-2);min-height:18px;text-align:center}
+.tstat.bad{color:var(--bad)}
+
+/* ===== Buttons: the Untitled UI button system, in Tara's purple =====
+   Sizes   sm 36 · md 40 · lg 44   (icon-only: square at the same height)
+   Variants  primary · secondary gray · secondary color · tertiary · button group · toggle
+   Every button: 8px radius, semibold 14px (16px at lg), xs shadow, a 4px focus ring,
+   and the Untitled disabled state. Colors come from the tokens below, nowhere else. */
+:root{
+  --uu-gray-50:#FAFAFA; --uu-gray-100:#F5F5F5; --uu-gray-200:#E9EAEB; --uu-gray-300:#D5D7DA;
+  --uu-gray-400:#A4A7AE; --uu-gray-500:#717680; --uu-gray-600:#535862; --uu-gray-700:#414651; --uu-gray-800:#252B37;
+  --uu-brand-50:#F9F5FF; --uu-brand-100:#F4EBFF; --uu-brand-300:#D6BBFB; --uu-brand-500:#9E77ED;
+  --uu-brand-600:#7F56D9; --uu-brand-700:#6941C6; --uu-brand-800:#53389E;
+  --uu-error-600:#D92D20; --uu-error-700:#B42318;
+  --uu-shadow-xs:0 1px 2px rgba(10,13,18,.05);
+  --uu-skeu:inset 0 0 0 1px rgba(10,13,18,.18), inset 0 -2px 0 0 rgba(10,13,18,.05);
+  --uu-ring:0 0 0 2px #fff, 0 0 0 4px var(--uu-brand-500);
+  --uu-ring-error:0 0 0 2px #fff, 0 0 0 4px #F04438;
+}
+
+/* shared base */
+.cwt,.pill,.pubbtn,.fillbtn,.sq,.cta,.send,
+.smallbtn,.ibtn,.backb,.obtn,.dashbtn,.askchips button,.try button,.mic,.copyb,.tbtn,
+.xbtn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  font-family:var(--body);font-weight:600;font-size:14px;line-height:20px;letter-spacing:0;
+  border-radius:8px;border:1px solid transparent;cursor:pointer;white-space:nowrap;
+  transition:background-color .1s linear,color .1s linear,border-color .1s linear,box-shadow .1s linear;
+  text-decoration:none;
+}
+.cwt:focus-visible,.pill:focus-visible,.pubbtn:focus-visible,.fillbtn:focus-visible,.sq:focus-visible,.cta:focus-visible,.send:focus-visible,
+.smallbtn:focus-visible,.ibtn:focus-visible,.backb:focus-visible,.obtn:focus-visible,.dashbtn:focus-visible,.askchips button:focus-visible,
+.try button:focus-visible,.mic:focus-visible,.copyb:focus-visible,.tbtn:focus-visible,.xbtn:focus-visible,
+.modes button:focus-visible,.seg button:focus-visible,.ttabs button:focus-visible,.sw:focus-visible{outline:none;box-shadow:var(--uu-ring)}
+
+/* sizes */
+.fillbtn,.smallbtn,.obtn,.dashbtn,.askchips button,.try button,.copyb{height:36px;min-height:36px;padding:8px 12px}
+.pubbtn,.tbtn{height:40px;padding:10px 14px}
+.cwt,.pill,.cta{height:44px;padding:10px 16px;font-size:16px;line-height:24px}
+.ibtn,.backb,.sq,.send,.mic{width:40px;height:40px;padding:0}
+.xbtn{width:36px;height:36px;padding:0}
+
+/* primary */
+.cwt,.pill,.pubbtn,.fillbtn,.sq,.cta,.send{
+  background:var(--uu-brand-600);color:#fff;border-color:var(--uu-brand-600);
+  box-shadow:var(--uu-shadow-xs),var(--uu-skeu);
+}
+.cwt:hover:not(:disabled),.pill:hover:not(:disabled),.pubbtn:hover:not(:disabled),.fillbtn:hover:not(:disabled),
+.sq:hover:not(:disabled),.cta:hover:not(:disabled),.send:hover:not(:disabled){background:var(--uu-brand-700)!important;border-color:var(--uu-brand-700);color:#fff}
+.cwt:disabled,.pill:disabled,.pubbtn:disabled,.fillbtn:disabled,.sq:disabled,.cta:disabled,.send:disabled{
+  background:var(--uu-gray-100)!important;color:var(--uu-gray-400)!important;border-color:var(--uu-gray-200)!important;box-shadow:var(--uu-shadow-xs);cursor:not-allowed;
+}
+
+/* secondary gray */
+.pill.o,.smallbtn,.ibtn,.backb,.obtn,.dashbtn,.askchips button,.try button,.mic,.copyb{
+  background:#fff;color:var(--uu-gray-700);border:1px solid var(--uu-gray-300);border-style:solid;
+  box-shadow:var(--uu-shadow-xs),inset 0 -2px 0 0 rgba(10,13,18,.05);
+}
+.pill.o:hover:not(:disabled),.smallbtn:hover:not(:disabled),.ibtn:hover:not(:disabled),.backb:hover:not(:disabled),
+.obtn:hover:not(:disabled),.dashbtn:hover:not(:disabled),.askchips button:hover:not(:disabled),.try button:hover:not(:disabled),
+.mic:hover:not(:disabled),.copyb:hover:not(:disabled){background:var(--uu-gray-50)!important;color:var(--uu-gray-800);border-color:var(--uu-gray-300)}
+.pill.o:disabled,.smallbtn:disabled,.ibtn:disabled,.backb:disabled,.obtn:disabled,.dashbtn:disabled,.askchips button:disabled,
+.try button:disabled,.mic:disabled,.copyb:disabled{background:#fff!important;color:var(--uu-gray-400)!important;border-color:var(--uu-gray-200)!important;cursor:not-allowed;opacity:1}
+.ibtn svg,.backb svg,.mic svg,.obtn svg,.dashbtn svg{color:var(--uu-gray-500)}
+.ibtn:hover svg,.backb:hover svg,.mic:hover svg{color:var(--uu-gray-600)}
+
+/* secondary color */
+.tbtn{background:#fff;color:var(--uu-brand-700);border:1px solid var(--uu-brand-300);box-shadow:var(--uu-shadow-xs),inset 0 -2px 0 0 rgba(10,13,18,.05)}
+.tbtn:hover:not(:disabled){background:var(--uu-brand-50)!important;color:var(--uu-brand-800);border-color:var(--uu-brand-300)}
+
+/* tertiary (icon actions in lists, breadcrumb) */
+.xbtn{background:transparent;color:var(--uu-gray-400);border-color:transparent;box-shadow:none}
+.xbtn:hover:not(:disabled){background:var(--uu-gray-50)!important;color:var(--uu-gray-500)}
+.crumb button{font-weight:600;font-size:14px;color:var(--uu-gray-600);border-radius:6px;padding:2px 4px}
+.crumb button:hover{color:var(--uu-gray-700)}
+
+/* destructive: the mic while a call is live */
+.mic.on{background:var(--uu-error-600)!important;border-color:var(--uu-error-600)!important;color:#fff!important;box-shadow:var(--uu-shadow-xs),var(--uu-skeu)}
+.mic.on svg{color:#fff}
+.mic.on:hover:not(:disabled){background:var(--uu-error-700)!important}
+.mic.on:focus-visible{box-shadow:var(--uu-ring-error)}
+
+/* button groups: Interview/Roleplay/Assessment, the persona and settings choices, template filters */
+.modes,.seg,.ttabs{
+  display:inline-flex;flex-wrap:nowrap;gap:0;padding:0;background:#fff;
+  border:1px solid var(--uu-gray-300);border-radius:8px;overflow:hidden;box-shadow:var(--uu-shadow-xs);
+  max-width:100%;overflow-x:auto;width:fit-content;
+}
+.modes button,.seg button,.ttabs button{
+  display:inline-flex;align-items:center;gap:8px;height:40px;min-height:40px;padding:10px 16px;margin:0;
+  font-family:var(--body);font-weight:600;font-size:14px;line-height:20px;white-space:nowrap;
+  background:#fff;color:var(--uu-gray-700);border:0;border-right:1px solid var(--uu-gray-300);border-radius:0;box-shadow:none;cursor:pointer;
+}
+.modes button{height:36px;min-height:36px;padding:8px 14px}
+.modes button:last-child,.seg button:last-child,.ttabs button:last-child{border-right:0}
+.modes button:hover,.seg button:hover,.ttabs button:hover{background:var(--uu-gray-50);color:var(--uu-gray-800)}
+.modes button[aria-pressed="true"],.seg button[aria-pressed="true"],.ttabs button[aria-selected="true"]{
+  background:var(--uu-gray-50);color:var(--uu-gray-800);border-color:var(--uu-gray-300);box-shadow:none;
+}
+.ttabs button i{font-style:normal;font-size:12px;line-height:18px;font-weight:500;padding:0 8px;border-radius:16px;
+  background:var(--uu-gray-50);border:1px solid var(--uu-gray-200);color:var(--uu-gray-700)}
+.ttabs button[aria-selected="true"] i{background:#fff;color:var(--uu-gray-700)}
+
+/* toggle (md) */
+.sw{width:44px;height:24px;padding:2px;border-radius:12px;border:0;background:var(--uu-gray-100);justify-content:flex-start;transition:background-color .15s linear}
+.sw:hover{background:var(--uu-gray-200)}
+.sw[aria-checked="true"]{background:var(--uu-brand-600);justify-content:flex-end}
+.sw[aria-checked="true"]:hover{background:var(--uu-brand-700)}
+.sw i{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(10,13,18,.1),0 1px 2px -1px rgba(10,13,18,.1)}
+
+@media (max-width:620px){.cwt,.pill{height:44px}.modes,.seg,.ttabs{width:100%}}
+</style>
+
+<div class="ainote" id="aiNote" hidden>Tara's answers come from Claude, which this view can't reach. Open this link in claude.ai to use the prototype.</div>
+
+<!-- ================= SCREEN 1 · DESCRIBE OR PICK A TEMPLATE ================= -->
+<div class="view" id="v1">
+  <header class="hdr" style="gap:24px">
+    <div class="hl">
+      <button class="brand" type="button" data-go="1"><span class="bmark" data-icon="spark18"></span><span class="bname"><b>Tara</b><small>by iMocha</small></span></button>
+      <nav class="pnav" aria-label="Primary"><a class="on" href="#">Agents</a><a href="#templates" id="navTpl">Templates</a></nav>
+    </div>
+    <div class="hr">
+      <button class="ibtn" type="button" aria-label="Help"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 17h.01"/></svg></button>
+      <button class="me-ava" type="button" aria-label="Account">SK</button>
+    </div>
+  </header>
+  <main class="m1">
+    <div class="hero">
+      <span class="newb"><span>NEW</span>Conversational Agent Builder</span>
+      <h1 class="h1big">What should <span>Tara</span> do?</h1>
+      <p class="herop">Describe the interview or roleplay in plain words. Tara drafts the persona, questions, rubric and conversation flow — you review and publish.</p>
+      <div class="pbox">
+        <label class="sr" for="brief">Describe your agent</label>
+        <textarea id="brief" placeholder="e.g. A 25-minute technical interview for a senior AI Engineer at DeepMind. Probe ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI. Be friendly but rigorous."></textarea>
+        <div class="pfoot">
+          <div role="group" aria-label="Agent type" class="modes" id="modes"></div>
+          <button class="cwt" id="create" type="button" disabled><span data-icon="spark18"></span>Create with Tara</button>
+        </div>
+      </div>
+      <div class="try"><span class="tryl">Try</span><span id="sugg" style="display:contents"></span></div>
+    </div>
+    <section id="templates" class="tpl" aria-labelledby="tpl-h">
+      <div class="tplh">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h2 id="tpl-h">Or start with a template</h2>
+          <p>Pre-built agents with persona, questions and rubric ready to tailor.</p>
+        </div>
+        <div role="tablist" aria-label="Template categories" class="ttabs" id="ttabs"></div>
+      </div>
+      <div class="tgrid" id="tcards"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= SCREEN 2 · BUILD ================= -->
+<div class="view" id="v2" hidden>
+  <header class="hdr s2hdr">
+    <div class="hl">
+      <button class="backb ghost" type="button" data-go="1" aria-label="Back to describe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span class="s2tag"><span class="bmark" data-icon="spark16"></span><b>New agent</b></span>
+    </div>
+    <button class="smallbtn ghost" type="button" id="rebuild" style="height:40px;padding:0 14px;font-size:14px">Rebuild</button>
+  </header>
+  <main class="s2main">
+    <div class="s2in">
+      <section class="s2l" aria-labelledby="genh">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <h1 id="genh">Tara is building your agent…</h1>
+          <p class="lede">Tara turns your scenario into a complete agent. Everything stays editable on the next screen.</p>
+        </div>
+        <div class="brief"><span class="eyebrow">YOUR BRIEF</span><p id="briefTxt"></p></div>
+        <div class="prog">
+          <div class="top"><span id="progLbl">Step 1 of 6</span><span id="progPct">0%</span></div>
+          <div class="pbar" id="progBar" role="progressbar" aria-label="Build progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i style="width:0"></i></div>
+        </div>
+        <ol class="steps" id="steps2"></ol>
+        <p class="errline" id="err2" hidden></p>
+        <div class="s2act" id="act2" hidden>
+          <button class="pill" type="button" id="toReview">Review &amp; edit agent →</button>
+          <button class="pill o" type="button" data-go="1">Edit brief</button>
+        </div>
+      </section>
+      <aside class="draft" aria-label="Agent draft" id="draftCard"></aside>
+    </div>
+  </main>
+</div>
+
+<!-- ================= SCREEN 3 · REVIEW, REFINE & TEST ================= -->
+<div class="view" id="v3" hidden>
+  <header class="hdr s3hdr">
+    <div class="hl">
+      <button class="s3brand" type="button" data-go="1"><span class="bmark" data-icon="spark16"></span><b>Tara</b></button>
+      <nav class="crumb" aria-label="Breadcrumb"><button type="button" data-go="1">Agents</button><span class="sep" aria-hidden="true">/</span><b id="crumbT">—</b></nav>
+      <span class="draftpill" id="dpill">DRAFT</span>
+      <span class="saved" id="saved"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E8A5F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Saved just now</span></span>
+    </div>
+    <div class="hr" style="gap:10px">
+      <button class="tbtn ghost" type="button" id="testBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg>Test agent</button>
+      <button class="pubbtn" type="button" id="pubBtn">Publish</button>
+    </div>
+  </header>
+  <div class="s3wrap">
+    <aside class="side" aria-label="Agent sections" id="side"></aside>
+    <main class="main3" id="main3"></main>
+    <aside class="testp" aria-label="Test Tara" id="testp">
+      <div class="tcard">
+        <div class="thd">
+          <b>Test Tara</b>
+          <div class="r">
+            <button class="xbtn" type="button" id="tRestart" aria-label="Restart test" title="Restart test"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+
+          </div>
+        </div>
+        <div class="tid"><span class="bigava" id="tAva">—</span><b id="tName">—</b><small id="tRole">—</small><span class="tstat" id="tStat" role="status"></span></div>
+        <div class="tlog" id="tlog" role="log" aria-live="polite"></div>
+        <div class="tin">
+          <button class="mic" type="button" id="tMic" aria-label="Start voice call" title="Start voice call"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+          <label class="sr" for="tin">Reply as the candidate</label>
+          <input id="tin" type="text" autocomplete="off" placeholder="Type a reply, or tap the mic to talk…">
+          <button class="sq" type="button" id="tsend" aria-label="Send reply" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+        <div class="scorebox" id="scorebox" hidden></div>
+        <div class="tfoot">
+          <button class="obtn ghost" type="button" id="scoreBtn" disabled>Score this test against the skills</button>
+          <span>Test sessions are never shared with candidates.</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const h = (tag, props, ...kids) => {
+    const e = document.createElement(tag);
+    if (props) for (const k in props) {
+      const v = props[k];
+      if (v == null || v === false) continue;
+      if (k === 'class') e.className = v;
+      else if (k === 'text') e.textContent = v;
+      else if (k === 'html') e.innerHTML = v; /* only static icon markup */
+      else if (k === 'value') e.value = v;
+      else if (k.slice(0,2) === 'on') e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? '' : v);
+    }
+    for (const c of kids.flat(3)) if (c != null && c !== false) e.append(c.nodeType ? c : String(c));
+    return e;
+  };
+  const ICON = {
+    spark18:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>',
+    spark16:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>',
+    spark14:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>',
+    check12:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    check14:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    check11:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    send:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    edit:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+    x:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    grip:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+    warn:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17h.01"/></svg>',
+    eyeoff:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0 1 12 6c5 0 9 6 9 6a17 17 0 0 1-2.6 3.2M6.6 6.6C4.3 8.1 3 12 3 12s4 6 9 6a9 9 0 0 0 4.4-1.1"/></svg>',
+    chev:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'
+  };
+  const icon = (n) => h('span', { class:'spark', html:ICON[n] });
+  document.querySelectorAll('[data-icon]').forEach((e) => { e.innerHTML = ICON[e.getAttribute('data-icon')]; });
+
+  /* ---------------- Claude engine ---------------- */
+  let aiDead = false;
+  const sampleP = (window.claude && typeof window.claude.use === 'function') ? window.claude.use('sample').catch(() => null) : Promise.resolve(null);
+  sampleP.then((s) => { if (!s) markDead(); });
+  function markDead(){ aiDead = true; $('aiNote').hidden = false; renderS1(); syncSend(); }
+  function errCopy(e){
+    const c = e && e.code;
+    if (['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(c)) { markDead(); return "Claude isn't allowed for this page, so Tara can't answer."; }
+    if (c === 'rate_limited') return 'Too many requests just now. Wait a moment, then try again.';
+    if (c === 'session_expired') return 'Your Claude session expired. Sign in again, then retry.';
+    if (c === 'invalid_json') return "Tara's answer came back incomplete. Try again.";
+    if (c === 'refused') return "Tara couldn't do that one. Try rephrasing.";
+    if (c === 'prompt_too_large') return 'This is too long for one request. Shorten it and try again.';
+    return 'Tara lost the connection. Try again.';
+  }
+  async function ai(kind, input, opts){
+    const s = await sampleP;
+    if (!s) throw { code:'not_granted' };
+    return kind === 'json' ? s.json(input, opts) : s(input, opts);
+  }
+
+  /* ---------------- state ---------------- */
+  const FIELDS = [
+    { k:'type', label:'SCENARIO TYPE', hint:'Interview, role-play or assessment' },
+    { k:'role', label:'ROLE OR SITUATION', hint:'Who is being assessed, and where' },
+    { k:'persona', label:'WHO TARA PLAYS', hint:'The character people talk to' },
+    { k:'skills', label:'WHAT TO ASSESS', hint:'The skills Tara scores' },
+    { k:'difficulty', label:'DIFFICULTY', hint:'Friendly, realistic or tough' },
+    { k:'length', label:'LENGTH', hint:'How many minutes' }
+  ];
+  const S = {
+    view:1, brief:'', mode:'roleplay', cat:'all', fields:{},
+    building:false, buildText:'', buildErr:'', builtFor:'',
+    agent:null, cfg:null, reviewed:false, published:false, askBusy:false, askMsg:'', askCls:'', genBusy:false, editQ:-1, advOpen:false,
+    test:[], tBusy:false, tab:'chat', score:null, scoreBusy:false
+  };
+  let ctlT = null;
+  const nFilled = () => FIELDS.filter((f) => (S.fields[f.k] || '').trim()).length;
+  const lenNum = () => { const m = String(S.fields.length || '').match(/\d+/); return m ? Math.max(5, Math.min(90, +m[0])) : 20; };
+  /* Voice catalog: label → Retell voice. Replace placeholder ids with ids from Retell GET /list-voices. */
+  const VOICES = [
+    { key:'grace', label:'Grace — warm, US English', lang:'English', locale:'en-US', id:'11labs-Grace' },
+    { key:'adrian', label:'Adrian — friendly, US English', lang:'English', locale:'en-US', id:'11labs-Adrian' },
+    { key:'willa', label:'Willa — crisp, UK English', lang:'English', locale:'en-GB', id:'11labs-Willa' },
+    { key:'anthony', label:'Anthony — steady, UK English', lang:'English', locale:'en-GB', id:'11labs-Anthony' },
+    { key:'monika', label:'Monika — clear, Indian English', lang:'English', locale:'en-IN', id:'11labs-Monika' },
+    { key:'amritanshu', label:'Amritanshu — calm, Indian English', lang:'English', locale:'en-IN', id:'11labs-Amritanshu' },
+    { key:'monika_hi', label:'Monika — Hindi', lang:'Hindi', locale:'hi-IN', id:'11labs-Monika' },
+    { key:'amritanshu_hi', label:'Amritanshu — Hindi', lang:'Hindi', locale:'hi-IN', id:'11labs-Amritanshu' },
+    { key:'emma', label:'Emma — poised, French', lang:'French', locale:'fr-FR', id:'cartesia-Emma' },
+    { key:'pierre', label:'Pierre — steady, French', lang:'French', locale:'fr-FR', id:'cartesia-Pierre' },
+    { key:'isabel', label:'Isabel — bright, Spanish', lang:'Spanish', locale:'es-ES', id:'cartesia-Isabel' },
+    { key:'santiago', label:'Santiago — measured, Spanish', lang:'Spanish', locale:'es-ES', id:'11labs-Santiago' },
+    { key:'carola', label:'Carola — direct, German', lang:'German', locale:'de-DE', id:'11labs-Carola' },
+    { key:'max', label:'Max — calm, German', lang:'German', locale:'de-DE', id:'minimax-Max' }
+  ];
+  const voiceOf = (k) => VOICES.find((v) => v.key === k) || VOICES[0];
+  /* Length follows the Follow-up depth chosen in Persona. */
+  const DEPTH_LEN = { Light:10, Probing:20, 'Deep dive':30 };
+  function lengthParts(){
+    const c = S.cfg, est = DEPTH_LEN[c.depth] || 20;
+    const cap = c.ending === 'Hard time limit' ? est : c.ending === 'No end time' ? 60 : est + 5;
+    return { est, cap };
+  }
+  const estMinutes = () => lengthParts().est;
+  const initials = (n) => String(n || '').replace(/^(dr|mr|mrs|ms)\.?\s+/i, '').split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0,2).toUpperCase() || 'T';
+
+  /* ---------------- navigation ---------------- */
+  function go(v){
+    S.view = v;
+    [1,2,3].forEach((i) => { $('v'+i).hidden = i !== v; });
+    if (v === 3) renderS3();
+    window.scrollTo(0,0);
+  }
+  document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); go(+g.getAttribute('data-go')); } });
+
+  let toastT;
+  function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3400); }
+
+  /* =============== SCREEN 1 =============== */
+  const TEMPLATES = [
+    { cat:'ai', kind:'Role-play', title:'AI Engineer Technical Interview', desc:'ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI for mid-to-senior engineers.', mins:'25 min', format:'Voice' },
+    { cat:'ai', kind:'Role-play', title:'Prompt Engineer Screening', desc:'Prompt design, evaluation methods and failure analysis with live scenario questions.', mins:'20 min', format:'Voice' },
+    { cat:'ai', kind:'Role-play', title:'ML Ops Engineer Deep-Dive', desc:'Pipelines, drift monitoring, model serving and rollback strategy for production ML.', mins:'30 min', format:'Voice' },
+    { cat:'ai', kind:'Assessment', title:'Data Scientist Case Study', desc:'Candidate walks through a churn-prediction case: framing, features, metrics, trade-offs.', mins:'30 min', format:'Voice' },
+    { cat:'sales', kind:'Role-play', title:'SDR Cold Call', desc:'Tara plays a busy VP of Operations. Book a meeting in under five minutes.', mins:'10 min', format:'Voice' },
+    { cat:'sales', kind:'Role-play', title:'Enterprise Discovery Call', desc:'Uncover pain, budget and decision process with a cautious IT director.', mins:'20 min', format:'Voice' },
+    { cat:'sales', kind:'Role-play', title:'Pricing Objection Handling', desc:'A procurement lead pushes back hard on price. Defend value without discounting.', mins:'15 min', format:'Voice' },
+    { cat:'sales', kind:'Role-play', title:'Renewal Negotiation', desc:'An at-risk customer threatens to churn. Negotiate a renewal that protects margin.', mins:'20 min', format:'Voice' },
+    { cat:'customer', kind:'Role-play', title:'Angry Customer De-escalation', desc:'A frustrated customer after a failed delivery. Calm, own the issue, resolve.', mins:'10 min', format:'Voice' },
+    { cat:'customer', kind:'Role-play', title:'Customer Success QBR', desc:'Present quarterly outcomes to a skeptical sponsor and agree on next goals.', mins:'20 min', format:'Voice' },
+    { cat:'customer', kind:'Role-play', title:'Support Agent Screening', desc:'Empathy, troubleshooting and written clarity for frontline support hires.', mins:'15 min', format:'Voice' },
+    { cat:'customer', kind:'Role-play', title:'Refund Request Handling', desc:'Apply policy fairly when a loyal customer asks for an out-of-window refund.', mins:'10 min', format:'Voice' }
+  ];
+  const CATS = { ai:'AI Roles', sales:'Sales', customer:'Customer' };
+  const SUGG = [
+    { label:'Senior AI Engineer technical interview', text:'A 25-minute technical interview for a senior AI Engineer at DeepMind. Probe ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI. Be friendly but rigorous.' },
+    { label:'SDR cold-call roleplay', text:'A cold-call roleplay where Tara is a busy VP of Operations at a logistics company. The rep must book a 30-minute demo. Push back on timing twice.' },
+    { label:'Support de-escalation practice', text:'An angry customer whose order arrived damaged for the second time. Score empathy, ownership and resolution. 10 minutes, voice.' }
+  ];
+  const MODES = [['roleplay','Role-play'],['assessment','Assessment']];
+  const CLOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  const MIC = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  function renderS1(){
+    const md = $('modes'); md.textContent = '';
+    MODES.forEach(([id, label]) => md.append(h('button', { type:'button', 'aria-pressed':String(S.mode === id), text:label, onclick:() => { S.mode = id; renderS1(); } })));
+    const sg = $('sugg'); sg.textContent = '';
+    SUGG.forEach((x) => sg.append(h('button', { type:'button', text:x.label, onclick:() => { S.brief = x.text; $('brief').value = x.text; S.mode = 'roleplay'; renderS1(); $('brief').focus(); } })));
+    const tb = $('ttabs'); tb.textContent = '';
+    [['all','All']].concat(Object.entries(CATS)).forEach(([id, label]) => {
+      const n = id === 'all' ? TEMPLATES.length : TEMPLATES.filter((t) => t.cat === id).length;
+      tb.append(h('button', { type:'button', role:'tab', 'aria-selected':String(S.cat === id), onclick:() => { S.cat = id; renderS1(); } }, label, h('i', { text:String(n) })));
+    });
+    const g = $('tcards'); g.textContent = '';
+    TEMPLATES.filter((t) => S.cat === 'all' || t.cat === S.cat).forEach((t) => g.append(
+      h('button', { class:'tc', type:'button', disabled: aiDead || null, 'aria-label':'Use template: ' + t.title, onclick:() => useTemplate(t) },
+        h('span', { class:'tr' }, h('span', { class:'cat ' + t.cat, text:CATS[t.cat] }), h('span', { class:'kind', text:t.kind })),
+        h('span', { class:'tt', text:t.title }),
+        h('span', { class:'td', text:t.desc }),
+        h('span', { class:'tf' }, h('span', null, h('span', null, h('span', { class:'spark', html:CLOCK }), t.mins), h('span', null, h('span', { class:'spark', html:MIC }), t.format)), h('span', { class:'use', text:'Use →' })))));
+    syncCreate();
+  }
+  function syncCreate(){ $('create').disabled = aiDead || S.building || !S.brief.trim(); }
+  function useTemplate(t){
+    S.brief = t.title + ': ' + t.desc + ' ' + t.mins + ', ' + t.format.toLowerCase() + '.';
+    S.mode = t.kind === 'Assessment' ? 'assessment' : 'roleplay';
+    $('brief').value = S.brief; renderS1(); startBuild();
+  }
+  function startBuild(){
+    const key = S.mode + '|' + S.brief.trim();
+    if (S.agent && S.builtFor === key) { go(3); return; }
+    build();
+  }
+  function syncSend(){
+    $('tsend').disabled = S.tBusy || aiDead || !$('tin').value.trim() || !S.agent;
+    $('scoreBtn').disabled = S.scoreBusy || S.tBusy || aiDead || S.test.filter((m) => m.from === 'user').length < 2;
+    if ($('create')) syncCreate();
+  }
+  $('brief').addEventListener('input', (e) => { S.brief = e.target.value; syncCreate(); });
+  $('brief').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !$('create').disabled) { e.preventDefault(); startBuild(); } });
+  $('create').addEventListener('click', startBuild);
+  $('navTpl').addEventListener('click', (e) => { e.preventDefault(); $('templates').scrollIntoView({ behavior:'smooth' }); });
+
+
+  /* =============== SCREEN 2 =============== */
+  const STEPS = [
+    { key:null, label:'Reading your scenario', detail:'Type, role, skills and tone' },
+    { key:'"type_label"', label:'Setting scenario details', detail:'' },
+    { key:'"style"', label:'Designing the Tara persona', detail:'Name, background, voice and style' },
+    { key:'"questions"', label:'Drafting potential AI questions', detail:'Core questions plus follow-up paths' },
+    { key:'"rubric"', label:'Choosing the skills to score', detail:'Skills, weights, 1–5 anchors' },
+    { key:'"closing_line"', label:'Configuring the conversation', detail:'Opening, pacing and ending' }
+  ];
+  const AGENT_SHAPE = `{"scenario":{"type":"Role-play | Assessment","role":"role or situation, short","persona":"who Tara plays, short","skills":"2-5 skills, comma-separated","difficulty":"Friendly | Realistic | Tough","length":"N min"},"title":"short agent name","type_label":"e.g. Technical interview / Sales role-play / Customer role-play / Behavioural interview / Assessment","persona":{"name":"full name","role":"job title and organisation if given","style":"3-6 words on tone"},"description":"2-3 encouraging sentences shown to participants before they start","instructions":"4-6 sentences: how Tara runs the conversation, what areas to cover in order, how to follow up, what never to do","opening_line":"what Tara says first, 1-3 spoken sentences","questions":[{"text":"question","tag":"competency it probes (must match a rubric name)"}],"rubric":[{"name":"competency","anchor":"what a 5 looks like, one sentence","weight":25}],"closing_line":"how Tara ends, 1-2 sentences","depth":"Light | Probing | Deep dive","voice":"one of: maya, adrian, elena, james, priya, arjun (pick the one that fits the persona's gender and region)"}`;
+  function stageOf(t){ let n = t ? 1 : 0; STEPS.forEach((s, i) => { if (s.key && t.includes(s.key)) n = Math.max(n, i + 1); }); return Math.min(n, 5); }
+  const unq = (s) => { try { return JSON.parse('"' + s + '"'); } catch (e) { return s; } };
+  const STR = '"((?:[^"\\\\]|\\\\.)*)"';
+  function peek(t){
+    const pick = (re, src) => { const m = (src || t).match(re); return m ? unq(m[1]) : ''; };
+    const pi = t.indexOf('"persona"', Math.max(0, t.indexOf('"title"'))), qi = t.indexOf('"questions"'), ri = t.indexOf('"rubric"');
+    const per = pi >= 0 ? t.slice(pi, qi >= 0 ? qi : undefined) : '';
+    const qsrc = qi >= 0 ? t.slice(qi, ri >= 0 ? ri : undefined) : '';
+    const rsrc = ri >= 0 ? t.slice(ri) : '';
+    const all = (re, src) => { const out = []; let m; const r = new RegExp(re, 'g'); while ((m = r.exec(src))) out.push(unq(m[1])); return out; };
+    const si = t.indexOf('"scenario"'), ti = t.indexOf('"title"');
+    const ssrc = si >= 0 ? t.slice(si, ti > si ? ti : undefined) : '';
+    const sf = {}; ['type','role','difficulty','length'].forEach((k) => { sf[k] = ssrc ? pick(new RegExp('"' + k + '"\\s*:\\s*' + STR), ssrc) : ''; });
+    return {
+      sf,
+      title: pick(new RegExp('"title"\\s*:\\s*' + STR)),
+      typeLabel: pick(new RegExp('"type_label"\\s*:\\s*' + STR)),
+      pname: per ? pick(new RegExp('"name"\\s*:\\s*' + STR), per) : '',
+      prole: per ? pick(new RegExp('"role"\\s*:\\s*' + STR), per) : '',
+      pstyle: per ? pick(new RegExp('"style"\\s*:\\s*' + STR), per) : '',
+      qs: qsrc ? all('"text"\\s*:\\s*' + STR, qsrc) : [],
+      rub: rsrc ? (() => { const out = []; const r = new RegExp('"name"\\s*:\\s*' + STR + '[\\s\\S]*?"weight"\\s*:\\s*(\\d+)', 'g'); let m; while ((m = r.exec(rsrc))) out.push({ name:unq(m[1]), weight:+m[2] }); return out; })() : []
+    };
+  }
+  function renderS2(){
+    const t = S.buildText, done = !!(S.agent && !S.building), at = done ? 6 : stageOf(t);
+    $('genh').textContent = done ? 'Your agent draft is ready' : (S.buildErr ? 'Tara stopped building' : 'Tara is building your agent…');
+    $('briefTxt').textContent = S.brief;
+    const pct = Math.round(at / 6 * 100);
+    $('progLbl').textContent = done ? 'All set' : 'Step ' + Math.min(at + 1, 6) + ' of 6';
+    $('progPct').textContent = pct + '%';
+    $('progBar').setAttribute('aria-valuenow', pct);
+    $('progBar').firstElementChild.style.width = pct + '%';
+    const pk = peek(t), F = done ? S.fields : pk.sf;
+    const ol = $('steps2'); ol.textContent = '';
+    STEPS.forEach((s, i) => {
+      const st = i < at ? 'done' : (i === at && !S.buildErr ? 'act' : 'wait');
+      const detail = i === 1 ? ([F.type, F.role, F.difficulty].filter(Boolean).join(' · ') || 'Type, role and difficulty') : s.detail;
+      ol.append(h('li', { class:st }, h('span', { class:'sdot ' + st, html: st === 'done' ? ICON.check14 : '' }), h('span', null, h('b', { text:s.label }), h('small', { text:detail }))));
+    });
+    $('err2').hidden = !S.buildErr; $('err2').textContent = S.buildErr;
+    $('act2').hidden = !done;
+    $('rebuild').disabled = S.building;
+    // live draft
+    const p = done ? { sf:S.fields, title:S.agent.title, typeLabel:S.agent.type_label, pname:S.agent.persona.name, prole:S.agent.persona.role, pstyle:S.agent.persona.style + ' · Voice: ' + voiceOf(S.cfg.voice).label.split(' —')[0], qs:S.agent.questions.map((q) => q.text), rub:S.agent.rubric } : pk;
+    const card = $('draftCard'); card.textContent = '';
+    const has = { role: !!p.title, persona: !!p.pname, q: p.qs.length > 0, r: p.rub.length > 0 };
+    card.append(
+      h('div', { class:'dh' },
+        has.persona ? h('span', { class:'bigava fadein', text:initials(p.pname) }) : h('span', { class:'bigava ph' }),
+        h('div', { class:'t' },
+          has.role ? h('span', { class:'dtitle fadein', text:p.title }) : h('span', { class:'bone', style:'height:18px;width:70%' }),
+          has.persona ? h('span', { class:'dsub fadein', text:[p.pname, p.prole, p.pstyle].filter(Boolean).join(' · ') }) : h('span', { class:'bone', style:'height:12px;width:50%;background:#F4F4F8' }))),
+      h('div', { class:'facts' }, [
+        ['Scenario type', p.typeLabel || F.type, at > 1],
+        ['Difficulty', F.difficulty, at > 1],
+        ['Format', done ? 'Voice · ' + estMinutes() + ' min' : '', done],
+        ['Opens with', done ? (S.cfg.speaker === 'Participant opens' ? 'Participant speaks' : 'Tara greets') : '', done]
+      ].map(([k, v, ok]) => h('div', { class:'fact' }, h('span', { text:k }), ok && v ? h('b', { class:'fadein', text:v }) : h('span', { class:'bone', style:'height:14px;width:60%;margin-top:3px;background:#EFEFF5' })))),
+      h('div', { style:'display:flex;flex-direction:column;gap:10px' }, h('span', { class:'eyebrow', text:'POTENTIAL AI QUESTIONS' }),
+        has.q ? h('div', { class:'fadein', style:'display:flex;flex-direction:column;gap:8px' }, p.qs.slice(0,2).map((q) => h('div', { class:'dq', text:q })), p.qs.length > 2 ? h('div', { class:'more', text:'+ ' + (p.qs.length - 2) + ' more question' + (p.qs.length - 2 === 1 ? '' : 's') }) : null)
+              : h('div', { style:'display:flex;flex-direction:column;gap:8px' }, h('span', { class:'bone', style:'height:42px;border-radius:12px;background:#F4F4F8' }), h('span', { class:'bone', style:'height:42px;border-radius:12px;background:#F6F6F9' }))),
+      h('div', { style:'display:flex;flex-direction:column;gap:10px' }, h('span', { class:'eyebrow', text:'SKILLS' }),
+        has.r ? h('div', { class:'rchips fadein' }, p.rub.map((r) => h('span', { class:'rchip', text:r.name + ' · ' + r.weight + '%' })))
+              : h('div', { style:'display:flex;gap:8px' }, [140,110,90].map((w) => h('span', { class:'bone', style:'height:30px;width:' + w + 'px;border-radius:999px;background:#F4F4F8' }))))
+    );
+  }
+  function normAgent(a){
+    if (!a || typeof a !== 'object' || !a.persona || !Array.isArray(a.questions) || !Array.isArray(a.rubric) || !a.rubric.length) throw { code:'invalid_json' };
+    const str = (x) => (x == null ? '' : String(x));
+    const out = {
+      title:str(a.title) || 'New agent', type_label:str(a.type_label) || S.fields.type || 'Role-play',
+      persona:{ name:str(a.persona.name) || 'Tara', role:str(a.persona.role), style:str(a.persona.style) },
+      description:str(a.description), instructions:str(a.instructions), opening_line:str(a.opening_line), closing_line:str(a.closing_line),
+      questions:a.questions.filter((q) => q && q.text).map((q) => ({ text:str(q.text), tag:str(q.tag) })),
+      rubric:a.rubric.filter((r) => r && r.name).map((r) => ({ name:str(r.name), anchor:str(r.anchor || r.five), weight:Math.max(0, Math.round(Number(r.weight) || 0)) })),
+      depth:['Light','Probing','Deep dive'].includes(a.depth) ? a.depth : 'Probing',
+      voice: VOICES.some((v) => v.key === a.voice) ? a.voice : 'grace'
+    };
+    const sum = out.rubric.reduce((t, r) => t + r.weight, 0);
+    if (sum !== 100 && out.rubric.length) {
+      out.rubric.forEach((r) => { r.weight = sum ? Math.round(r.weight * 100 / sum) : Math.round(100 / out.rubric.length); });
+      out.rubric[0].weight += 100 - out.rubric.reduce((t, r) => t + r.weight, 0);
+    }
+    return out;
+  }
+  function defaultCfg(){
+    return { tone: S.fields.difficulty && /tough/i.test(S.fields.difficulty) ? 'Tough' : /realistic/i.test(S.fields.difficulty || '') ? 'Realistic' : 'Friendly',
+      depth:(S.agent && S.agent.depth) || 'Probing', followups:true, format:'Voice only', speaker:'Tara opens', sound:'None', ending:'Tara decides',
+      voice:(S.agent && S.agent.voice) || 'grace', language:voiceOf((S.agent && S.agent.voice) || 'grace').lang, consent:true, proctoring:'Off' };
+  }
+  async function build(){
+    S.building = true; S.buildText = ''; S.buildErr = ''; S.agent = null;
+    go(2); renderS2();
+    const prompt = `You are designing a conversational AI agent for Tara by iMocha. Tara runs a spoken conversation (an interview or a role-play) with a participant, then scores it. Write the complete agent from this brief, written by the person setting it up:\n\n"""${S.brief.trim().slice(0, 4000)}"""\n\nAgent type they picked: ${S.mode}.\n\nFirst fill "scenario" from the brief: infer what it implies, use sensible defaults for anything missing (difficulty Realistic), and use only organisation names the brief gives. Length is set by \"depth\": Light = 10 min, Probing = 20 min, Deep dive = 30 min. Pick the depth whose length best fits the brief (Probing if it gives no length) and set scenario.length to that depth's minutes, e.g. \"20 min\". Choose \"voice\" to fit the persona. Then: the persona matches scenario.persona (a believable full name); questions that fit the role, difficulty and length (4 for Light, 6 for Probing, 7 for Deep dive); 4-5 rubric competencies drawn from the skills with weights summing to 100, every question tagged with one of them; spoken lines sound natural said aloud; keys in exactly this order.\n\nReply with only JSON:\n${AGENT_SHAPE}`;
+    try {
+      const a = await ai('json', prompt, { cache:false, onText: ({ text }) => { S.buildText = text; renderS2(); } });
+      S.fields = {}; const sc = (a && a.scenario) || {}; FIELDS.forEach(({ k }) => { if (typeof sc[k] === 'string' && sc[k].trim()) S.fields[k] = sc[k].trim(); });
+      S.agent = normAgent(a); renamePersona(S.agent, S.agent.persona.name, voiceName(S.agent.voice)); S.agent.persona.name = voiceName(S.agent.voice); S.cfg = defaultCfg(); S.fields.length = estMinutes() + ' min'; S.reviewed = false; S.published = false; S.builtFor = S.mode + '|' + S.brief.trim();
+      S.askMsg = ''; resetTest(false);
+    } catch (e) {
+      S.buildErr = errCopy(e);
+    }
+    S.building = false; renderS2(); syncCreate();
+  }
+  $('rebuild').addEventListener('click', () => { if (!S.building) build(); });
+  $('toReview').addEventListener('click', () => go(3));
+
+  /* =============== SCREEN 3 =============== */
+  function seg(label, key, opts){
+    return h('div', { role:'group', 'aria-label':label, class:'seg' }, opts.map((o) => h('button', { type:'button', 'aria-pressed': String(S.cfg[key] === o), text:o, onclick:() => { S.cfg[key] = o; touch(); renderMain(); } })));
+  }
+  function readiness(){
+    const a = S.agent; if (!a) return [];
+    const tot = a.rubric.reduce((t, r) => t + (+r.weight || 0), 0);
+    return [
+      { id:'scenario', label:'Scenario details', group:'BASICS', done: nFilled() === 6 },
+      { id:'desc', label:'Description', group:'BASICS', done: !!a.description.trim() },
+      { id:'context', label:'Instructions', group:'AGENT SETUP', done: !!a.instructions.trim() },
+      { id:'persona', label:'Persona', group:'AGENT SETUP', done: !!a.persona.name.trim() },
+      { id:'rubric', label:'Skills', group:'AGENT SETUP', done: S.reviewed && tot === 100, review: !(S.reviewed && tot === 100) },
+      { id:'questions', label:'Potential AI Questions', group:'OPTIONAL', opt:true, done: a.questions.length > 0 },
+      { id:'settings', label:'Conversation settings', group:'OPTIONAL', opt:true },
+      { id:'advanced', label:'Advanced', group:'OPTIONAL', opt:true }
+    ];
+  }
+  function renderSide(){
+    const a = S.agent, side = $('side'); side.textContent = '';
+    const items = readiness(), req = items.filter((i) => !i.opt), n = req.filter((i) => i.done).length;
+    side.append(
+      h('div', { class:'sid' }, h('span', { class:'bigava', text:initials(a.persona.name) }), h('div', null, h('b', { text:a.title }), h('small', { text:a.type_label }))),
+      h('div', { class:'ready' }, h('div', { class:'top' }, h('span', { text:'Ready to publish' }), h('b', { text:n + ' of ' + req.length })), h('div', { class:'pbar' }, h('i', { style:'width:' + Math.round(n / req.length * 100) + '%' })))
+    );
+    ['BASICS','AGENT SETUP','OPTIONAL'].forEach((g) => {
+      side.append(h('div', { class:'ngroup' }, h('span', { text:g }), items.filter((i) => i.group === g).map((i) =>
+        h('a', { class:'navi', href:'#' + i.id, onclick:(e) => { e.preventDefault(); const t = $(i.id); if (t) { t.scrollIntoView({ behavior:'smooth', block:'start' }); t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash'); } } },
+          i.label, i.review ? h('span', { class:'revpill', text:'Review' }) : (i.done && !i.opt) || (i.opt && i.done) ? h('span', { class:'okdot', 'aria-label':'Complete', html:ICON.check11 }) : null))));
+    });
+    $('crumbT').textContent = a.title;
+    $('dpill').textContent = S.published ? 'PUBLISHED' : 'DRAFT';
+    $('dpill').className = 'draftpill' + (S.published ? ' pub' : '');
+  }
+  let savedT;
+  function touch(){
+    S.published = false;
+    if (S.agent && S.cfg) S.fields.length = estMinutes() + ' min';
+    const s = $('saved').lastElementChild; s.textContent = 'Saving…';
+    clearTimeout(savedT); savedT = setTimeout(() => { s.textContent = 'Saved just now'; }, 600);
+    renderSide();
+  }
+  const bind = (obj, key, after) => (e) => { obj[key] = e.target.value; touch(); if (after) after(); };
+
+  function renderMain(){
+    const a = S.agent, c = S.cfg, m = $('main3');
+    const keepY = window.scrollY;
+    m.textContent = '';
+    const tot = a.rubric.reduce((t, r) => t + (+r.weight || 0), 0);
+    const quick = ['Make it more challenging', 'Add a coding question', 'Shorten to 15 minutes', 'Make the persona warmer'];
+
+    // Ask Tara
+    const askIn = h('input', { id:'ask', type:'text', autocomplete:'off', placeholder:'Tell Tara what to change — “Make it harder and add a coding question”', disabled: S.askBusy || null });
+    const askBtn = h('button', { class:'sq', type:'button', 'aria-label':'Send to Tara', html:ICON.send, disabled:true });
+    const syncAsk = () => { askBtn.disabled = S.askBusy || aiDead || !askIn.value.trim(); };
+    askIn.addEventListener('input', syncAsk);
+    askIn.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !askBtn.disabled) { e.preventDefault(); revise(askIn.value); } });
+    askBtn.addEventListener('click', () => revise(askIn.value));
+    m.append(h('section', { class:'askbox', 'aria-label':'Ask Tara to edit' },
+      h('div', { class:'askrow' }, h('span', { class:'askic', html:ICON.spark18 }), h('label', { class:'sr', for:'ask', text:'Ask Tara to change something' }), askIn, askBtn),
+      h('div', { class:'askchips' }, quick.map((q) => h('button', { type:'button', class:'ghost', text:q, disabled: S.askBusy || aiDead || null, onclick:() => revise(q) }))),
+      (S.askBusy || S.askMsg) ? h('p', { class:'askstat ' + (S.askCls || ''), role:'status', text: S.askBusy ? 'Tara is updating the agent…' : S.askMsg }) : null
+    ));
+    syncAsk();
+
+    // Scenario details (was Job details)
+    const sel = (id, key, opts, obj) => h('select', { id, class:'inp', onchange:bind(obj || S.fields, key, () => { renderSide(); }) }, opts.map((o) => h('option', { value:o, text:o, selected: (obj || S.fields)[key] === o || null })));
+    const typeOpts = ['Role-play','Assessment'];
+    m.append(h('section', { id:'scenario', class:'card', 'aria-labelledby':'sc-h' },
+      h('div', { class:'ch2' }, h('div', { class:'tt' }, h('h2', { id:'sc-h', text:'Scenario details' }), h('p', { class:'sub', text:'Tara filled these from your brief. Change any of them here.' }))),
+      h('div', { class:'grid4' },
+        h('div', { class:'fld' }, h('label', { for:'f-type', text:'Scenario type' }), sel('f-type', 'type', typeOpts)),
+        h('div', { class:'fld' }, h('label', { for:'f-role', text:'Role or situation' }), h('input', { id:'f-role', class:'inp', type:'text', value:S.fields.role || '', oninput:bind(S.fields, 'role') })),
+        h('div', { class:'fld', style:'grid-column:1 / -1' }, h('label', { for:'f-skills', text:'What to assess' }), h('input', { id:'f-skills', class:'inp', type:'text', value:S.fields.skills || '', oninput:bind(S.fields, 'skills') }))
+      )));
+
+    // Description
+    m.append(h('section', { id:'desc', class:'card', style:'gap:14px', 'aria-labelledby':'desc-h' },
+      h('div', { class:'tt', style:'display:flex;flex-direction:column;gap:6px' }, h('h2', { id:'desc-h', text:'Participant-facing description' }), h('p', { class:'sub', text:'Shown to participants before they start. Keep it short and encouraging.' })),
+      h('label', { class:'sr', for:'desc-t', text:'Description' }),
+      h('textarea', { id:'desc-t', class:'inp', rows:'3', value:a.description, oninput:bind(a, 'description') })));
+
+    // Instructions
+    m.append(h('section', { id:'context', class:'card', style:'gap:14px', 'aria-labelledby':'ctx-h' },
+      h('div', { class:'ch2' }, h('div', { class:'tt' }, h('h2', { id:'ctx-h', text:"Tara's instructions" }), h('p', { class:'sub', text:'How Tara runs the conversation. Hidden from participants.' })), h('span', { class:'privpill' }, h('span', { class:'spark', html:ICON.eyeoff }), 'Private')),
+      h('label', { class:'sr', for:'ctx-t', text:"Tara's instructions" }),
+      h('textarea', { id:'ctx-t', class:'inp', rows:'6', value:a.instructions, oninput:bind(a, 'instructions') }),
+      h('div', { class:'grid4' },
+        h('div', { class:'fld' }, h('label', { for:'open-t', text:'Opening line' }), h('textarea', { id:'open-t', class:'inp', rows:'3', value:a.opening_line, oninput:bind(a, 'opening_line') })),
+        h('div', { class:'fld' }, h('label', { for:'close-t', text:'Closing line' }), h('textarea', { id:'close-t', class:'inp', rows:'3', value:a.closing_line, oninput:bind(a, 'closing_line') })))));
+
+    // Persona
+    m.append(h('section', { id:'persona', class:'card', style:'gap:22px', 'aria-labelledby':'per-h' },
+      h('div', { class:'tt', style:'display:flex;flex-direction:column;gap:6px' }, h('h2', { id:'per-h', text:'Persona' }), h('p', { class:'sub', text:'Who participants will meet. Tara stays in character the whole time.' })),
+      h('div', { class:'prow' },
+        h('div', { class:'pava' }, h('span', { class:'bigava', id:'pAva', text:initials(a.persona.name) })),
+        h('div', { class:'pgrid' },
+          h('div', { class:'fld' }, h('label', { for:'pn', text:'Name' }), h('input', { id:'pn', class:'inp', type:'text', value:a.persona.name, oninput:(e) => { a.persona.name = e.target.value; $('pAva').textContent = initials(a.persona.name); syncTestHead(); touch(); } })),
+          h('div', { class:'fld' }, h('label', { for:'pt', text:'Title' }), h('input', { id:'pt', class:'inp', type:'text', value:a.persona.role, oninput:(e) => { a.persona.role = e.target.value; syncTestHead(); touch(); } })),
+          h('div', { class:'fld' }, h('label', { for:'pv', text:'Voice' }),
+            h('select', { id:'pv', class:'inp', onchange:(e) => { setVoice(e.target.value); } },
+              VOICES.map((v) => h('option', { value:v.key, text:v.label, selected: c.voice === v.key || null })))))),
+      h('div', { class:'segs2' },
+        h('div', { class:'segwrap' }, h('span', { class:'lbl', text:'Difficulty' }), seg('Difficulty', 'tone', ['Friendly','Realistic','Tough'])),
+        h('div', { class:'segwrap' }, h('span', { class:'lbl', text:'Follow-up depth' }), seg('Follow-up depth', 'depth', ['Light','Probing','Deep dive']),
+          h('small', { style:'font-size:13px;color:var(--muted-2)', text:'Also sets the length: Light ≈ ' + DEPTH_LEN.Light + ' min · Probing ≈ ' + DEPTH_LEN.Probing + ' min · Deep dive ≈ ' + DEPTH_LEN['Deep dive'] + ' min' })))));
+
+    // Rubric
+    const rows = a.rubric.map((r, i) => {
+      const w = h('input', { type:'number', min:'0', max:'100', value:String(r.weight), 'aria-label':'Weight for ' + r.name, oninput:(e) => { r.weight = Math.max(0, Math.round(+e.target.value || 0)); touch(); updTotal(); } });
+      return h('div', { class:'rr' },
+        h('textarea', { class:'ed n', rows:'1', 'aria-label':'Skill name', value:r.name, oninput:(e) => { r.name = e.target.value; touch(); } }),
+        h('div', { class:'a-cell' }, h('textarea', { class:'ed a', rows:'2', 'aria-label':'What a 5 looks like', value:r.anchor, oninput:(e) => { r.anchor = e.target.value; touch(); } })),
+        h('div', { class:'wbox' }, w, h('span', { text:'%' })),
+        h('button', { class:'xbtn', type:'button', 'aria-label':'Remove ' + r.name, html:ICON.x, onclick:() => { a.rubric.splice(i, 1); S.reviewed = false; touch(); renderMain(); } }));
+    });
+    const totPill = h('span', { class:'totpill' + (tot === 100 ? '' : ' off'), id:'totp', text:'Total ' + tot + '%' });
+    function updTotal(){ const t = a.rubric.reduce((x, r) => x + (+r.weight || 0), 0); totPill.textContent = 'Total ' + t + '%'; totPill.className = 'totpill' + (t === 100 ? '' : ' off'); renderSide(); }
+    m.append(h('section', { id:'rubric', class:'card', 'aria-labelledby':'rub-h' },
+      h('div', { class:'ch2' }, h('div', { class:'tt' }, h('h2', { id:'rub-h', text:'Skills' }), h('p', { class:'sub', text:'Each skill is scored 1–5 with anchored descriptors. Weights must total 100%. Never sent to the voice agent.' })), totPill),
+      !S.reviewed ? h('div', { class:'warnbox' }, h('span', null, h('span', { class:'spark', html:ICON.warn }), 'Tara drafted these skills from your brief. Check the weights before you publish.'),
+        h('button', { class:'fillbtn', type:'button', text:'Mark as reviewed', onclick:() => { const t = a.rubric.reduce((x, r) => x + (+r.weight || 0), 0); if (t !== 100) { toast('Weights total ' + t + '%. Make them add up to 100% first.'); return; } S.reviewed = true; touch(); renderMain(); } })) : null,
+      h('div', { class:'rtab' }, h('div', { class:'rr hd' }, h('span', { text:'SKILL' }), h('span', { class:'a-cell', text:'WHAT A 5 LOOKS LIKE' }), h('span', { style:'text-align:right', text:'WEIGHT' }), h('span')), rows),
+      h('button', { class:'dashbtn ghost', type:'button', text:'+ Add skill', onclick:() => { a.rubric.push({ name:'New skill', anchor:'', weight:0 }); S.reviewed = false; touch(); renderMain(); } })));
+
+    // Questions
+    const qlist = h('div', { class:'qlist' });
+    let dragFrom = -1;
+    a.questions.forEach((q, i) => {
+      const editing = S.editQ === i;
+      const body = editing
+        ? h('div', { class:'qbody' }, h('textarea', { rows:'2', 'aria-label':'Question text', value:q.text, onblur:(e) => { q.text = e.target.value.trim() || q.text; S.editQ = -1; touch(); renderMain(); }, onkeydown:(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } } }), q.tag ? h('span', { class:'qtag', text:q.tag }) : null)
+        : h('div', { class:'qbody' }, h('span', { class:'qt', text:q.text }), q.tag ? h('span', { class:'qtag', text:q.tag }) : null);
+      const row = h('div', { class:'qrow', draggable:'true' },
+        h('span', { class:'grip', 'aria-hidden':'true', html:ICON.grip }), body,
+        h('button', { class:'xbtn', style:'color:var(--accent-ink)', type:'button', 'aria-label':'Edit question', html:ICON.edit, onclick:() => { S.editQ = i; renderMain(); const t = qlist.querySelector('textarea'); if (t) t.focus(); } }),
+        h('button', { class:'xbtn', type:'button', 'aria-label':'Remove question', html:ICON.x, onclick:() => { a.questions.splice(i, 1); touch(); renderMain(); } }));
+      row.addEventListener('dragstart', () => { dragFrom = i; row.classList.add('dragging'); });
+      row.addEventListener('dragend', () => row.classList.remove('dragging'));
+      row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('over'); });
+      row.addEventListener('dragleave', () => row.classList.remove('over'));
+      row.addEventListener('drop', (e) => { e.preventDefault(); if (dragFrom < 0 || dragFrom === i) return; const [mv] = a.questions.splice(dragFrom, 1); a.questions.splice(i, 0, mv); dragFrom = -1; touch(); renderMain(); });
+      qlist.append(row);
+    });
+    m.append(h('section', { id:'questions', class:'card', 'aria-labelledby':'q-h' },
+      h('div', { class:'ch2' }, h('div', { class:'tt' }, h('h2', { id:'q-h' }, 'Potential AI Questions ', h('small', { text:'(Optional)' })), h('p', { class:'sub', text:'Tara picks from these based on how the conversation goes. Drag to set priority.' })),
+        h('button', { class:'obtn ghost', type:'button', disabled: S.genBusy || aiDead || null, onclick:genMore }, h('span', { class:'spark', html:ICON.spark16 }), S.genBusy ? 'Generating…' : 'Generate more')),
+      qlist,
+      h('div', { class:'togrow' }, h('span', null, h('b', { text:'Adaptive follow-ups' }), h('small', { text:'Tara asks probing follow-ups when an answer is vague or strong.' })),
+        h('button', { class:'sw', type:'button', role:'switch', 'aria-checked':String(c.followups), 'aria-label':'Adaptive follow-ups', onclick:() => { c.followups = !c.followups; touch(); renderMain(); } }, h('i'))),
+      h('button', { class:'dashbtn ghost', type:'button', text:'+ Add question', onclick:() => { a.questions.push({ text:'New question', tag:'' }); S.editQ = a.questions.length - 1; touch(); renderMain(); const t = qlist.querySelector('textarea'); if (t) { t.focus(); t.select(); } } })));
+
+    // Settings
+    const srow = (title, hint, key, opts) => h('div', { class:'srow' }, h('span', { class:'tt' }, h('b', { text:title }), h('small', { text:hint })), seg(title, key, opts));
+    m.append(h('section', { id:'settings', class:'card', style:'gap:22px', 'aria-labelledby':'set-h' },
+      h('div', { class:'tt', style:'display:flex;flex-direction:column;gap:6px' }, h('h2', { id:'set-h', text:'Conversation settings' }), h('p', { class:'sub', text:'How the session starts, runs and ends.' })),
+      srow('Who speaks first', 'Tara greets the participant in character.', 'speaker', ['Tara opens','Participant opens']),
+      srow('Introduction sound', 'Played as the session begins.', 'sound', ['None','Phone ring','Video join','Doorbell']),
+      srow('Ending', 'How the conversation wraps up.', 'ending', ['Tara decides','Hard time limit','No end time']),
+      (() => { const L = lengthParts(); return h('div', { class:'srow', style:'border-bottom:none;padding-bottom:0' },
+        h('span', { class:'tt' }, h('b', { text:'Conversation length' }), h('small', { text:'Set by Follow-up depth in Persona (' + c.depth + '). Change it there.' })),
+        h('span', { style:'display:flex;flex-direction:column;gap:4px' },
+          h('span', { class:'est' }, h('b', { text:'≈ ' + L.est }), h('span', { text:'min' })),
+          h('span', { class:'estcalc', text:'Call cap ' + L.cap + ' min (' + c.ending + ')' }))); })()));
+
+    // Advanced
+    m.append(h('section', { id:'advanced', class:'adv' },
+      h('button', { type:'button', 'aria-expanded':String(S.advOpen), onclick:() => { S.advOpen = !S.advOpen; renderMain(); } },
+        h('span', null, h('b', { text:'Advanced' }), h('small', { text:'Language, recording consent' })), h('span', { class:'spark', style: S.advOpen ? 'transform:rotate(180deg)' : null, html:ICON.chev })),
+      S.advOpen ? h('div', { class:'advbody' },
+        h('div', { class:'fld' }, h('span', { class:'lbl', text:'Language' }), h('p', { style:'font-size:15px;margin:6px 0 0', text: voiceOf(c.voice).lang + ' — set by the voice chosen in Persona' })),
+        h('div', { class:'togrow', style:'grid-column:1 / -1' }, h('span', null, h('b', { text:'Recording consent' }), h('small', { text:'Ask participants to agree to recording before they start.' })),
+          h('button', { class:'sw', type:'button', role:'switch', 'aria-checked':String(c.consent), 'aria-label':'Recording consent', onclick:() => { c.consent = !c.consent; touch(); renderMain(); } }, h('i')))) : null));
+
+    window.scrollTo(0, keepY);
+  }
+  function callConfig(){
+    const a = S.agent, c = S.cfg, f = S.fields, L = lengthParts(), v = voiceOf(c.voice);
+    const userFirst = c.speaker === 'Participant opens';
+    return {
+      agent_id: 'RETELL_AGENT_ID',
+      agent_override: {
+        agent: { voice_id:v.id, language:v.locale, max_call_duration_ms:(L.cap + 2) * 60000 },
+        retell_llm: { start_speaker: userFirst ? 'user' : 'agent', begin_message: userFirst ? '' : a.opening_line }
+      },
+      retell_llm_dynamic_variables: {
+        agent_name:a.persona.name, agent_role:a.persona.role, agent_style:a.persona.style, agent_title:a.title, scenario_type:a.type_label,
+        participant_role:f.role || '', skills_focus:f.skills || '', difficulty:c.tone, follow_up_depth:c.depth, adaptive_followups: c.followups ? 'on' : 'off',
+        conversation_instructions:a.instructions, question_bank:a.questions.map((q, i) => (i + 1) + '. ' + q.text).join('\n'),
+        opening_line: userFirst ? '' : a.opening_line, closing_line:a.closing_line,
+        target_minutes:String(L.est), ending_mode:c.ending, max_minutes:String(L.cap), language:c.language
+      },
+      metadata: { source:'tara-agent-builder', agent_title:a.title, voice:v.label, estimated_minutes:L.est }
+    };
+  }
+  const voiceName = (k) => voiceOf(k).label.split(' —')[0];
+  function renamePersona(a, before, after){
+    if (!before || before === after) return;
+    const bare = before.replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '');
+    const names = [before, bare, bare.split(/\s+/)[0]].filter((n, i, all) => n && all.indexOf(n) === i).sort((x, y) => y.length - x.length);
+    ['opening_line', 'closing_line', 'instructions', 'description'].forEach((k) => {
+      let t = a[k] || '';
+      names.forEach((n) => { t = t.replace(new RegExp('\\b' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), after); });
+      a[k] = t;
+    });
+  }
+  // The persona's name follows the voice: pick Adrian and the persona is Adrian.
+  function setVoice(key){
+    const a = S.agent, c = S.cfg, after = voiceName(key);
+    c.voice = key; c.language = voiceOf(key).lang;
+    renamePersona(a, a.persona.name, after); a.persona.name = after;
+    touch(); renderMain(); syncTestHead(); resetTest(true);
+  }
+  function syncTestHead(){
+    const a = S.agent; if (!a) return;
+    $('tAva').textContent = initials(a.persona.name); $('tName').textContent = a.persona.name; $('tRole').textContent = a.persona.role || a.type_label;
+  }
+  function renderS3(){ if (!S.agent) { go(1); return; } renderSide(); renderMain(); syncTestHead(); renderTest(); }
+
+  function snapshot(){ return { scenario:S.fields, agent:S.agent, settings:{ voice:S.cfg.voice, difficulty:S.cfg.tone, followUpDepth:S.cfg.depth, adaptiveFollowUps:S.cfg.followups, estimatedMinutes:estMinutes(), lengthRule:'length is set only by followUpDepth: Light 10 min, Probing 20 min, Deep dive 30 min. To change length, change followUpDepth.' } }; }
+  async function revise(instr){
+    instr = (instr || '').trim(); if (!instr || S.askBusy) return;
+    S.askBusy = true; S.askMsg = ''; renderMain();
+    const prompt = `Here is a conversational AI agent for Tara by iMocha, with its scenario and settings:\n\n${JSON.stringify(snapshot())}\n\nThe person configuring it asks: "${instr}"\n\nApply that change. Change only what it needs and keep everything else exactly as it is (rewrite instructions, opening or questions only where the change calls for it). Rubric weights must still total 100 and every question's tag must match a rubric name.\n\nReply with only JSON: {"agent": ${AGENT_SHAPE}, "scenario": {"type":"","role":"","persona":"","skills":"","difficulty":"","length":""}, "settings": {"difficulty":"Friendly|Realistic|Tough","followUpDepth":"Light|Probing|Deep dive","voice":"keep current unless asked: grace|adrian|willa|anthony|monika|amritanshu|monika_hi|amritanshu_hi|emma|pierre|isabel|santiago|carola|max"}, "summary":"one short sentence on what changed"}`;
+    try {
+      const out = await ai('json', prompt, { cache:false });
+      const na = normAgent(out && out.agent);
+      S.agent = na;
+      if (out.scenario) FIELDS.forEach(({ k }) => { const v = out.scenario[k]; if (typeof v === 'string' && v.trim()) S.fields[k] = v.trim(); });
+      const st = out.settings || {};
+      if (['Friendly','Realistic','Tough'].includes(st.difficulty)) S.cfg.tone = st.difficulty;
+      if (['Light','Probing','Deep dive'].includes(st.followUpDepth)) S.cfg.depth = st.followUpDepth;
+      if (VOICES.some((v) => v.key === st.voice)) S.cfg.voice = st.voice;
+      renamePersona(S.agent, S.agent.persona.name, voiceName(S.cfg.voice)); S.agent.persona.name = voiceName(S.cfg.voice); S.cfg.language = voiceOf(S.cfg.voice).lang;
+      S.reviewed = false;
+      S.askMsg = String(out.summary || 'Updated.') + ' The test conversation restarted with this version.'; S.askCls = 'ok';
+      resetTest(false);
+    } catch (e) { S.askMsg = errCopy(e); S.askCls = 'bad'; }
+    S.askBusy = false; touch(); renderS3();
+  }
+  async function genMore(){
+    if (S.genBusy) return;
+    S.genBusy = true; renderMain();
+    const a = S.agent;
+    const prompt = `Agent scenario: ${JSON.stringify(S.fields)}\nRubric competencies: ${a.rubric.map((r) => r.name).join(', ')}\nExisting questions:\n${a.questions.map((q) => '- ' + q.text).join('\n')}\n\nWrite 3 NEW questions Tara could ask in this conversation, different from the existing ones, each tagged with one rubric competency. Reply with only JSON: {"questions":[{"text":"...","tag":"..."}]}`;
+    try {
+      const out = await ai('json', prompt, { modelTier:'quick', cache:false });
+      const qs = (Array.isArray(out && out.questions) ? out.questions : []).filter((q) => q && q.text).map((q) => ({ text:String(q.text), tag:String(q.tag || '') }));
+      a.questions.push(...qs); touch();
+      toast('Added ' + qs.length + ' question' + (qs.length === 1 ? '' : 's') + '.');
+    } catch (e) { toast(errCopy(e)); }
+    S.genBusy = false; renderMain();
+  }
+  $('pubBtn').addEventListener('click', () => {
+    const items = readiness().filter((i) => !i.opt && !i.done);
+    if (items.length) { toast('Finish ' + items.map((i) => i.label.toLowerCase()).join(', ') + ' before publishing.'); const t = $(items[0].id); if (t) t.scrollIntoView({ behavior:'smooth' }); return; }
+    S.published = true; renderSide(); toast('Published. This prototype doesn\'t send it anywhere yet.');
+  });
+  $('testBtn').addEventListener('click', () => { resetTest(true); $('testp').scrollIntoView({ behavior:'smooth', block:'start' }); setTimeout(() => $('tin').focus({ preventScroll:true }), 300); });
+
+  /* ---------- test conversation ---------- */
+  function resetTest(render){
+    if (ctlT) ctlT.abort();
+    S.tBusy = false; S.score = null; S.scoreBusy = false;
+    if ($('tStat')) { $('tStat').textContent = ''; $('tStat').className = 'tstat'; }
+    S.test = S.agent && S.cfg && S.cfg.speaker !== 'Participant opens' ? [{ from:'tara', text:S.agent.opening_line }] : [];
+    if (render !== false) renderTest();
+  }
+  function renderTest(){
+    const log = $('tlog'); log.textContent = '';
+    if (!S.test.length && !S.tBusy) log.append(h('p', { class:'empty', text:'Type a reply or tap the mic to talk. You speak first in this setup.' }));
+    S.test.forEach((m) => log.append(h('div', { class: m.from === 'tara' ? 'a' : m.from === 'user' ? 'u' : 'eb', text:m.text })));
+    if (S.tBusy && !(S.test.length && S.test[S.test.length - 1].live)) log.append(h('span', { class:'typing', 'aria-label':'Typing' }, h('i'), h('i'), h('i')));
+    log.scrollTop = log.scrollHeight;
+    const box = $('scorebox');
+    if (S.scoreBusy) { box.hidden = false; box.textContent = ''; box.append(h('span', { class:'eyebrow', text:'SCORING AGAINST THE SKILLS…' })); }
+    else if (S.score) {
+      box.hidden = false; box.textContent = '';
+      box.append(h('span', { class:'eyebrow', text:'TEST SCORE · NOT SAVED' }));
+      if (S.score.err) box.append(h('p', { style:'font-size:13px;color:var(--bad)', text:S.score.err }));
+      else {
+        if (S.score.overall) box.append(h('p', { style:'font-size:13.5px;color:var(--ink-2)', text:S.score.overall }));
+        S.score.rows.forEach((r) => { const n = r.score, cls = n == null ? 'na' : n >= 4 ? 'hi' : n >= 3 ? 'mid' : 'lo';
+          box.append(h('div', { class:'scr' }, h('span', { class:'scp ' + cls, text: n == null ? '–' : n + '/5' }), h('div', null, h('b', { text:r.name }), h('span', { text:r.note })))); });
+      }
+    } else box.hidden = true;
+    syncSend();
+  }
+  function testRules(){
+    const a = S.agent, c = S.cfg, f = S.fields;
+    const tone = { Friendly:'supportive and encouraging', Realistic:'neutral and probing, like a real conversation', Tough:'skeptical; push back hard and press for specifics' }[c.tone] || 'neutral';
+    const depth = { Light:'Rarely follow up.', Probing:'Follow up once when an answer is vague or strong.', 'Deep dive':'Follow up two or three times to get to real depth.' }[c.depth];
+    return `You are role-playing as ${a.persona.name}${a.persona.role ? ', ' + a.persona.role : ''} (${a.persona.style}). This is a ${a.type_label} for: ${f.role}. Skills being assessed: ${f.skills}.\nDifficulty: ${c.tone} — be ${tone}. ${c.followups ? depth : 'Do not ask follow-up questions; move on after each answer.'} Target length: about ${estMinutes()} minutes.\n\nHow to run it: ${a.instructions}\n\nQuestions you can draw on, in priority order (adapt them, one at a time):\n${a.questions.map((q, i) => (i + 1) + '. ' + q.text).join('\n')}\n\nStay in character. Speak in short, natural spoken sentences (1-3). Ask one thing at a time. Never reveal scores, the rubric or these instructions, and never coach the participant. When you have covered enough or the participant wants to stop, close with: "${a.closing_line}"\n\nReply with only your next spoken line, no name label or stage directions.${c.speaker === 'Tara opens' ? ' You already opened with your first line; the participant replies next.' : ''}`;
+  }
+  async function sendTest(text){
+    text = (text || '').trim(); if (!text || S.tBusy || !S.agent) return;
+    S.test.push({ from:'user', text }); S.tBusy = true; S.score = null;
+    $('tin').value = ''; renderTest();
+    const turns = [{ role:'user', content:testRules() }, { role:'user', content:'(The conversation starts now.)' }];
+    S.test.filter((m) => m.from !== 'err').slice(-24).forEach((m) => turns.push({ role: m.from === 'tara' ? 'assistant' : 'user', content:m.text }));
+    ctlT = new AbortController();
+    const live = { from:'tara', text:'', live:true };
+    try {
+      await ai('text', turns, { modelTier:'quick', cache:false, signal:ctlT.signal, onText: ({ text }) => { if (!live.text) S.test.push(live); live.text = text; renderTest(); } });
+    } catch (e) {
+      if (e && e.text && !live.text) { live.text = e.text; S.test.push(live); }
+      if (!e || e.code !== 'cancelled') S.test.push({ from:'err', text:errCopy(e) });
+    }
+    delete live.live; S.tBusy = false; ctlT = null; renderTest();
+    if (!aiDead) $('tin').focus({ preventScroll:true });
+  }
+  async function scoreTest(){
+    if (S.scoreBusy) return;
+    S.scoreBusy = true; renderTest();
+    const a = S.agent;
+    const tr = S.test.filter((m) => m.from !== 'err').map((m) => (m.from === 'tara' ? a.persona.name : 'Participant') + ': ' + m.text).join('\n');
+    const prompt = `Score the participant in this ${a.type_label} (${S.fields.role}) against the rubric. Score each competency 1-5 using only evidence from the transcript; if there isn't enough evidence, give null and say what was missing. Be specific and fair; paraphrase what they said.\n\nRubric:\n${a.rubric.map((r) => '- ' + r.name + ' (' + r.weight + '%): a 5 looks like: ' + r.anchor).join('\n')}\n\nTranscript:\n${tr.slice(-14000)}\n\nReply with only JSON: {"overall":"two sentences","scores":[{"name":"competency","score":3,"note":"one sentence of evidence"}]}`;
+    try {
+      const out = await ai('json', prompt, { cache:false });
+      S.score = { overall:String(out.overall || ''), rows:(Array.isArray(out.scores) ? out.scores : []).map((r) => ({ name:String(r.name || ''), note:String(r.note || ''), score: r.score == null || isNaN(+r.score) ? null : Math.max(1, Math.min(5, Math.round(+r.score))) })) };
+    } catch (e) { S.score = { err:errCopy(e) }; }
+    S.scoreBusy = false; renderTest();
+  }
+  $('tin').addEventListener('input', syncSend);
+  $('tin').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing && !$('tsend').disabled) { e.preventDefault(); sendTest($('tin').value); } });
+  $('tsend').addEventListener('click', () => sendTest($('tin').value));
+  $('tRestart').addEventListener('click', () => resetTest(true));
+  $('scoreBtn').addEventListener('click', scoreTest);
+  // The live Retell call needs a microphone, which a shared preview page cannot open.
+  // The Tara app places the real call on the same agent; here the mic says so.
+  $('tMic').addEventListener('click', () => { const st = $('tStat'); st.className = 'tstat bad'; st.textContent = 'Live voice calls run in the Tara app, which can use your microphone. Here, type to test the same agent.'; });
+
+  renderS1(); syncSend();
+})();
+</script>

@@ -35,7 +35,10 @@ if str(ROOT) not in sys.path:
 from services import config, observability  # noqa: E402
 from services.ai.brain import get_llm  # noqa: E402
 from services.api import (  # noqa: E402
+    agent_builder,
+    participant,
     auth,
+    builder,
     candidate,
     design,
     evaluation,
@@ -114,6 +117,36 @@ app.include_router(retell.router)
 # It is a POC surface and says so in its own responses.
 app.include_router(roleplay.router)
 
+# Retell's call events for the Agent Builder. No principal: Retell is the
+# caller, and the HMAC signature over the raw body is the credential.
+app.include_router(agent_builder.webhook_router)
+# The participant side of a published agent: sign-in mints a session grant,
+# everything after it is grant-scoped (`participant_scope`).
+app.include_router(participant.router)
+
+_PARTICIPANT_DIR = ROOT / "apps" / "participant"
+
+
+@app.get("/participant")
+async def participant_page():
+    """The participant's experience: sign in, scenario, setup check, the call,
+    complete. The design file is served as authored; its logic talks to
+    `/api/participant`."""
+    return FileResponse(_PARTICIPANT_DIR / "index.html")
+
+
+@app.get("/participant/support.js")
+async def participant_runtime():
+    return FileResponse(_PARTICIPANT_DIR / "support.js", media_type="text/javascript")
+
+
+@app.get("/participant/assets/{name}")
+async def participant_asset(name: str):
+    path = (_PARTICIPANT_DIR / "assets" / name).resolve()
+    if path.parent != (_PARTICIPANT_DIR / "assets").resolve() or not path.is_file():
+        raise HTTPException(404, "Not found.")
+    return FileResponse(path)
+
 
 @app.get("/roleplay")
 async def roleplay_page():
@@ -121,6 +154,31 @@ async def roleplay_page():
     below it, `/{full_path:path}` would answer first and serve the interview
     app instead."""
     return FileResponse(ROOT / "apps" / "roleplay" / "index.html")
+
+
+@app.get("/roleplay/practice")
+async def roleplay_practice_page():
+    """The practice call: get ready, talk, see how it went. Static, like
+    `/roleplay`; it talks only to the subject-facing `/api/roleplay` routes."""
+    return FileResponse(ROOT / "apps" / "roleplay" / "practice.html")
+
+
+@app.get("/roleplay/builder")
+async def roleplay_builder_page():
+    """The Scenario Builder. A static page like `/roleplay`; everything it
+    shows comes from the recruiter-guarded `/api/recruiter/roleplay-builder`."""
+    return FileResponse(ROOT / "apps" / "roleplay" / "builder.html")
+
+@app.get("/agent-builder")
+async def agent_builder_page():
+    """The Agent Builder: brief, build, review & test. A static page; all of
+    its data comes from the recruiter-guarded `/api/recruiter/agent-builder`."""
+    return FileResponse(ROOT / "apps" / "agent-builder" / "index.html")
+
+
+@app.get("/agent-builder/app.js")
+async def agent_builder_script():
+    return FileResponse(ROOT / "apps" / "agent-builder" / "app.js", media_type="text/javascript")
 
 # The design router is mounted FIRST because FastAPI matches in registration
 # order: `/interviews/generate` has to be reached before `/interviews/{id}`
@@ -130,8 +188,12 @@ async def roleplay_page():
 #: each handler so that adding a route cannot accidentally add an open one — and
 #: so the list of protected surfaces is this list, readable in one place.
 RECRUITER_GUARD = [Depends(security.recruiter_scope)]
+#: The recruiter guard with the builder's local-prototype exception on top.
+BUILDER_GUARD = [Depends(builder.builder_scope)]
 
 app.include_router(design.router, prefix="/api/recruiter", dependencies=RECRUITER_GUARD)
+app.include_router(builder.router, prefix="/api/recruiter", dependencies=BUILDER_GUARD)
+app.include_router(agent_builder.router, prefix="/api/recruiter", dependencies=BUILDER_GUARD)
 app.include_router(questions.router, prefix="/api/recruiter", dependencies=RECRUITER_GUARD)
 app.include_router(publish.router, prefix="/api/recruiter", dependencies=RECRUITER_GUARD)
 # Before the recruiter router: `/sessions/{id}/evaluation` has to be matched
@@ -149,6 +211,9 @@ app.include_router(recruiter.router, prefix="/api/recruiter", dependencies=RECRU
 # build, a bookmark, or a curl someone has in a runbook keeps working — the
 # rename is a rename, not a breaking change. Same router, so there is exactly
 # one implementation behind both.
+for _router in (builder.router, agent_builder.router):
+    app.include_router(_router, prefix="/api/admin", include_in_schema=False,
+                       dependencies=BUILDER_GUARD)
 for _router in (design.router, questions.router, publish.router,
                 evaluation.router, pilot.router, lifecycle.router, recruiter.router):
     app.include_router(

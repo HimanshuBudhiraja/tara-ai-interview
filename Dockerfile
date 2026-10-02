@@ -24,6 +24,11 @@ COPY packages/ packages/
 COPY tests/ tests/
 COPY tools/ tools/
 COPY content/ content/
+# The static pages served as files: the role-play POC, the Agent Builder and the
+# participant (candidate) flow. Without these the routes 404 in a deploy.
+COPY apps/roleplay/ apps/roleplay/
+COPY apps/agent-builder/ apps/agent-builder/
+COPY apps/participant/ apps/participant/
 COPY --from=web /build/apps/candidate/dist apps/candidate/dist
 COPY --from=web /build/apps/recruiter/dist apps/recruiter/dist
 EXPOSE 8000

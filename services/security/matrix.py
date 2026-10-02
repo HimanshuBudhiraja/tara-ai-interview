@@ -141,7 +141,9 @@ def _candidates(app: Any) -> Iterable[tuple[str, str, Any, set[str]]]:
 
 def derive(route: Route) -> str:
     """The class the route's own wiring implies."""
-    if "recruiter_scope" in route.dependencies:
+    # `builder_scope` is `recruiter_scope` plus an exception that exists only
+    # off production, only from loopback, and only when switched on.
+    if {"recruiter_scope", "builder_scope"} & set(route.dependencies):
         if any("{" + name + "}" in route.path for name in OWNED_PARAMS):
             return RECRUITER_ORGANIZATION_SCOPED
         return RECRUITER_AUTHENTICATED
@@ -150,7 +152,7 @@ def derive(route: Route) -> str:
     # Both session guards, because they are the same class of control: a
     # per-session secret in an HttpOnly cookie, proving this browser owns this
     # session and no other. `roleplay_scope` is the role-play surface's copy.
-    if {"candidate_scope", "roleplay_scope"} & set(route.dependencies):
+    if {"candidate_scope", "roleplay_scope", "participant_scope"} & set(route.dependencies):
         return CANDIDATE_TOKEN_SCOPED
     if route.path.startswith("/api/"):
         return PUBLIC
@@ -194,6 +196,54 @@ DECLARED: dict[tuple[str, str], str] = {
     ("GET", "/api/roleplay/session/{session_id}/result"): CANDIDATE_TOKEN_SCOPED,
     # The static POC page. No data of its own; everything it shows it fetches.
     ("GET", "/roleplay"): INTERNAL_ONLY,
+    ("GET", "/roleplay/builder"): INTERNAL_ONLY,
+    ("GET", "/roleplay/practice"): INTERNAL_ONLY,
+    # ---- Scenario Builder ---------------------------------------------------
+    # Authoring: every response carries the scoring key, so it sits behind the
+    # recruiter guard like the interview designer does.
+    ("POST", "/api/recruiter/roleplay-builder/draft"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/roleplay-builder/check"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/roleplay-builder/save"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/roleplay-builder/publish"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/roleplay-builder/scenarios"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/roleplay-builder/scenarios/{scenario_id}"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/roleplay-builder/retell-prompt"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/roleplay-builder/knowledge"): RECRUITER_AUTHENTICATED,
+    # ---- Agent Builder (recruiter authoring; carries the rubric) ----------
+    # `agent_id` is not an OWNED_PARAM: ownership is checked in the handler,
+    # against the organization stamped on the row, and a miss is a 404.
+    ("GET", "/agent-builder"): INTERNAL_ONLY,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/invites"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/sessions"): RECRUITER_AUTHENTICATED,
+    # ---- Participant (a published agent, taken by someone with an access code)
+    # Public because it MINTS the session grant from an access code; every
+    # route after it is grant-scoped by `participant_scope`.
+    ("POST", "/api/participant/sign-in"): PUBLIC,
+    ("GET", "/api/participant/session/{session_id}"): CANDIDATE_TOKEN_SCOPED,
+    ("GET", "/api/participant/session/{session_id}/slots"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/participant/session/{session_id}/booking"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/participant/session/{session_id}/call"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/participant/session/{session_id}/chat"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/participant/session/{session_id}/complete"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/participant/session/{session_id}/feedback"): CANDIDATE_TOKEN_SCOPED,
+    ("GET", "/participant"): INTERNAL_ONLY,
+    ("GET", "/participant/support.js"): INTERNAL_ONLY,
+    ("GET", "/participant/assets/{name}"): INTERNAL_ONLY,
+    ("GET", "/agent-builder/app.js"): INTERNAL_ONLY,
+    ("GET", "/api/recruiter/agent-builder/options"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/drafts"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/agent-builder/agents"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/agent-builder/agents/{agent_id}"): RECRUITER_AUTHENTICATED,
+    ("PUT", "/api/recruiter/agent-builder/agents/{agent_id}"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/revise"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/questions/generate"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/test-chat"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/test-call"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/score"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/publish"): RECRUITER_AUTHENTICATED,
+    # Retell calls this. No principal exists; the handler verifies Retell's
+    # HMAC signature over the raw body and ignores calls it did not place.
+    ("POST", "/api/agent-builder/retell-webhook"): PUBLIC,
     ("POST", "/api/auth/login"): PUBLIC,
     ("POST", "/api/auth/logout"): PUBLIC,
 
