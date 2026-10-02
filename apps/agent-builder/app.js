@@ -101,7 +101,7 @@
 
   /* =============== SCREEN 1 =============== */
   const TEMPLATES = [
-    { cat: 'ai', kind: 'Role-play', title: 'AI Engineer Technical Interview', desc: 'ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI for mid-to-senior engineers.', mins: '25 min', format: 'Voice' },
+    { cat: 'ai', kind: 'Role-play', title: 'AI Engineer Technical Conversation', desc: 'ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI for mid-to-senior engineers.', mins: '25 min', format: 'Voice' },
     { cat: 'ai', kind: 'Role-play', title: 'Prompt Engineer Screening', desc: 'Prompt design, evaluation methods and failure analysis with live scenario questions.', mins: '20 min', format: 'Voice' },
     { cat: 'ai', kind: 'Role-play', title: 'ML Ops Engineer Deep-Dive', desc: 'Pipelines, drift monitoring, model serving and rollback strategy for production ML.', mins: '30 min', format: 'Voice' },
     { cat: 'ai', kind: 'Assessment', title: 'Data Scientist Case Study', desc: 'The participant walks through a churn-prediction case: framing, features, metrics, trade-offs.', mins: '30 min', format: 'Voice' },
@@ -116,7 +116,7 @@
   ];
   const CATS = { ai: 'AI Roles', sales: 'Sales', customer: 'Customer' };
   const SUGG = [
-    { label: 'Senior AI Engineer technical interview', text: 'A 25-minute technical interview for a senior AI Engineer at DeepMind. Probe ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI. Be friendly but rigorous.', mode: 'roleplay' },
+    { label: 'Senior AI Engineer technical conversation', text: 'A 25-minute technical conversation for a senior AI Engineer at DeepMind. Probe ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI. Be friendly but rigorous.', mode: 'roleplay' },
     { label: 'SDR cold-call roleplay', text: 'A cold-call roleplay where Tara is a busy VP of Operations at a logistics company. The rep must book a 30-minute demo. Push back on timing twice.', mode: 'roleplay' },
     { label: 'Support de-escalation practice', text: 'An angry customer whose order arrived damaged for the second time. Score empathy, ownership and resolution. 10 minutes, voice.', mode: 'roleplay' }
   ];

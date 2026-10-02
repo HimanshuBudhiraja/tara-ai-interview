@@ -26,6 +26,7 @@ another. A built agent reaches it as per-call variables and `agent_override`.
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import hmac
 import json
@@ -150,11 +151,15 @@ def persona_only(agent: dict[str, Any]) -> dict[str, Any]:
     first name.
     """
     first = rx.persona_first((agent.get("persona") or {}).get("name"))
-    for key in ("title", "description", "instructions", "opening_line", "closing_line"):
-        agent[key] = rx._TARA.sub(first, agent.get(key) or "")
+    fix = lambda t: no_interview(rx._TARA.sub(first, t or ""))  # noqa: E731
+    for key in ("title", "type_label", "description", "instructions", "opening_line", "closing_line"):
+        agent[key] = fix(agent.get(key))
     for q in agent.get("questions") or []:
-        q["text"] = rx._TARA.sub(first, q.get("text") or "")
+        q["text"] = fix(q.get("text"))
     return agent
+
+
+no_interview = rx.no_interview
 
 
 def clean_agent(agent: dict[str, Any]) -> dict[str, Any]:
@@ -220,7 +225,9 @@ def public(row: dict[str, Any]) -> dict[str, Any]:
         "brief": row.get("brief", ""),
         "mode": "roleplay" if row.get("mode", "roleplay") == "interview" else row.get("mode", "roleplay"),
         "fields": row["fields"],
-        "agent": row["agent"],
+        # Shown with today's wording rules ("conversation", the persona's name), even
+        # for an agent saved or published before them; edits save it this way too.
+        "agent": persona_only(copy.deepcopy(row["agent"])),
         "cfg": row["cfg"],
         "reviewed": bool(row.get("reviewed")),
         "version": int(row.get("version") or 0),
@@ -346,9 +353,9 @@ def draft(
 def list_agents(request: Request) -> dict[str, Any]:
     org = _org(request)
     return {"agents": [
-        {"agent_id": r["agent_id"], "title": r["agent"]["title"], "type_label": r["agent"]["type_label"],
+        {"agent_id": r["agent_id"], "title": no_interview(r["agent"]["title"]), "type_label": no_interview(r["agent"]["type_label"]),
          "persona": ((r["agent"].get("persona") or {}).get("name") or ""),
-         "description": r["agent"].get("description") or "",
+         "description": no_interview(r["agent"].get("description") or ""),
          "minutes": rx.DEPTH_MINUTES.get((r.get("cfg") or {}).get("depth") or "", 0),
          "published_version": int((r.get("published") or {}).get("version") or 0),
          "updated_at": r.get("updated_at", 0)}
@@ -660,11 +667,11 @@ def invitation_email(row: dict[str, Any], name: str, code: str, link: str, note:
     a, cfg = row["published"]["agent"], row["published"]["cfg"]
     target, _ = rx.lengths(cfg)
     first = (name.split() or ["there"])[0]
-    kind = "interview" if cfg.get("purpose") == "Hiring" else "practice conversation" if cfg.get("purpose") == "L&D" else "conversation"
-    subject = f"Your invitation: {a['title']}"
+    kind = "AI conversation" if cfg.get("purpose") == "Hiring" else "practice conversation" if cfg.get("purpose") == "L&D" else "conversation"
+    subject = f"Your invitation: {no_interview(a['title'])}"
     text = (
         f"Hi {first},\n\n"
-        f"You're invited to a spoken {kind}: {a['title']}. It takes about {target} minutes and runs in your web browser "
+        f"You're invited to a spoken {kind}: {no_interview(a['title'])}. It takes about {target} minutes and runs in your web browser "
         "on a computer or phone. You'll need a microphone and a quiet place.\n\n"
         + (note.strip() + "\n\n" if note.strip() else "")
         + f"Open your invitation: {link}\nYour access code: {code}\n\n"
@@ -740,7 +747,7 @@ def list_invites(agent_id: str, request: Request) -> dict[str, Any]:
 def _invite_values(row: dict[str, Any], name: str) -> dict[str, str]:
     pub = row["published"]
     target, _ = rx.lengths(pub["cfg"])
-    return {"PARTICIPANT_NAME": (name.split() or ["there"])[0], "ROLE_PLAY": pub["agent"]["title"],
+    return {"PARTICIPANT_NAME": (name.split() or ["there"])[0], "ROLE_PLAY": no_interview(pub["agent"]["title"]),
             "LANGUAGE": pub["cfg"].get("language") or rx.voice(pub["cfg"].get("voice") or "").language,
             "DURATION": str(target), "COMPANY_NAME": config.COMPANY_NAME}
 
@@ -755,8 +762,8 @@ def invitation(agent_id: str, request: Request) -> dict[str, Any]:
     out = _open_link(row)
     if out["enabled"]:
         out["link"] = _base(request) + out["path"]
-    return {"title": row["published"]["agent"]["title"], "purpose": purpose,
-            "label": "AI Interview" if purpose == "Hiring" else "Role-play",
+    return {"title": no_interview(row["published"]["agent"]["title"]), "purpose": purpose,
+            "label": "AI Conversation" if purpose == "Hiring" else "Role-play",
             "template": row.get("invite_template") or tmpl.default_template(purpose),
             "placeholders": ["{" + p + "}" for p in tmpl.PLACEHOLDERS],
             "defaults": _proctoring(row), "open_link": out, "max_emails": 10,
@@ -789,7 +796,7 @@ def send_invitations(agent_id: str, body: InvitationsBody, request: Request) -> 
     tpl = body.template_html.strip() or tmpl.default_template(_purpose(row))
     row["invite_template"] = tmpl.sanitize(tpl)
     proctoring = _proctoring(row, body.image_proctoring, body.safe_browser)
-    subject = f"Your invitation: {row['published']['agent']['title']}"
+    subject = f"Your invitation: {no_interview(row['published']['agent']['title'])}"
     results = []
     for e in emails:
         code = _unique_code()
@@ -953,11 +960,11 @@ def _agent_report(row: dict[str, Any]) -> dict[str, Any]:
     rows = [_report_row(r, names) for r in sessions_]
     rows += _pending_rows(row, {r.get("invite_code", "") for r in sessions_})
     for x in rows:
-        x["agent_id"], x["agent_title"] = row["agent_id"], a["title"]
+        x["agent_id"], x["agent_title"] = row["agent_id"], no_interview(a["title"])
     done = [x for x in rows if x["overall"] is not None]
     avg = lambda vals: round(sum(vals) / len(vals), 1) if vals else None  # noqa: E731
     return {
-        "agent": {"agent_id": row["agent_id"], "title": a["title"], "type_label": a.get("type_label", ""), "purpose": purpose,
+        "agent": {"agent_id": row["agent_id"], "title": no_interview(a["title"]), "type_label": no_interview(a.get("type_label", "")), "purpose": purpose,
                   "role": ((row.get("published") or {}).get("fields") or row["fields"]).get("role", ""),
                   "published_version": int((row.get("published") or {}).get("version") or 0), "skills": skills},
         "decisions": DECISIONS.get(purpose, DECISIONS["L&D"]),
@@ -1062,7 +1069,7 @@ def _session_of(agent_id: str, session_id: str, request: Request) -> tuple[dict[
 def session_report(agent_id: str, attempt_id: str, request: Request) -> dict[str, Any]:
     row, s = _session_of(agent_id, attempt_id, request)
     a = (row.get("published") or {}).get("agent") or row["agent"]
-    return {"session_id": attempt_id, "agent_id": agent_id, "agent_title": a["title"],
+    return {"session_id": attempt_id, "agent_id": agent_id, "agent_title": no_interview(a["title"]),
             "persona": (a.get("persona") or {}).get("name", ""), "purpose": _purpose(row),
             "decisions": DECISIONS.get(_purpose(row), DECISIONS["L&D"]), "name": s.get("name", ""), "email": s.get("email", ""),
             "attempt": int(s.get("attempt") or 1), "status": s["status"], "evaluation": s.get("evaluation"),

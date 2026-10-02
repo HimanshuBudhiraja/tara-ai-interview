@@ -104,7 +104,7 @@ def voice_sample(voice_id: str) -> str:
 
 
 def _persona_only(agent: dict[str, Any], text: str) -> str:
-    return rx._TARA.sub(rx.persona_first((agent.get("persona") or {}).get("name")), text or "")
+    return rx.no_interview(rx._TARA.sub(rx.persona_first((agent.get("persona") or {}).get("name")), text or ""))
 
 
 def view(row: dict[str, Any]) -> dict[str, Any]:
@@ -121,7 +121,7 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
         "agent": {
             # The participant only meets the persona: any "Tara" in what they
             # read becomes the persona's first name, as it does in the call.
-            "title": _persona_only(a, a["title"]), "type_label": a["type_label"],
+            "title": _persona_only(a, a["title"]), "type_label": _persona_only(a, a["type_label"]),
             "persona": {"name": a["persona"]["name"], "role": a["persona"]["role"]},
             "description": _persona_only(a, a["description"]),
             "skills": [r["name"] for r in a["rubric"]],

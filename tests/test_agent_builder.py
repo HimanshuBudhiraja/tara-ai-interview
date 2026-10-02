@@ -722,7 +722,7 @@ def test_the_config_never_keeps_tara_whoever_wrote_the_line(client):
     agent["questions"][0]["text"] = "Tara asks about pricing."
     r = client.put(f"{BASE}/agents/{row['agent_id']}", json={"fields": row["fields"], "agent": agent, "cfg": row["cfg"], "reviewed": False})
     out = r.json()["agent"]
-    assert out["instructions"] == "Maya conducts a friendly interview."
+    assert out["instructions"] == "Maya conducts a friendly conversation."   # and never "interview"
     assert out["questions"][0]["text"] == "Maya asks about pricing."
 
 
@@ -805,7 +805,7 @@ def test_a_session_is_evaluated_once_and_only_admins_see_it(client, monkeypatch)
 def test_proctoring_is_fields_for_the_suite_and_nothing_else(client):
     aid, _ = _publish_with(client, purpose="Hiring", image_proctoring=True)
     inv = client.get(f"{BASE}/agents/{aid}/invitation").json()
-    assert inv["defaults"] == {"image_proctoring": True, "safe_browser": False} and inv["label"] == "AI Interview"
+    assert inv["defaults"] == {"image_proctoring": True, "safe_browser": False} and inv["label"] == "AI Conversation"
     r = client.post(f"{BASE}/agents/{aid}/invitations", json={"emails": ["a@x.test"], "image_proctoring": False, "safe_browser": True}).json()
     code = r["results"][0]["code"]
     v = TestClient(app).post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "a@x.test", "consent": True}).json()
@@ -907,3 +907,15 @@ def test_bulk_invitations_use_a_safe_template(client, monkeypatch):
     assert "Hi Maya," in html_ and "<b>" in html_ and r["results"][0]["code"] in html_ and r["results"][0]["link"] in html_
     assert "<script" not in html_ and "onerror" not in html_ and "javascript:" not in html_ and "<img" not in html_
     assert tmpl.sanitize('<div onclick="x">a<style>b</style></div>') == "<p>a</p>"
+
+
+def test_the_word_interview_never_reaches_anyone():
+    assert api.no_interview("Senior AI Engineer Interview: two interviews, an interview. An interview.") == \
+        "Senior AI Engineer Conversation: two conversations, a conversation. A conversation."
+    out = api.no_interview("Interview prep: this interview has interviews.")
+    assert "nterview" not in out and out.startswith("Conversation prep")
+    agent = api.clean_agent({"title": "Data Scientist Interview", "type_label": "Technical interview",
+                             "persona": {"name": "Maya"}, "description": "A short interview.",
+                             "instructions": "Run the interview.", "opening_line": "Welcome to the interview.",
+                             "closing_line": "Thanks.", "questions": [{"text": "Why this interview?", "tag": "x"}]})
+    assert "nterview" not in json.dumps(agent)

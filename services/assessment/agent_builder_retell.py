@@ -217,12 +217,24 @@ def dynamic_variables(row: dict[str, Any], candidate_name: str = "not given",
     first = persona_first(persona.get("name"))
     for k in out:
         if k not in ("candidate_name", "resume_context"):
-            out[k] = _TARA.sub(first, out[k])
+            out[k] = no_interview(_TARA.sub(first, out[k]))
     return out
 
 
 _TARA = re.compile(r"\bTara\b")
 _TITLES = {"dr", "mr", "mrs", "ms", "miss", "prof", "sir"}
+
+
+_INTERVIEW = re.compile(r"\b(interview)(s?)\b", re.I)
+_AN_INTERVIEW = re.compile(r"\b(a)n(\s+)(?=interview\b)", re.I)
+
+
+def no_interview(text: str) -> str:
+    """The product says "conversation", never "interview" (user decision, 2026-10-03)."""
+    def sub(m: re.Match) -> str:
+        word = "conversation" + m.group(2)
+        return word.capitalize() if m.group(1)[0].isupper() else word
+    return _INTERVIEW.sub(sub, _AN_INTERVIEW.sub(r"\1\2", text))
 
 
 def persona_first(name: Any) -> str:

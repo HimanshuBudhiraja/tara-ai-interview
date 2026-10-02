@@ -84,7 +84,7 @@ def to_text(html_: str) -> str:
 
 
 def default_template(purpose: str) -> str:
-    kind = {"Hiring": "an AI interview", "HR": "a conversation", "L&D": "a practice role-play"}.get(purpose, "a role-play")
+    kind = {"Hiring": "an AI conversation", "HR": "a conversation", "L&D": "a practice role-play"}.get(purpose, "a role-play")
     return (
         "<p>Hi {PARTICIPANT_NAME},</p>"
         f"<p>You've been invited to complete <b>{kind}: {{ROLE_PLAY}}</b>. It's a spoken conversation in your web browser, "
