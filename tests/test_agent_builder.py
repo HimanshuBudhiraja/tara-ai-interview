@@ -81,16 +81,20 @@ def test_the_flow_uses_only_contract_and_system_variables():
     assert set(rx.VARIABLES) - used <= {"max_minutes", "language"}
 
 
-def test_the_flow_is_the_seven_node_design():
+def test_the_flow_closes_only_after_the_wrap_up():
     from services.assessment import agent_builder_flow as flow
 
     nodes = {n["id"]: n for n in flow.NODES}
-    assert list(nodes) == ["opening", "resume", "main", "followup", "stop", "closing", "end_call"]
+    assert list(nodes) == ["opening", "resume", "main", "followup", "wrapup", "stop", "closing", "end_call"]
     assert flow.FLOW["start_node_id"] == "opening"
     out = {k: {e["destination_node_id"] for e in n.get("edges", [])} | (
         {n["skip_response_edge"]["destination_node_id"]} if n.get("skip_response_edge") else set()) for k, n in nodes.items()}
-    assert out["opening"] == {"resume", "main", "stop"} and out["main"] == {"followup", "closing", "stop"}
-    assert out["followup"] == {"main", "closing", "stop"} and out["stop"] == {"closing"} and out["closing"] == {"end_call"}
+    assert out["opening"] == {"resume", "main", "stop"} and out["main"] == {"followup", "wrapup", "stop"}
+    assert out["followup"] == {"main", "wrapup", "stop"} and out["stop"] == {"closing"} and out["closing"] == {"end_call"}
+    # Only the wrap-up (participant has nothing more, or out of time) and a stop reach the closing line.
+    assert out["wrapup"] == {"closing", "stop"}
+    assert {k for k, v in out.items() if "closing" in v} == {"wrapup", "stop"}
+    assert "Tara decides" not in json.dumps(flow.FLOW)   # the mode reaches the agent as "<persona> decides"
     assert nodes["closing"]["instruction"] == {"type": "static_text", "text": "{{closing_line}}"}
     assert rx.general_prompt() == flow.GLOBAL_PROMPT.strip()      # the repo copy is the flow's prompt
 

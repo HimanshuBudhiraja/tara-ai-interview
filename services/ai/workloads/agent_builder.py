@@ -70,7 +70,7 @@ _PLAN_SHAPE = """{
 _CONTENT_SHAPE = """{
   "questions": [{"text": "a question Tara can ask", "tag": "the rubric competency it probes (exact name)"}],
   "rubric": [{"name": "competency", "anchor": "what a 5 out of 5 looks like, one sentence", "weight": 25}],
-  "closing_line": "how Tara ends the conversation"
+  "closing_line": "the persona's final goodbye, said after the participant has no more questions: thanks them, no question in it"
 }"""
 
 
