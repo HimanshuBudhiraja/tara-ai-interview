@@ -851,16 +851,31 @@ def test_the_report_grid_and_an_admin_review(client, monkeypatch):
     monkeypatch.setattr(ab, "_complete", FakeLLM(ev, [dict(JUDGED[0], name=first)]))
     part.evaluate_session(s)
     agent_sessions.save(s)
+    client.post(f"{BASE}/agents/{aid}/invites", json={"name": "Not Yet", "email": "later@x.test"})
     rep = client.get(f"{BASE}/agents/{aid}/report").json()
     assert rep["agent"]["purpose"] == "Hiring" and rep["decisions"] == ["Advance", "Hold", "Reject"]
-    row = rep["rows"][0]
-    assert row["name"] == "Asha" and row["status"] == "Evaluated" and row["duration_sec"] == 310
+    row = next(x for x in rep["rows"] if x["session_id"] == sid)
+    assert row["name"] == "Asha" and row["status"] == "Completed" and row["evaluation"] == "Evaluated" and row["duration_sec"] == 310
+    # The invitation that was never used is in the grid as Pending.
+    assert any(x["status"] == "Pending" for x in rep["rows"])
     assert row["skills"][first] is not None and rep["stats"]["evaluated"] == 1 and rep["stats"]["average"] == row["overall"]
     assert client.put(f"{BASE}/agents/{aid}/attempts/{sid}/review", json={"decision": "Maybe"}).status_code == 422
     r = client.put(f"{BASE}/agents/{aid}/attempts/{sid}/review", json={"decision": "Advance", "notes": "Strong discovery."}).json()
     assert r["decision"] == "Advance" and r["by"]
     again = client.get(f"{BASE}/agents/{aid}/report").json()
-    assert again["rows"][0]["review"]["notes"] == "Strong discovery." and again["stats"]["decisions"]["Advance"] == 1
+    mine = next(x for x in again["rows"] if x["session_id"] == sid)
+    assert mine["review"]["notes"] == "Strong discovery." and again["stats"]["decisions"]["Advance"] == 1
+    assert mine["recommendation"] == "Advance" and mine["recommendation_source"] == "admin" and mine["recommendation_level"] == "positive"
+    # Org-wide reports, and Excel downloads that respect the filters.
+    allr = client.get(f"{BASE}/reports").json()
+    assert any(x["session_id"] == sid and x["agent_title"] for x in allr["rows"]) and allr["agents"]
+    x = client.get(f"{BASE}/agents/{aid}/report.xlsx", params={"status": "Completed"})
+    assert x.status_code == 200 and x.content[:2] == b"PK" and "spreadsheetml" in x.headers["content-type"]
+    import io
+    from openpyxl import load_workbook
+    ws = load_workbook(io.BytesIO(x.content)).active
+    assert ws.max_row == 2 and ws["A2"].value == "Asha" and ws["K2"].value == "Advance"
+    assert client.get(f"{BASE}/reports.xlsx").status_code == 200
     detail = client.get(f"{BASE}/agents/{aid}/attempts/{sid}/report").json()
     assert detail["evaluation"]["overall"] == row["overall"] and detail["transcript"]
     # The AI's recommendation is kept beside the admin's decision, never replaced.

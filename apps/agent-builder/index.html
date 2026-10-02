@@ -658,6 +658,65 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-
 .reptx{display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.5}
 .reptx p{margin:0}.reptx b{font-weight:600}
 .repempty{padding:28px;text-align:center;color:var(--muted-2)}
+
+/* ===== second-level nav, Figma-style reports ===== */
+:root{--sub:156px}
+body{padding-left:calc(var(--rail) + var(--sub))}
+.subnav{position:fixed;top:0;bottom:0;left:var(--rail);width:var(--sub);z-index:39;background:var(--white);border-right:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top,0px) + 18px) 10px 0;display:flex;flex-direction:column;gap:4px;box-sizing:border-box}
+.subnav a{font-size:13.5px;font-weight:500;color:var(--ink-3);text-decoration:none;padding:8px 10px;border-radius:8px}
+.subnav a:hover{background:var(--uu-gray-50,#F9FAFB)}
+.subnav a.on{color:var(--accent-ink);background:var(--soft);font-weight:600}
+@media (max-width:760px){:root{--sub:0px}.subnav{display:none}}
+.repmain{padding:22px 28px 0;display:flex;flex-direction:column;gap:0;min-height:100vh;box-sizing:border-box}
+.repback{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid var(--uu-gray-300,#D0D5DD);border-radius:6px;background:#fff;font:inherit;font-size:13px;color:var(--ink-2);cursor:pointer;margin-bottom:14px}
+.rephead h1{margin:0;font-size:20px;font-weight:600;color:var(--ink)}
+.rephead p{margin:6px 0 0;font-size:14px;color:var(--muted-2)}
+.repdivide{border:0;border-top:1px solid var(--line);margin:18px 0 20px}
+.reptools{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+.repsearch{position:relative;flex:0 1 280px}
+.repsearch input{width:100%;box-sizing:border-box;height:34px;border:1px solid var(--uu-gray-300,#D0D5DD);border-radius:6px;padding:0 12px 0 34px;font:inherit;font-size:13.5px}
+.repsearch svg{position:absolute;left:10px;top:9px;color:var(--faint)}
+.reptools .r{display:flex;gap:10px;align-items:center}
+.iconbtn{position:relative;width:36px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--ink-3);border-radius:6px;cursor:pointer}
+.iconbtn:hover{background:var(--uu-gray-50,#F9FAFB);color:var(--accent-ink)}
+.iconbtn .badge{position:absolute;top:2px;right:2px;min-width:15px;height:15px;border-radius:8px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.invoutline{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid var(--accent);border-radius:6px;background:#fff;color:var(--accent-ink);font:inherit;font-size:13.5px;font-weight:500;cursor:pointer}
+.invoutline:hover{background:var(--soft-2)}
+.repfilters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-4px 0 14px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--uu-gray-50,#F9FAFB)}
+.repfilters select{height:34px;border:1px solid var(--uu-gray-300,#D0D5DD);border-radius:6px;padding:0 10px;font:inherit;font-size:13.5px;background:#fff}
+.repfilters .clear{border:0;background:transparent;color:var(--accent-ink);font:inherit;font-size:13.5px;cursor:pointer}
+.repgridwrap{overflow-x:auto;flex:1}
+table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+.repgrid th{background:var(--soft-2);text-align:left;font-size:13.5px;font-weight:600;color:var(--ink);padding:13px 12px;white-space:nowrap;position:static;cursor:default}
+.repgrid th:first-child{border-radius:6px 0 0 6px}.repgrid th:last-child{border-radius:0 6px 6px 0}
+.repgrid th .info{display:inline-flex;vertical-align:middle;margin-left:6px;color:var(--faint);cursor:help}
+.repgrid th.sortable{cursor:pointer}
+.repgrid td{padding:14px 12px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle;color:var(--ink-2)}
+.repgrid tbody tr{cursor:default}
+.repgrid tbody tr:hover{background:#FCFAFF}
+.repgrid td .cand{display:flex;flex-direction:column;gap:2px}
+.repgrid td .cand b{font-weight:500;color:var(--ink)}
+.repgrid td .cand small{font-size:12.5px;color:var(--muted-2)}
+.st{font-weight:500}.st.completed{color:#079455}.st.inprogress{color:#DC6803}.st.terminated{color:#D92D20}.st.pending{color:var(--muted-2)}
+.recicon{display:inline-flex;width:24px;height:24px;cursor:help}
+.recicon.positive{color:#079455}.recicon.caution{color:#F79009}.recicon.negative{color:#D92D20}
+.recicon.admin{filter:drop-shadow(0 0 0 transparent)}
+.acts{display:flex;gap:6px}
+.acts .iconbtn{width:32px;height:30px}
+.acts .iconbtn:disabled{opacity:.35;cursor:not-allowed}
+.repfoot{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--line);margin:0 -32px;padding:14px 32px;display:flex;justify-content:flex-end;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-2)}
+.repfoot select{height:32px;border:1px solid var(--uu-gray-300,#D0D5DD);border-radius:6px;padding:0 8px;font:inherit}
+.repfoot .pg{width:28px;height:28px;border-radius:50%;border:1px solid var(--accent);background:#fff;color:var(--accent-ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.repfoot .pg:disabled{border-color:var(--uu-gray-300,#D0D5DD);color:var(--faint);cursor:default}
+.repempty{padding:40px;text-align:center;color:var(--muted-2)}
+.xlsdlg{width:min(520px,calc(100vw - 32px))}
+.dlbanner{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:24px;z-index:60;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;font-size:14px;border:1px solid;box-shadow:0 8px 20px -8px rgba(16,24,40,.2);background:#fff}
+.dlbanner.ok{border-color:#75E0A7;background:#F6FEF9;color:#067647}
+.dlbanner.bad{border-color:#FDA29B;background:#FFFBFA;color:#B42318}
+.dlbanner.busy{border-color:#B2DDFF;background:#F5FAFF;color:#175CD3}
+.drawerback{position:fixed;inset:0;background:rgba(12,17,29,.35);z-index:70}
+.repdrawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);z-index:71;border-radius:0;border:0;border-left:1px solid var(--line);max-height:none;padding:20px 22px 40px;box-sizing:border-box;background:var(--white);overflow-y:auto;display:flex;flex-direction:column;gap:12px}
 </style>
 </head>
 <body>
@@ -670,6 +729,10 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-
   <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><span class="beta">BETA</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>AI Skills Match</a>
   <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>More</a>
 </aside>
+<nav class="subnav" aria-label="AI Conversation Agent">
+  <a href="#" data-home id="subRoleplays" class="on">Role-plays</a>
+  <a href="#" id="subReports">Reports</a>
+</nav>
 <div class="ainote" id="aiNote" hidden></div>
 <dialog id="invDlg" class="smdlg" aria-labelledby="invTitle">
   <div class="smhd"><div><h2 id="invTitle">Invite participants</h2></div>
@@ -828,20 +891,18 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-
 
 <!-- ================= SCREEN 4 · REPORTS FOR ONE ROLE-PLAY ================= -->
 <div class="view" id="v4" hidden>
-  <header class="hdr s3hdr">
-    <div class="hl">
-      <button class="s3brand" type="button" data-go="1"><span class="bmark" data-icon="spark16"></span><b>Tara</b></button>
-      <nav class="crumb" aria-label="Breadcrumb"><button type="button" data-go="1">Agents</button><span class="sep" aria-hidden="true">/</span><button type="button" id="repBack">—</button><span class="sep" aria-hidden="true">/</span><b>Reports</b></nav>
-    </div>
-    <div class="hr" style="gap:10px">
-      <button class="tbtn ghost" type="button" id="repRefresh">Refresh</button>
-      <button class="tbtn ghost" type="button" id="repCsv">Export CSV</button>
-    </div>
-  </header>
-  <main class="repmain" id="repMain"></main>
+  <main class="repmain" id="repMain" aria-labelledby="repH"></main>
 </div>
+<dialog id="xlsDlg" class="smdlg xlsdlg" aria-labelledby="xlsH">
+  <div class="smhd"><div><h2 id="xlsH">Download Excel</h2><p>With filters applied, only matching reports will be downloaded. Without filters, all reports will be downloaded.</p></div>
+    <button class="xbtn" type="button" id="xlsClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="smft"><span></span><span style="display:flex;gap:10px"><button class="obtn ghost" type="button" id="xlsCancel">Cancel</button><button class="cwt" type="button" id="xlsGo">Continue Download</button></span></div>
+</dialog>
+<div class="dlbanner" id="dlBanner" role="status" hidden></div>
+<div class="drawerback" id="drawerBack" hidden></div>
+<aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003n"></script>
+<script src="/agent-builder/app.js?v=20261003p"></script>
 </body>
 </html>

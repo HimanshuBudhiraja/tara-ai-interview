@@ -590,127 +590,195 @@
     } catch (e) { toast(e.message); }
   }
 
-  /* ---------- Reports: one grid per role-play, a report per attempt, admin notes and decision ---------- */
-  $('repBtn').addEventListener('click', () => { S.rep = { q: '', status: 'all', decision: 'all', sort: 'ended_at', dir: -1, sel: null }; go(4); });
-  $('repBack').addEventListener('click', () => go(3));
-  $('repRefresh').addEventListener('click', () => loadReport());
-  $('repCsv').addEventListener('click', exportCsv);
-  async function loadReport() {
-    S.rep = S.rep || { q: '', status: 'all', decision: 'all', sort: 'ended_at', dir: -1, sel: null };
-    $('repBack').textContent = S.agent ? S.agent.title : 'Role-play';
-    try { S.rep.data = await api('/agents/' + encodeURIComponent(S.agentId) + '/report'); } catch (e) { toast(e.message); return; }
-    renderReport();
-    if (S.rep.sel) openAttempt(S.rep.sel, true);
+  /* ---------- Reports: all role-plays, or one; Figma layout in the builder's purple ---------- */
+  const SVGI = {
+    search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+    download: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg>',
+    filter: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 4h18l-7 9v6l-4 2v-8z"/></svg>',
+    report: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M7 17V11M11 17V7M15 17v-4M19 17V9"/></svg>',
+    info: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+    back: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    invite: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="8" r="4"/><path d="M3 20c1-4 4-6 7-6s6 2 7 6M19 8v6M16 11h6"/></svg>',
+    prev: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    next: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>',
+    positive: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M8 12.5l2.7 2.7L16 9.8"/></svg>',
+    caution: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v6M12 16.5h.01"/></svg>',
+    negative: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9 9l6 6M15 9l-6 6"/></svg>'
+  };
+  const fmtDT = (t) => t ? new Date(t * 1000).toLocaleString([], { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '–';
+  function openReports(scope) {
+    S.rep = { scope, data: null, q: '', status: '', rec: '', agent: '', page: 0, per: 50, filtersOpen: false };
+    $('subRoleplays').classList.toggle('on', false); $('subReports').classList.toggle('on', true);
+    go(4);
   }
-  const mmssLong = (sec) => !sec ? '–' : Math.floor(sec / 60) + 'm ' + String(sec % 60).padStart(2, '0') + 's';
-  const fmtDT = (t) => t ? new Date(t * 1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '–';
+  $('repBtn').addEventListener('click', () => openReports('agent'));
+  $('subReports').addEventListener('click', (e) => { e.preventDefault(); openReports('all'); });
+  document.querySelectorAll('[data-home]').forEach((a) => a.addEventListener('click', () => { $('subReports').classList.remove('on'); $('subRoleplays').classList.add('on'); }));
+  async function loadReport() {
+    const R = S.rep || (S.rep = { scope: 'agent', q: '', status: '', rec: '', agent: '', page: 0, per: 50 });
+    try { R.data = R.scope === 'all' ? await api('/reports') : await api('/agents/' + encodeURIComponent(S.agentId) + '/report'); }
+    catch (e) { toast(e.message); return; }
+    renderReport();
+  }
+  const activeFilters = () => [S.rep.status, S.rep.rec, S.rep.agent].filter(Boolean).length;
   function repRows() {
     const R = S.rep, q = R.q.trim().toLowerCase();
-    let rows = R.data.rows.filter((x) => (!q || (x.name + ' ' + x.email).toLowerCase().includes(q))
-      && (R.status === 'all' || x.status === R.status)
-      && (R.decision === 'all' || (R.decision === 'none' ? !x.review.decision : x.review.decision === R.decision)));
-    const key = (x) => R.sort.startsWith('skill:') ? x.skills[R.sort.slice(6)] : R.sort === 'decision' ? (x.review.decision || '') : x[R.sort];
-    rows = rows.slice().sort((a, b) => { const va = key(a), vb = key(b); if (va == null && vb == null) return 0; if (va == null) return 1; if (vb == null) return -1; return (va > vb ? 1 : va < vb ? -1 : 0) * R.dir; });
-    return rows;
+    return R.data.rows.filter((x) => (!q || (x.name + ' ' + x.email).toLowerCase().includes(q))
+      && (!R.status || x.status === R.status) && (!R.rec || x.recommendation_level === R.rec) && (!R.agent || x.agent_id === R.agent));
   }
   function renderReport() {
     const R = S.rep, D = R.data, main = $('repMain'); main.textContent = '';
-    const st = D.stats, skills = D.agent.skills;
-    main.append(
-      h('div', { class: 'reptitle' }, h('h1', { text: D.agent.title }),
-        h('p', { text: D.agent.type_label + ' · ' + D.agent.purpose + ' · published v' + D.agent.published_version + ' · AI scores are backed by quotes; the decision column is yours.' })),
-      h('div', { class: 'reptiles' }, [
-        ['Attempts', st.attempts], ['People', st.people], ['Invited by email', st.invited], ['Evaluated', st.evaluated],
-        ['Average score', st.average == null ? '–' : Math.round(st.average)], ['Reviewed', st.reviewed + ' of ' + st.attempts]
-      ].map(([k, v]) => h('div', { class: 'reptile' }, h('span', { text: k }), h('b', { text: String(v) })))),
-      h('div', { class: 'repskills', 'aria-label': 'Average by skill' }, skills.map((k) => h('span', null, k.name + ' · ' + Math.round(k.weight) + '%', h('b', { text: st.skills[k.name] == null ? '–' : String(Math.round(st.skills[k.name])) })))));
-    const search = h('input', { type: 'search', placeholder: 'Search by name or email', value: R.q, 'aria-label': 'Search participants', oninput: (e) => { R.q = e.target.value; renderGrid(); } });
-    const selStatus = h('select', { 'aria-label': 'Status', onchange: (e) => { R.status = e.target.value; renderGrid(); } },
-      [['all', 'All statuses'], ['Evaluated', 'Evaluated'], ['Evaluating', 'Evaluating'], ['In progress', 'In progress'], ['Not evaluated', 'Not evaluated']].map(([v, l]) => h('option', { value: v, text: l, selected: R.status === v })));
-    const selDec = h('select', { 'aria-label': 'Decision', onchange: (e) => { R.decision = e.target.value; renderGrid(); } },
-      [['all', 'All decisions'], ['none', 'Not reviewed']].concat(D.decisions.map((d) => [d, d])).map(([v, l]) => h('option', { value: v, text: l, selected: R.decision === v })));
-    main.append(h('div', { class: 'reptools' }, search, selStatus, selDec));
-    const body = h('div', { class: 'repbody' + (R.sel ? ' open' : ''), id: 'repBody' }, h('div', { class: 'repgridwrap', id: 'repGridWrap' }), h('aside', { class: 'repdrawer', id: 'repDrawer', hidden: !R.sel, 'aria-label': 'Attempt report' }));
-    main.append(body);
-    renderGrid();
+    const all = R.scope === 'all';
+    if (!all) main.append(h('button', { class: 'repback', type: 'button', html: SVGI.back + '<span>Back to role-play</span>', onclick: () => { $('subReports').classList.remove('on'); $('subRoleplays').classList.add('on'); go(3); } }));
+    const done = D.rows.filter((x) => x.overall != null);
+    const avg = done.length ? Math.round(done.reduce((t, x) => t + x.overall, 0) / done.length) : null;
+    main.append(h('div', { class: 'rephead' }, h('h1', { id: 'repH', text: all ? 'Role-play Reports' : 'Reports' }),
+      h('p', { text: all ? 'Every conversation across your published role-plays. Open a report for the evidence, your notes and your recommendation.'
+        : (D.agent.purpose === 'Hiring' ? 'Job role: ' : 'Role-play: ') + (D.agent.role || D.agent.title) + ' · ' + D.agent.title + (avg != null ? ' · average score ' + avg : '') })));
+    main.append(h('hr', { class: 'repdivide' }));
+    const search = h('input', { type: 'search', placeholder: 'Search by Candidate', value: R.q, 'aria-label': 'Search by candidate', oninput: (e) => { R.q = e.target.value; R.page = 0; renderTable(); } });
+    const fbtn = h('button', { class: 'iconbtn', type: 'button', title: 'Filters', 'aria-label': 'Filters', 'aria-expanded': String(!!R.filtersOpen), html: SVGI.filter, onclick: () => { R.filtersOpen = !R.filtersOpen; renderReport(); } });
+    if (activeFilters()) fbtn.append(h('span', { class: 'badge', text: String(activeFilters()) }));
+    main.append(h('div', { class: 'reptools' },
+      h('label', { class: 'repsearch' }, h('span', { html: SVGI.search }), search),
+      h('div', { class: 'r' },
+        !all ? h('button', { class: 'invoutline', type: 'button', html: SVGI.invite + '<span>Invite participants</span>', onclick: () => openInvite('email') }) : null,
+        h('button', { class: 'iconbtn', type: 'button', title: 'Download Excel', 'aria-label': 'Download Excel', html: SVGI.download, onclick: () => $('xlsDlg').showModal() }),
+        fbtn)));
+    if (R.filtersOpen) {
+      const sel = (label, key, opts) => h('select', { 'aria-label': label, onchange: (e) => { R[key] = e.target.value; R.page = 0; renderReport(); } }, opts.map(([v, l]) => h('option', { value: v, text: l, selected: R[key] === v })));
+      main.append(h('div', { class: 'repfilters' },
+        sel('Status', 'status', [['', 'All statuses'], ['Completed', 'Completed'], ['In Progress', 'In Progress'], ['Terminated', 'Terminated'], ['Pending', 'Pending']]),
+        sel('Recommendation', 'rec', [['', 'All recommendations'], ['positive', 'Recommended'], ['caution', 'Needs review'], ['negative', 'Not recommended']]),
+        all ? sel('Role-play', 'agent', [['', 'All role-plays']].concat(D.agents.map((a) => [a.agent_id, a.title]))) : null,
+        activeFilters() ? h('button', { class: 'clear', type: 'button', text: 'Clear filters', onclick: () => { R.status = R.rec = R.agent = ''; renderReport(); } }) : null));
+    }
+    main.append(h('div', { class: 'repgridwrap', id: 'repGridWrap' }), h('div', { class: 'repfoot', id: 'repFoot' }));
+    renderTable();
   }
-  function renderGrid() {
-    const R = S.rep, D = R.data, wrap = $('repGridWrap'); wrap.textContent = '';
-    const rows = repRows();
-    if (!rows.length) { wrap.append(h('div', { class: 'repempty', text: D.rows.length ? 'No attempts match these filters.' : 'No one has taken this role-play yet. Invite people from the role-play screen.' })); return; }
-    const cols = [['name', 'Participant'], ['attempt', 'Attempt'], ['ended_at', 'Date'], ['duration_sec', 'Duration'], ['overall', 'Score'], ['band', 'Band'], ['ai_recommendation', 'AI recommendation']]
-      .concat(D.agent.skills.map((k) => ['skill:' + k.name, k.name])).concat([['decision', 'Your decision'], ['notes', 'Notes']]);
-    const head = h('tr', null, cols.map(([k, l]) => h('th', { scope: 'col', 'aria-sort': R.sort === k ? (R.dir > 0 ? 'ascending' : 'descending') : 'none',
-      onclick: () => { if (k === 'notes') return; R.dir = R.sort === k ? -R.dir : (k === 'name' || k === 'band' ? 1 : -1); R.sort = k; renderGrid(); } }, l)));
-    const decIdx = (d) => D.decisions.indexOf(d);
-    const tb = h('tbody', null, rows.map((x) => h('tr', { 'aria-selected': String(R.sel === x.session_id), tabindex: '0',
-      onclick: () => openAttempt(x.session_id), onkeydown: (e) => { if (e.key === 'Enter') openAttempt(x.session_id); } },
-      h('td', null, h('b', { text: x.name || 'Participant' }), h('small', { text: x.email })),
-      h('td', { class: 'num', text: String(x.attempt) }),
-      h('td', { text: fmtDT(x.ended_at || x.started_at) }),
-      h('td', { class: 'num', text: mmssLong(x.duration_sec) }),
-      h('td', { class: 'num' }, x.overall == null ? h('span', { class: 'na', text: x.status }) : h('b', { text: String(Math.round(x.overall)) })),
-      h('td', { text: x.band || '–' }),
-      h('td', { class: 'rec', text: x.ai_recommendation || (x.problems.length ? 'Not evaluated: ' + x.problems.join('; ') : '–') }),
-      D.agent.skills.map((k) => h('td', { class: 'num' + (x.skills[k.name] == null ? ' na' : ''), text: x.skills[k.name] == null ? (x.overall == null ? '–' : 'N/A') : String(x.skills[k.name]) })),
-      h('td', null, x.review.decision ? h('span', { class: 'decpill d' + decIdx(x.review.decision), text: x.review.decision }) : h('span', { class: 'na', text: 'Not reviewed' })),
-      h('td', { class: 'rec', text: x.review.notes ? (x.review.notes.length > 60 ? x.review.notes.slice(0, 60) + '…' : x.review.notes) : '' }))));
-    wrap.append(h('table', { class: 'repgrid' }, h('thead', null, head), tb));
+  function recCell(x) {
+    if (!x.recommendation_level) return h('span', { class: 'na', text: '-' });
+    const who = x.recommendation_source === 'admin' ? 'Your decision: ' : 'AI recommendation: ';
+    return h('span', { class: 'recicon ' + x.recommendation_level + (x.recommendation_source === 'admin' ? ' admin' : ''), title: who + x.recommendation, 'aria-label': who + x.recommendation, html: SVGI[x.recommendation_level] });
   }
-  async function openAttempt(sid, keep) {
-    const R = S.rep; R.sel = sid;
-    $('repBody').className = 'repbody open';
-    const dr = $('repDrawer'); dr.hidden = false; if (!keep) dr.textContent = '';
-    renderGrid();
-    let d;
-    try { d = await api('/agents/' + encodeURIComponent(S.agentId) + '/attempts/' + encodeURIComponent(sid) + '/report'); } catch (e) { toast(e.message); return; }
+  function renderTable() {
+    const R = S.rep, all = R.scope === 'all', wrap = $('repGridWrap'), foot = $('repFoot');
+    wrap.textContent = ''; foot.textContent = '';
+    const rows = repRows(), total = rows.length, pages = Math.max(1, Math.ceil(total / R.per));
+    R.page = Math.min(R.page, pages - 1);
+    const page = rows.slice(R.page * R.per, R.page * R.per + R.per);
+    if (!total) wrap.append(h('div', { class: 'repempty', text: R.data.rows.length ? 'No reports match your search or filters.' : (all ? 'No one has taken a published role-play yet.' : 'No one has been invited yet. Use Invite participants to send invitations.') }));
+    else {
+      const th = (label, info) => h('th', { scope: 'col' }, label, info ? h('span', { class: 'info', title: info, html: SVGI.info }) : null);
+      const head = h('tr', null, th(all ? 'Candidate' : 'Candidate Name'), all ? th('Role-play') : null, th('Date'), th('Status'), th('Score'),
+        th('Proctoring Details', 'Proctoring settings for this role-play. The proctoring suite applies them and adds its findings.'),
+        th('Recommendation', 'Your decision when you have reviewed the attempt; otherwise the AI recommendation, backed by quotes in the report.'), th('Action'));
+      const body = h('tbody', null, page.map((x) => h('tr', null,
+        h('td', null, h('span', { class: 'cand' }, all ? h('b', { text: x.email || x.name || 'Invited · ' + (x.invite_code || '') }) : h('b', { text: x.name || x.email || 'Invited · ' + (x.invite_code || '') }), h('small', { text: all ? x.name : x.email }))),
+        all ? h('td', { text: x.agent_title }) : null,
+        h('td', { text: fmtDT(x.date) }),
+        h('td', null, h('span', { class: 'st ' + x.status.toLowerCase().replace(/\s/g, ''), text: x.status })),
+        h('td', { text: x.overall == null ? (x.evaluation === 'Evaluating' ? '…' : '-') : String(Math.round(x.overall)) }),
+        h('td', { text: x.proctoring && x.proctoring !== 'Off' ? x.proctoring : '-' }),
+        h('td', null, recCell(x)),
+        h('td', null, h('span', { class: 'acts' },
+          h('button', { class: 'iconbtn', type: 'button', title: 'View report', 'aria-label': 'View report for ' + (x.name || x.email), html: SVGI.report, disabled: !x.session_id, onclick: () => openAttempt(x.agent_id, x.session_id) }),
+          h('button', { class: 'iconbtn', type: 'button', title: 'Download report', 'aria-label': 'Download report for ' + (x.name || x.email), html: SVGI.download, disabled: !x.session_id, onclick: () => printAttempt(x.agent_id, x.session_id) }))))));
+      wrap.append(h('table', { class: 'repgrid' }, h('thead', null, head), body));
+    }
+    const from = total ? R.page * R.per + 1 : 0, to = Math.min(total, (R.page + 1) * R.per);
+    foot.append(
+      h('span', null, 'Total Record Count: ', h('b', { text: String(total) })),
+      h('select', { 'aria-label': 'Records per page', onchange: (e) => { R.per = +e.target.value; R.page = 0; renderTable(); } }, [10, 25, 50, 100].map((n) => h('option', { value: n, text: String(n), selected: R.per === n }))),
+      h('span', { text: 'Records per page' }),
+      h('button', { class: 'pg', type: 'button', 'aria-label': 'Previous page', html: SVGI.prev, disabled: R.page === 0, onclick: () => { R.page--; renderTable(); } }),
+      h('span', { text: from + ' - ' + to }),
+      h('button', { class: 'pg', type: 'button', 'aria-label': 'Next page', html: SVGI.next, disabled: R.page >= pages - 1, onclick: () => { R.page++; renderTable(); } }));
+  }
+  /* Download Excel: the server builds a real .xlsx with the current filters. */
+  function banner(kind, text) {
+    const b = $('dlBanner'); b.className = 'dlbanner ' + kind; b.textContent = text; b.hidden = false;
+    clearTimeout(b._t); if (kind !== 'busy') b._t = setTimeout(() => { b.hidden = true; }, 3500);
+  }
+  $('xlsClose').addEventListener('click', () => $('xlsDlg').close());
+  $('xlsCancel').addEventListener('click', () => $('xlsDlg').close());
+  $('xlsGo').addEventListener('click', async () => {
+    $('xlsDlg').close();
+    const R = S.rep, qs = new URLSearchParams({ q: R.q, status: R.status, rec: R.rec, agent: R.agent });
+    const url = API + (R.scope === 'all' ? '/reports.xlsx?' : '/agents/' + encodeURIComponent(S.agentId) + '/report.xlsx?') + qs;
+    banner('busy', 'Downloading report…');
+    try {
+      const r = await fetch(url, { credentials: 'same-origin' });
+      if (!r.ok) throw new Error('status ' + r.status);
+      const blob = await r.blob();
+      const name = ((/filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '') || [])[1]) || 'reports.xlsx';
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+      banner('ok', 'Report downloaded successfully');
+    } catch (e) { banner('bad', 'Couldn\'t download the report. Try again.'); }
+  });
+  /* One attempt: report, the admin's decision and notes, transcript. */
+  function closeDrawer() { $('repDrawer').hidden = true; $('drawerBack').hidden = true; }
+  $('drawerBack').addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('repDrawer').hidden) closeDrawer(); });
+  async function fetchAttempt(agentId, sid) {
+    return api('/agents/' + encodeURIComponent(agentId) + '/attempts/' + encodeURIComponent(sid) + '/report');
+  }
+  async function openAttempt(agentId, sid) {
+    const dr = $('repDrawer'); dr.textContent = ''; dr.hidden = false; $('drawerBack').hidden = false;
+    dr.append(h('p', { class: 'meta', text: 'Loading…' }));
+    let d; try { d = await fetchAttempt(agentId, sid); } catch (e) { toast(e.message); closeDrawer(); return; }
     dr.textContent = '';
     const notes = h('textarea', { 'aria-label': 'Evaluation notes', placeholder: 'Your evaluation notes: what you saw, what to follow up, anything the score doesn\'t capture.', value: d.review.notes || '' });
     let decision = d.review.decision || '';
-    const decSeg = h('div', { role: 'group', 'aria-label': 'Your decision', class: 'seg' });
-    const paintDec = () => { decSeg.textContent = ''; R.data.decisions.forEach((o) => decSeg.append(h('button', { type: 'button', 'aria-pressed': String(decision === o), text: o, onclick: () => { decision = decision === o ? '' : o; paintDec(); } }))); };
-    paintDec();
-    const save = h('button', { class: 'cwt', type: 'button', text: 'Save review', onclick: async () => {
+    const decSeg = h('div', { role: 'group', 'aria-label': 'Your recommendation', class: 'seg' });
+    const paint = () => { decSeg.textContent = ''; d.decisions.forEach((o) => decSeg.append(h('button', { type: 'button', 'aria-pressed': String(decision === o), text: o, onclick: () => { decision = decision === o ? '' : o; paint(); } }))); };
+    paint();
+    const save = h('button', { class: 'cwt', type: 'button', text: 'Save', onclick: async () => {
       save.disabled = true;
-      try { const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/attempts/' + encodeURIComponent(sid) + '/review', { method: 'PUT', body: { decision, notes: notes.value } });
-        const row = R.data.rows.find((x) => x.session_id === sid); if (row) row.review = r;
-        toast('Review saved.'); await loadReport();
-      } catch (e) { toast(e.message); }
-      save.disabled = false;
+      try { await api('/agents/' + encodeURIComponent(agentId) + '/attempts/' + encodeURIComponent(sid) + '/review', { method: 'PUT', body: { decision, notes: notes.value } });
+        toast('Saved.'); closeDrawer(); await loadReport(); }
+      catch (e) { toast(e.message); save.disabled = false; }
     } });
-    const meta = h('p', { class: 'meta', text: d.review.at ? 'Saved by ' + d.review.by + ' · ' + fmtDT(d.review.at) : 'Not reviewed yet' });
     dr.append(
       h('div', { style: 'display:flex;justify-content:space-between;gap:10px;align-items:flex-start' },
-        h('div', null, h('h2', { text: (d.name || 'Participant') + (d.attempt > 1 ? ' · attempt ' + d.attempt : '') }), h('p', { class: 'meta', text: d.email })),
-        h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Close report', html: ICON.x, onclick: () => { R.sel = null; $('repBody').className = 'repbody'; dr.hidden = true; renderGrid(); } })),
-      d.evaluation ? h('div', { class: 'airec' }, h('b', { text: 'AI recommendation: ' }), d.evaluation.recommendation)
-        : h('div', { style: 'display:flex;flex-direction:column;gap:8px;align-items:flex-start' },
+        h('div', null, h('h2', { text: (d.name || 'Participant') + (d.attempt > 1 ? ' · attempt ' + d.attempt : '') }), h('p', { class: 'meta', text: d.email + ' · ' + d.agent_title })),
+        h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Close report', html: ICON.x, onclick: closeDrawer })),
+      d.evaluation ? h('div', { class: 'airec' }, h('b', { text: 'AI recommendation: ' }), d.evaluation.recommendation) :
+        h('div', { style: 'display:flex;flex-direction:column;gap:8px;align-items:flex-start' },
           h('p', { class: 'meta', text: d.evaluation_error ? 'Not evaluated: ' + (d.evaluation_error.problems || []).join('; ') : d.status === 'complete' ? 'Not evaluated yet.' : 'This attempt is still in progress.' }),
           d.status === 'complete' ? h('button', { class: 'obtn ghost', type: 'button', text: 'Evaluate now', onclick: async (e) => {
             const b = e.currentTarget; b.disabled = true; b.textContent = 'Evaluating… (about a minute)';
-            try { await api('/agents/' + encodeURIComponent(S.agentId) + '/attempts/' + encodeURIComponent(sid) + '/evaluate', { method: 'POST' }); toast('Evaluated.'); await loadReport(); }
+            try { await api('/agents/' + encodeURIComponent(agentId) + '/attempts/' + encodeURIComponent(sid) + '/evaluate', { method: 'POST' }); toast('Evaluated.'); openAttempt(agentId, sid); loadReport(); }
             catch (x) { toast(x.message); b.disabled = false; b.textContent = 'Evaluate now'; }
           } }) : null),
-      h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Your decision' }), decSeg),
+      h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Your recommendation' }), decSeg),
       h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Evaluation notes' }), notes),
-      h('div', { style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap' }, save, meta));
+      h('div', { style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap' }, save,
+        h('button', { class: 'obtn ghost', type: 'button', text: 'Download report', onclick: () => printAttempt(agentId, sid) }),
+        h('span', { class: 'meta', text: d.review.at ? 'Last saved by ' + d.review.by + ' · ' + fmtDT(d.review.at) : 'Not reviewed yet' })));
     if (d.evaluation) dr.append(resultView(d.evaluation));
-    if ((d.transcript || []).length) {
-      const who = S.agent ? S.agent.persona.name : 'Persona';
-      dr.append(h('details', { class: 'resskill' }, h('summary', null, h('b', { text: 'Transcript (' + d.transcript.length + ' turns)' })),
-        h('div', { class: 'reptx' }, d.transcript.map((t) => h('p', null, h('b', { text: (t.role === 'agent' ? who : d.name || 'Participant') + (t.t != null ? ' · ' + Math.floor(t.t / 60) + ':' + String(Math.round(t.t % 60)).padStart(2, '0') : '') + ': ' }), t.text)))));
-    }
+    if ((d.transcript || []).length) dr.append(transcriptView(d));
   }
-  function exportCsv() {
-    const D = S.rep && S.rep.data; if (!D) return;
-    const esc = (v) => { const t = v == null ? '' : String(v); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
-    const head = ['Name', 'Email', 'Attempt', 'Status', 'Date', 'Duration (s)', 'Score', 'Band', 'AI recommendation'].concat(D.agent.skills.map((k) => k.name)).concat(['Decision', 'Notes', 'Reviewed by']);
-    const lines = [head].concat(repRows().map((x) => [x.name, x.email, x.attempt, x.status, x.ended_at ? new Date(x.ended_at * 1000).toISOString() : '', x.duration_sec, x.overall, x.band, x.ai_recommendation]
-      .concat(D.agent.skills.map((k) => x.skills[k.name])).concat([x.review.decision || '', x.review.notes || '', x.review.by || ''])));
-    const blob = new Blob(['\ufeff' + lines.map((l) => l.map(esc).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = (D.agent.title || 'report').replace(/[^\w-]+/g, '_') + '_report.csv'; document.body.append(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  function transcriptView(d) {
+    return h('details', { class: 'resskill' }, h('summary', null, h('b', { text: 'Transcript (' + d.transcript.length + ' turns)' })),
+      h('div', { class: 'reptx' }, d.transcript.map((t) => h('p', null, h('b', { text: (t.role === 'agent' ? d.persona || 'Persona' : d.name || 'Participant') + (t.t != null ? ' · ' + Math.floor(t.t / 60) + ':' + String(Math.round(t.t % 60)).padStart(2, '0') : '') + ': ' }), t.text))));
+  }
+  /* Download one report: a print-ready page (Save as PDF from the print dialog). */
+  async function printAttempt(agentId, sid) {
+    let d; try { d = await fetchAttempt(agentId, sid); } catch (e) { toast(e.message); return; }
+    const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups for this page to download the report.'); return; }
+    const box = h('div', { class: 'printdoc' },
+      h('h1', { text: d.agent_title + ' · report' }),
+      h('p', { class: 'meta', text: (d.name || 'Participant') + ' · ' + d.email + (d.attempt > 1 ? ' · attempt ' + d.attempt : '') }),
+      d.review.decision || d.review.notes ? h('div', { class: 'airec' }, h('b', { text: 'Reviewer: ' }), (d.review.decision ? d.review.decision + '. ' : '') + (d.review.notes || '')) : null,
+      d.evaluation ? resultView(d.evaluation) : h('p', { text: 'Not evaluated.' }));
+    box.querySelectorAll('details').forEach((x) => x.setAttribute('open', ''));
+    const css = [...document.querySelectorAll('style')].map((x) => x.textContent).join('\n');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + (d.name || 'Report').replace(/</g, '') + ' report</title><style>' + css +
+      ' body{padding:32px;max-width:860px;margin:0 auto}.printdoc h1{font-size:22px;margin:0 0 6px}@media print{body{padding:0}}</style></head><body></body></html>');
+    w.document.body.append(w.document.importNode(box, true)); w.document.close();
+    setTimeout(() => { w.focus(); w.print(); }, 300);
   }
 
   /* ---------- Results: every participant's attempts, with the evidence-backed report ---------- */

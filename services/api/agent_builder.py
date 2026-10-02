@@ -33,7 +33,7 @@ import re
 import time
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -787,56 +787,167 @@ def _purpose(row: dict[str, Any]) -> str:
     return ((row.get("published") or {}).get("cfg") or {}).get("purpose") or row["cfg"].get("purpose") or "L&D"
 
 
+#: Icon level for a recommendation: positive (check), caution (!), negative (x).
+_LEVEL = {
+    "Advance": "positive", "Hold": "caution", "Reject": "negative",
+    "No action": "positive", "Follow up": "caution", "Escalate": "negative",
+    "Ready": "positive", "Needs practice": "caution", "Coaching recommended": "negative",
+}
+
+
+def _ai_level(rec: str) -> str:
+    r = (rec or "").lower()
+    if r.startswith(("proceed", "advanced", "proficient")):
+        return "positive"
+    if r.startswith(("not suitable", "foundational")):
+        return "negative"
+    return "caution" if r else ""
+
+
 def _report_row(r: dict[str, Any], skills: list[str]) -> dict[str, Any]:
     ev = r.get("evaluation") or {}
     by = {x["name"]: x for x in ev.get("skills") or []}
     started, ended = r.get("created_at"), r.get("ended_at")
-    recent = (time.time() - (r.get("ended_at") or 0)) < 600
-    status = ("Evaluated" if ev else "In progress" if r["status"] != "complete"
-              else "Evaluating" if recent and not r.get("evaluation_error") else "Not evaluated")
+    recent = (time.time() - (ended or 0)) < 600
+    status = ("In Progress" if r["status"] != "complete" else "Terminated" if r.get("early") else "Completed")
+    evaluation = ("Evaluated" if ev else "" if r["status"] != "complete"
+                  else "Evaluating" if recent and not r.get("evaluation_error") else "Not evaluated")
+    review = r.get("review") or {}
+    rec, src = (review["decision"], "admin") if review.get("decision") else (ev.get("recommendation", ""), "ai" if ev else "")
     return {
         "session_id": r["session_id"], "name": r.get("name", ""), "email": r.get("email", ""),
-        "attempt": int(r.get("attempt") or 1), "version": r.get("version"), "status": status,
-        "started_at": started, "ended_at": ended,
+        "attempt": int(r.get("attempt") or 1), "version": r.get("version"), "status": status, "evaluation": evaluation,
+        "started_at": started, "ended_at": ended, "date": ended or started,
         "duration_sec": int(r.get("elapsed_sec") or 0) or (int(ended - started) if ended and started else 0),
         "early": bool(r.get("early")),
         "overall": ev.get("overall"), "band": ev.get("band", ""), "ai_recommendation": ev.get("recommendation", ""),
+        "recommendation": rec, "recommendation_source": src,
+        "recommendation_level": _LEVEL.get(rec, "") if src == "admin" else _ai_level(rec),
+        "proctoring": ((r.get("snapshot") or {}).get("cfg") or {}).get("proctoring") or "Off",
         "coverage": ev.get("weight_coverage"),
         "skills": {n: (by[n]["score"] if n in by else None) for n in skills},
-        "review": r.get("review") or {},
+        "review": review,
         "problems": (r.get("evaluation_error") or {}).get("problems", []),
+    }
+
+
+def _pending_rows(row: dict[str, Any], started_codes: set[str]) -> list[dict[str, Any]]:
+    """People invited by email who haven't started: they belong in the grid too."""
+    out = []
+    for i in row.get("invites") or []:
+        if i.get("shared") or i.get("revoked") or i["code"] in started_codes:
+            continue
+        out.append({"session_id": "", "invite_code": i["code"], "name": i.get("name", ""), "email": i.get("email", ""),
+                    "attempt": 0, "status": "Pending", "evaluation": "", "date": i.get("created_at"),
+                    "started_at": None, "ended_at": None, "duration_sec": 0, "early": False, "overall": None, "band": "",
+                    "ai_recommendation": "", "recommendation": "", "recommendation_source": "", "recommendation_level": "",
+                    "proctoring": (row.get("published") or {}).get("cfg", {}).get("proctoring") or "Off",
+                    "coverage": None, "skills": {}, "review": {}, "problems": []})
+    return out
+
+
+def _agent_report(row: dict[str, Any]) -> dict[str, Any]:
+    from services.data import agent_sessions
+
+    a = (row.get("published") or {}).get("agent") or row["agent"]
+    purpose = _purpose(row)
+    skills = [{"name": r["name"], "weight": r["weight"]} for r in a["rubric"]]
+    names = [x["name"] for x in skills]
+    sessions_ = agent_sessions.for_agent(row["agent_id"])
+    rows = [_report_row(r, names) for r in sessions_]
+    rows += _pending_rows(row, {r.get("invite_code", "") for r in sessions_})
+    for x in rows:
+        x["agent_id"], x["agent_title"] = row["agent_id"], a["title"]
+    done = [x for x in rows if x["overall"] is not None]
+    avg = lambda vals: round(sum(vals) / len(vals), 1) if vals else None  # noqa: E731
+    return {
+        "agent": {"agent_id": row["agent_id"], "title": a["title"], "type_label": a.get("type_label", ""), "purpose": purpose,
+                  "role": ((row.get("published") or {}).get("fields") or row["fields"]).get("role", ""),
+                  "published_version": int((row.get("published") or {}).get("version") or 0), "skills": skills},
+        "decisions": DECISIONS.get(purpose, DECISIONS["L&D"]),
+        "stats": {
+            "invited": sum(1 for i in row.get("invites") or [] if not i.get("shared")),
+            "attempts": sum(1 for x in rows if x["status"] != "Pending"),
+            "people": len({x["email"] for x in rows if x["email"]}),
+            "completed": sum(1 for x in rows if x["status"] in ("Completed", "Terminated")),
+            "evaluated": len(done), "average": avg([x["overall"] for x in done]),
+            "skills": {n: avg([x["skills"][n] for x in done if x["skills"].get(n) is not None]) for n in names},
+            "decisions": {d: sum(1 for x in rows if x["review"].get("decision") == d) for d in DECISIONS.get(purpose, ())},
+            "reviewed": sum(1 for x in rows if x["review"].get("decision")),
+        },
+        "rows": sorted(rows, key=lambda x: x["date"] or 0, reverse=True),
     }
 
 
 @router.get("/agents/{agent_id}/report")
 def report(agent_id: str, request: Request) -> dict[str, Any]:
-    """Every attempt at this role-play as one grid, with totals for the top of the page."""
-    from services.data import agent_sessions
+    """Every attempt and pending invitation for this role-play, with totals."""
+    return _agent_report(_row(agent_id, request))
 
-    row = _row(agent_id, request)
-    a = (row.get("published") or {}).get("agent") or row["agent"]
-    purpose = _purpose(row)
-    skills = [{"name": r["name"], "weight": r["weight"]} for r in a["rubric"]]
-    names = [x["name"] for x in skills]
-    rows = [_report_row(r, names) for r in agent_sessions.for_agent(agent_id)]
-    done = [x for x in rows if x["overall"] is not None]
-    avg = lambda vals: round(sum(vals) / len(vals), 1) if vals else None  # noqa: E731
-    invited = sum(1 for i in row.get("invites") or [] if not i.get("shared"))
-    return {
-        "agent": {"agent_id": agent_id, "title": a["title"], "type_label": a.get("type_label", ""), "purpose": purpose,
-                  "published_version": int((row.get("published") or {}).get("version") or 0), "skills": skills},
-        "decisions": DECISIONS.get(purpose, DECISIONS["L&D"]),
-        "stats": {
-            "invited": invited, "attempts": len(rows),
-            "people": len({x["email"] for x in rows if x["email"]}),
-            "completed": sum(1 for x in rows if x["status"] in ("Evaluated", "Not evaluated", "Evaluating")),
-            "evaluated": len(done), "average": avg([x["overall"] for x in done]),
-            "skills": {n: avg([x["skills"][n] for x in done if x["skills"][n] is not None]) for n in names},
-            "decisions": {d: sum(1 for x in rows if x["review"].get("decision") == d) for d in DECISIONS.get(purpose, ())},
-            "reviewed": sum(1 for x in rows if x["review"].get("decision")),
-        },
-        "rows": rows,
-    }
+
+@router.get("/reports")
+def all_reports(request: Request) -> dict[str, Any]:
+    """Every attempt across this organization's published role-plays, newest first."""
+    org = _org(request)
+    rows, agents_ = [], []
+    for r in store.list_all():
+        if r.get("org_id") != org or not r.get("published"):
+            continue
+        rep = _agent_report(r)
+        rows += rep["rows"]
+        agents_.append({"agent_id": r["agent_id"], "title": rep["agent"]["title"], "purpose": rep["agent"]["purpose"]})
+    rows.sort(key=lambda x: x["date"] or 0, reverse=True)
+    return {"rows": rows, "agents": sorted(agents_, key=lambda a: a["title"].lower())}
+
+
+def _filtered(rows: list[dict[str, Any]], q: str, status: str, rec: str, agent: str) -> list[dict[str, Any]]:
+    q = (q or "").strip().lower()
+    return [x for x in rows if (not q or q in (x["name"] + " " + x["email"]).lower())
+            and (not status or x["status"] == status) and (not rec or x["recommendation_level"] == rec)
+            and (not agent or x["agent_id"] == agent)]
+
+
+def _xlsx(rows: list[dict[str, Any]], skills: list[str], title: str) -> Response:
+    import io
+    from datetime import datetime
+
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Reports"
+    head = (["Candidate", "Email", "Role-play", "Attempt", "Date", "Status", "Duration (min)", "Score", "Band",
+             "AI recommendation", "Decision", "Decision by", "Evaluation notes", "Proctoring"] + skills)
+    ws.append(head)
+    for c in ws[1]:
+        c.font, c.fill = Font(bold=True, color="FFFFFF"), PatternFill("solid", fgColor="7F56D9")
+    for x in rows:
+        when = datetime.fromtimestamp(x["date"]).strftime("%d %b %Y %H:%M") if x["date"] else ""
+        ws.append([x["name"], x["email"], x["agent_title"], x["attempt"] or "", when, x["status"],
+                   round(x["duration_sec"] / 60, 1) if x["duration_sec"] else "", x["overall"], x["band"],
+                   x["ai_recommendation"], x["review"].get("decision", ""), x["review"].get("by", ""),
+                   x["review"].get("notes", ""), x["proctoring"]] + [x["skills"].get(n) for n in skills])
+    for col, width in zip("ABCDEFGHIJKLMN", (22, 30, 30, 8, 18, 12, 14, 8, 12, 36, 14, 26, 50, 11)):
+        ws.column_dimensions[col].width = width
+    ws.freeze_panes = "A2"
+    buf = io.BytesIO()
+    wb.save(buf)
+    name = re.sub(r"[^\w-]+", "_", title)[:60] or "reports"
+    return Response(buf.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f'attachment; filename="{name}.xlsx"'})
+
+
+@router.get("/agents/{agent_id}/report.xlsx")
+def report_xlsx(agent_id: str, request: Request, q: str = "", status: str = "", rec: str = "") -> Response:
+    rep = _agent_report(_row(agent_id, request))
+    return _xlsx(_filtered(rep["rows"], q, status, rec, ""), [s["name"] for s in rep["agent"]["skills"]], rep["agent"]["title"] + " reports")
+
+
+@router.get("/reports.xlsx")
+def all_reports_xlsx(request: Request, q: str = "", status: str = "", rec: str = "", agent: str = "") -> Response:
+    data = all_reports(request)
+    return _xlsx(_filtered(data["rows"], q, status, rec, agent), [], "Role-play reports")
 
 
 def _session_of(agent_id: str, session_id: str, request: Request) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -853,8 +964,11 @@ def _session_of(agent_id: str, session_id: str, request: Request) -> tuple[dict[
 # the interview product's sessions; a role-play attempt is checked by _session_of.
 @router.get("/agents/{agent_id}/attempts/{attempt_id}/report")
 def session_report(agent_id: str, attempt_id: str, request: Request) -> dict[str, Any]:
-    _, s = _session_of(agent_id, attempt_id, request)
-    return {"session_id": attempt_id, "name": s.get("name", ""), "email": s.get("email", ""),
+    row, s = _session_of(agent_id, attempt_id, request)
+    a = (row.get("published") or {}).get("agent") or row["agent"]
+    return {"session_id": attempt_id, "agent_id": agent_id, "agent_title": a["title"],
+            "persona": (a.get("persona") or {}).get("name", ""), "purpose": _purpose(row),
+            "decisions": DECISIONS.get(_purpose(row), DECISIONS["L&D"]), "name": s.get("name", ""), "email": s.get("email", ""),
             "attempt": int(s.get("attempt") or 1), "status": s["status"], "evaluation": s.get("evaluation"),
             "evaluation_error": s.get("evaluation_error"), "transcript": s.get("transcript") or [],
             "review": s.get("review") or {}, "feedback": s.get("feedback")}
