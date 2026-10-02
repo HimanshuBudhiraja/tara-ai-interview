@@ -330,6 +330,47 @@ def revise(agent_id: str, body: ReviseBody, request: Request,
     return {**public(store.save(row)), "summary": out["summary"]}
 
 
+@router.get("/skill-master")
+def skill_master_catalogue() -> dict[str, Any]:
+    """The Skill Master picker: domains by category, each with readable skills."""
+    from services.data import skill_master
+
+    lib = json.loads((config.ROOT_DIR / "content" / "skill_library.json").read_text())["skills"]
+    cat = skill_master.catalogue()
+    return {"version": cat["version"], "categories": cat["categories"], "domains": [
+        {"id": d["id"], "label": d["label"], "category": d["category"],
+         "description": d.get("description", ""), "skills": lib.get(d["id"], [])}
+        for d in cat["domains"]
+    ]}
+
+
+class SkillNames(BaseModel):
+    names: list[str] = Field(default_factory=list, max_length=12)
+
+
+@router.post("/agents/{agent_id}/skills/draft")
+def draft_skills(agent_id: str, body: SkillNames, request: Request,
+                 _: None = Depends(ratelimit.limiter("generation"))) -> dict[str, Any]:
+    """Anchors and questions for skills just added from the Skill Master."""
+    row = _row(agent_id, request)
+    have = {r["name"].lower(): r for r in row["agent"]["rubric"]}
+    names = [n.strip() for n in body.names if n.strip().lower() in have][:12]
+    if not names:
+        return {**public(row), "added": 0}
+    try:
+        out = ab.skill_details(row, names)
+    except LLMError as exc:
+        raise _no_model() from exc
+    for name, anchor in out["anchors"].items():
+        r = have[name.lower()]
+        if not (r.get("anchor") or "").strip():
+            r["anchor"] = anchor
+    row["agent"]["questions"] += out["questions"]
+    row["reviewed"] = False
+    row["version"] = int(row.get("version") or 0) + 1
+    return {**public(store.save(row)), "added": len(out["questions"])}
+
+
 @router.post("/agents/{agent_id}/questions/generate")
 def generate_questions(agent_id: str, request: Request,
                        _: None = Depends(ratelimit.limiter("generation"))) -> dict[str, Any]:

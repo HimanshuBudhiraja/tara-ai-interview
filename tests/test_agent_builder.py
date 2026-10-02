@@ -629,3 +629,31 @@ def test_each_llm_use_has_its_own_model_slot():
     for w, var in uses.items():
         assert workload_config(Workload(w)).model == getattr(config, var)
     assert workload_config(Workload.AGENT_SCORER).temperature == 0.0
+
+
+# --------------------------------------------------------------------------- #
+#  Skill Master
+# --------------------------------------------------------------------------- #
+def test_the_skill_master_lists_readable_skills_for_every_domain(client):
+    cat = client.get(f"{BASE}/skill-master").json()
+    assert {d["category"] for d in cat["domains"]} == {"technical", "functional", "behavioural"}
+    assert all(d["skills"] for d in cat["domains"])
+    assert "Negotiation" in [s for d in cat["domains"] for s in d["skills"]]
+
+
+def test_skills_added_from_the_master_get_anchors_and_questions(client, monkeypatch):
+    row = _draft(client)["done"]
+    aid = row["agent_id"]
+    agent = copy.deepcopy(row["agent"])
+    agent["rubric"].append({"name": "Negotiation", "anchor": "", "weight": 0})
+    client.put(f"{BASE}/agents/{aid}", json={"fields": row["fields"], "agent": agent, "cfg": row["cfg"], "reviewed": True})
+    monkeypatch.setattr(ab, "_complete", lambda *a, **k: {"skills": [
+        {"name": "negotiation", "anchor": "Trades concessions for value.", "questions": ["What would you give up first?", "Why that price?"]},
+        {"name": "Not in this agent", "anchor": "x", "questions": ["ignored"]}]})
+    r = client.post(f"{BASE}/agents/{aid}/skills/draft", json={"names": ["Negotiation"]})
+    assert r.status_code == 200, r.text
+    out = r.json()
+    neg = next(s for s in out["agent"]["rubric"] if s["name"] == "Negotiation")
+    assert neg["anchor"] == "Trades concessions for value."
+    assert [q["tag"] for q in out["agent"]["questions"]].count("Negotiation") == 2
+    assert out["added"] == 2 and out["reviewed"] is False

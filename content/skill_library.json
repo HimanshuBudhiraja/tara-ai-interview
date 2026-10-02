@@ -1,0 +1,182 @@
+{
+ "_note": "Readable skills for the Agent Builder's Skill Master picker, grouped by the skill master's domains (content/skill_master.json). Names are suggestions: a recruiter can add any custom skill.",
+ "version": "skill_library_v1",
+ "skills": {
+  "dom_software_engineering": [
+   "API design",
+   "Code quality and readability",
+   "Data structures and algorithms",
+   "Debugging",
+   "Object-oriented design",
+   "Code review",
+   "Concurrency",
+   "Refactoring legacy code"
+  ],
+  "dom_architecture": [
+   "System design",
+   "Scalability",
+   "Distributed systems",
+   "Technical trade-offs",
+   "Microservices architecture",
+   "Caching strategy",
+   "Event-driven design"
+  ],
+  "dom_data_engineering": [
+   "Data pipelines (ETL/ELT)",
+   "SQL",
+   "Data modelling",
+   "Data quality",
+   "Streaming data",
+   "Data warehousing"
+  ],
+  "dom_data_science": [
+   "ML fundamentals",
+   "Model evaluation",
+   "Feature engineering",
+   "Statistics",
+   "RAG vs fine-tuning",
+   "MLOps",
+   "Responsible AI",
+   "Prompt engineering",
+   "Experiment design (A/B testing)"
+  ],
+  "dom_cloud_infrastructure": [
+   "Cloud architecture (AWS/Azure/GCP)",
+   "Containers and Kubernetes",
+   "Infrastructure as code",
+   "CI/CD pipelines",
+   "Networking fundamentals",
+   "Cost optimisation"
+  ],
+  "dom_reliability": [
+   "Incident response",
+   "Monitoring and observability",
+   "Root cause analysis",
+   "On-call practices",
+   "Capacity planning",
+   "Rollback strategy"
+  ],
+  "dom_security": [
+   "Application security",
+   "Identity and access management",
+   "Threat modelling",
+   "Data privacy and compliance",
+   "Secure coding"
+  ],
+  "dom_quality_engineering": [
+   "Test strategy",
+   "Test automation",
+   "Exploratory testing",
+   "Performance testing",
+   "Bug triage"
+  ],
+  "dom_product_management": [
+   "Product discovery",
+   "Prioritisation",
+   "Roadmapping",
+   "Stakeholder management",
+   "Metrics and success criteria",
+   "User research",
+   "Writing requirements"
+  ],
+  "dom_design": [
+   "User experience design",
+   "Interaction design",
+   "Visual design",
+   "Accessibility",
+   "Design systems",
+   "Usability testing"
+  ],
+  "dom_project_delivery": [
+   "Planning and estimation",
+   "Risk management",
+   "Agile delivery",
+   "Scope management",
+   "Status reporting"
+  ],
+  "dom_customer_support": [
+   "Empathy",
+   "De-escalation",
+   "Troubleshooting",
+   "Ownership of the issue",
+   "Policy application",
+   "First-contact resolution",
+   "Clear written responses"
+  ],
+  "dom_sales": [
+   "Prospecting",
+   "Cold calling",
+   "Discovery questioning",
+   "Objection handling",
+   "Value articulation",
+   "Negotiation",
+   "Closing",
+   "Pipeline management",
+   "Pricing conversations"
+  ],
+  "dom_marketing": [
+   "Campaign planning",
+   "Positioning and messaging",
+   "Content strategy",
+   "Marketing analytics",
+   "Brand management"
+  ],
+  "dom_finance": [
+   "Financial analysis",
+   "Budgeting and forecasting",
+   "Accounting principles",
+   "Financial reporting",
+   "Cost control"
+  ],
+  "dom_people": [
+   "Hiring and interviewing",
+   "Performance management",
+   "Coaching and feedback",
+   "Employee relations",
+   "Onboarding"
+  ],
+  "dom_domain_knowledge": [
+   "Industry knowledge",
+   "Regulatory awareness",
+   "Product knowledge",
+   "Competitive landscape"
+  ],
+  "dom_communication": [
+   "Verbal communication",
+   "Active listening",
+   "Clarity and structure",
+   "Persuasion",
+   "Presenting to stakeholders",
+   "Explaining technical concepts simply"
+  ],
+  "dom_collaboration": [
+   "Teamwork",
+   "Cross-functional collaboration",
+   "Conflict resolution",
+   "Giving and receiving feedback"
+  ],
+  "dom_leadership": [
+   "Decision making",
+   "Influencing without authority",
+   "Mentoring",
+   "Ownership and accountability",
+   "Vision and direction",
+   "Managing change"
+  ],
+  "dom_problem_solving": [
+   "Analytical thinking",
+   "Structured problem solving",
+   "Critical thinking",
+   "Creativity",
+   "Prioritising under pressure",
+   "Judgement"
+  ],
+  "dom_adaptability": [
+   "Learning agility",
+   "Handling ambiguity",
+   "Resilience",
+   "Composure under pressure",
+   "Openness to feedback"
+  ]
+ }
+}

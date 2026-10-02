@@ -332,6 +332,41 @@ def more_questions(row: dict[str, Any], n: int = 3) -> list[dict[str, str]]:
             for q in (out.get("questions") or [])[:n] if isinstance(q, dict) and _s(q.get("text"))]
 
 
+def skill_details(row: dict[str, Any], names: list[str], per_skill: int = 2) -> dict[str, Any]:
+    """A 1-5 anchor and a few questions for skills just added from the Skill Master.
+
+    Returns {"anchors": {name: anchor}, "questions": [{"text", "tag"}]}. Only the
+    named skills are touched; every other skill and question stays as it is.
+    """
+    a = row["agent"]
+    user = (
+        "Scenario: " + json.dumps(row["fields"])
+        + "\nAll skills in this agent: " + ", ".join(r["name"] for r in a["rubric"])
+        + "\nExisting questions:\n" + "\n".join("- " + q["text"] for q in a["questions"])
+        + "\n\nFor EACH of these newly added skills: " + json.dumps(names)
+        + f"\nwrite (1) an anchor: one sentence on what a 5 out of 5 looks like in THIS scenario, and"
+          f" (2) {per_skill} new questions or moves Tara could use to bring that skill out, different from the existing ones."
+          ' Return only JSON: {"skills": [{"name": "exact skill name", "anchor": "...",'
+          ' "questions": ["...", "..."]}]}'
+    )
+    out = _complete(_RULES, user, 2500, "question_suggester")
+    wanted = {n.lower(): n for n in names}
+    anchors: dict[str, str] = {}
+    questions: list[dict[str, str]] = []
+    for sk in out.get("skills") or []:
+        if not isinstance(sk, dict):
+            continue
+        name = wanted.get(_s(sk.get("name")).lower())
+        if not name:
+            continue
+        if _s(sk.get("anchor")):
+            anchors[name] = _s(sk.get("anchor"))
+        for q in (sk.get("questions") or [])[:per_skill]:
+            if _s(q):
+                questions.append({"text": _s(q), "tag": name})
+    return {"anchors": anchors, "questions": questions}
+
+
 # --------------------------------------------------------------------------- #
 #  Rehearsal in text, on the real global prompt
 # --------------------------------------------------------------------------- #

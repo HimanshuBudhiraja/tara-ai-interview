@@ -152,6 +152,65 @@
   $('navMine').addEventListener('click', (e) => { e.preventDefault(); $('mine').scrollIntoView({ behavior: 'smooth' }); });
   $('railAgent').addEventListener('click', (e) => { e.preventDefault(); go(1); loadMine(); });
 
+  /* ---------- Skill Master: pick skills from the library, or add a custom one ---------- */
+  function balanceWeights(rubric) {
+    if (!rubric.length) return;
+    const each = Math.floor(100 / rubric.length);
+    rubric.forEach((r) => { r.weight = each; });
+    rubric[0].weight += 100 - each * rubric.length;
+  }
+  let SM = null;
+  async function openSkillMaster() {
+    const dlg = $('smDlg');
+    if (!SM) { try { SM = await api('/skill-master'); } catch (e) { toast(e.message); return; } }
+    S.sm = { q: '', cat: 'all', picked: new Set() };
+    renderSkillMaster(); dlg.showModal(); $('smSearch').value = ''; $('smSearch').focus();
+  }
+  function renderSkillMaster() {
+    const st = S.sm, have = new Set(S.agent.rubric.map((r) => r.name.toLowerCase()));
+    const tabs = $('smTabs'); tabs.textContent = '';
+    [['all', 'All'], ['technical', 'Technical'], ['functional', 'Functional'], ['behavioural', 'Behavioural']].forEach(([id, label]) =>
+      tabs.append(h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.cat === id), text: label, onclick: () => { st.cat = id; renderSkillMaster(); } })));
+    const q = st.q.trim().toLowerCase(), list = $('smList'); list.textContent = '';
+    let shown = 0;
+    SM.domains.filter((d) => st.cat === 'all' || d.category === st.cat).forEach((d) => {
+      const skills = d.skills.filter((n) => !q || n.toLowerCase().includes(q) || d.label.toLowerCase().includes(q));
+      if (!skills.length) return;
+      shown += skills.length;
+      list.append(h('div', { class: 'smdom' }, h('b', { text: d.label }), h('div', { class: 'smchips' }, skills.map((n) => {
+        const already = have.has(n.toLowerCase()), on = st.picked.has(n);
+        return h('button', { type: 'button', class: 'smchip', 'aria-pressed': String(on || already), disabled: already, title: already ? 'Already in this agent' : '',
+          text: n, onclick: () => { on ? st.picked.delete(n) : st.picked.add(n); renderSkillMaster(); } });
+      }))));
+    });
+    if (!shown) list.append(h('p', { class: 'smempty', text: q ? 'No skill in the library matches "' + st.q.trim() + '". Add it as a custom skill below.' : 'No skills here.' }));
+    $('smCustomAdd').disabled = !$('smCustom').value.trim();
+    $('smAdd').disabled = !st.picked.size;
+    $('smAdd').textContent = st.picked.size ? 'Add ' + st.picked.size + ' skill' + (st.picked.size === 1 ? '' : 's') : 'Add skills';
+  }
+  $('smSearch').addEventListener('input', (e) => { S.sm.q = e.target.value; renderSkillMaster(); });
+  $('smCustom').addEventListener('input', () => { $('smCustomAdd').disabled = !$('smCustom').value.trim(); });
+  $('smCustomAdd').addEventListener('click', () => {
+    const n = $('smCustom').value.trim().slice(0, 80); if (!n) return;
+    S.sm.picked.add(n); $('smCustom').value = ''; renderSkillMaster();
+  });
+  $('smCancel').addEventListener('click', () => $('smDlg').close());
+  $('smAdd').addEventListener('click', async () => {
+    const names = [...S.sm.picked].filter((n) => !S.agent.rubric.some((r) => r.name.toLowerCase() === n.toLowerCase()));
+    $('smDlg').close();
+    if (!names.length) return;
+    names.forEach((n) => S.agent.rubric.push({ name: n, anchor: '', weight: 0 }));
+    balanceWeights(S.agent.rubric); S.reviewed = false; dirty = true; renderMain(); renderSide();
+    toast('Added ' + names.length + ' skill' + (names.length === 1 ? '' : 's') + '. Tara is drafting what a 5 looks like and questions for ' + (names.length === 1 ? 'it' : 'them') + '…');
+    try {
+      await saveNow();
+      const row = await api('/agents/' + encodeURIComponent(S.agentId) + '/skills/draft', { method: 'POST', body: { names } });
+      S.row = row; S.agent.rubric = row.agent.rubric; S.agent.questions = row.agent.questions;
+      toast('Drafted anchors and ' + row.added + ' question' + (row.added === 1 ? '' : 's') + ' for the new skills. Review them before you publish.');
+    } catch (e) { toast('Skills added. ' + e.message); }
+    renderMain(); renderSide();
+  });
+
   /* ---------- your role-plays: every agent created, to open or showcase ---------- */
   async function openAgent(id) {
     try {
@@ -432,7 +491,9 @@
       !S.reviewed ? h('div', { class: 'warnbox' }, h('span', null, h('span', { class: 'spark', html: ICON.warn }), 'Tara drafted these skills from your brief. Check the weights before you publish.'),
         h('button', { class: 'fillbtn', type: 'button', text: 'Mark as reviewed', onclick: () => { const t = a.rubric.reduce((x, r) => x + (+r.weight || 0), 0); if (t !== 100) { toast('Weights total ' + t + '%. Make them add up to 100% first.'); return; } S.reviewed = true; touch(); renderMain(); } })) : null,
       h('div', { class: 'rtab' }, h('div', { class: 'rr hd' }, h('span', { text: 'SKILL' }), h('span', { class: 'a-cell', text: 'WHAT A 5 LOOKS LIKE' }), h('span', { style: 'text-align:right', text: 'WEIGHT' }), h('span')), rows),
-      h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add skill', onclick: () => { a.rubric.push({ name: 'New skill', anchor: '', weight: 0 }); S.reviewed = false; touch(); renderMain(); } })));
+      h('div', { class: 'rbtns' },
+        h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add skill from Skill Master', onclick: openSkillMaster }),
+        h('button', { class: 'obtn ghost', type: 'button', text: 'Balance weights to 100%', disabled: !a.rubric.length, onclick: () => { balanceWeights(a.rubric); S.reviewed = false; touch(); renderMain(); } }))));
 
     const qlist = h('div', { class: 'qlist' });
     let dragFrom = -1;

@@ -533,6 +533,30 @@ body{padding-left:var(--rail)}
 .mine-st{font-weight:600}
 .tc .cat.pub{background:#ECFDF3;color:#067647}
 .tc .cat.draft{background:#F2F4F7;color:#344054}
+
+/* ===== Skill Master dialog ===== */
+.rbtns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.rbtns .dashbtn{flex:1 1 260px}
+.smdlg{width:min(860px,calc(100vw - 32px));max-height:min(780px,calc(100vh - 48px));padding:0;border:1px solid var(--uu-gray-200,#EAECF0);border-radius:16px;
+  background:#fff;color:var(--ink);box-shadow:0 24px 48px -12px rgba(16,24,40,.18);display:none;flex-direction:column;overflow:hidden}
+.smdlg[open]{display:flex}
+.smdlg::backdrop{background:rgba(12,17,29,.45)}
+.smhd{display:flex;justify-content:space-between;gap:16px;padding:20px 24px 12px}
+.smhd h2{margin:0 0 4px;font-size:18px;font-weight:600}
+.smhd p{margin:0;font-size:14px;color:var(--muted-2);max-width:62ch}
+.smbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:0 24px 14px;border-bottom:1px solid var(--uu-gray-200,#EAECF0)}
+.smbar input{flex:1 1 280px;height:40px;padding:0 14px;border:1px solid var(--uu-gray-300,#D0D5DD);border-radius:8px;font:inherit;font-size:14px}
+.smlist{flex:1;overflow-y:auto;padding:14px 24px;display:flex;flex-direction:column;gap:16px}
+.smdom b{display:block;font-size:13px;font-weight:600;color:var(--ink-3);margin-bottom:8px}
+.smchips{display:flex;flex-wrap:wrap;gap:8px}
+.smchip{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--uu-gray-300,#D0D5DD);background:#fff;color:var(--uu-gray-700,#344054);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.smchip:hover:not(:disabled){background:var(--uu-gray-50,#F9FAFB)}
+.smchip[aria-pressed="true"]{background:#EFF8FF;color:#1570EF;border-color:#84CAFF}
+.smchip:disabled{cursor:default;opacity:.6}
+.smempty{color:var(--muted-2);font-size:14px;margin:8px 0}
+.smft{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 24px;border-top:1px solid var(--uu-gray-200,#EAECF0);background:var(--uu-gray-50,#F9FAFB)}
+.smcustom{display:flex;gap:8px;flex:1 1 360px}
+.smcustom input{flex:1;height:40px;padding:0 12px;border:1px solid var(--uu-gray-300,#D0D5DD);border-radius:8px;font:inherit;font-size:14px;min-width:0}
 </style>
 </head>
 <body>
@@ -546,6 +570,18 @@ body{padding-left:var(--rail)}
   <a aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>More</a>
 </aside>
 <div class="ainote" id="aiNote" hidden></div>
+<dialog id="smDlg" class="smdlg" aria-labelledby="smH">
+  <div class="smhd"><div><h2 id="smH">Skill Master</h2><p>Pick the skills this conversation should bring out. Weights are balanced to 100% and Tara drafts what a 5 looks like, plus questions, for each one.</p></div>
+    <button class="xbtn" type="button" id="smCancel" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="smbar"><label class="sr" for="smSearch">Search skills</label><input id="smSearch" type="search" placeholder="Search skills or domains, e.g. negotiation, SQL, empathy" autocomplete="off">
+    <div role="tablist" aria-label="Skill categories" class="ttabs" id="smTabs"></div></div>
+  <div class="smlist" id="smList"></div>
+  <div class="smft">
+    <div class="smcustom"><label class="sr" for="smCustom">Custom skill</label><input id="smCustom" type="text" maxlength="80" placeholder="Not in the library? Type a custom skill" autocomplete="off"><button class="obtn ghost" type="button" id="smCustomAdd" disabled>Add custom</button></div>
+    <button class="cwt" type="button" id="smAdd" disabled>Add skills</button>
+  </div>
+</dialog>
+
 
 <!-- ================= SCREEN 1 · DESCRIBE OR PICK A TEMPLATE ================= -->
 <div class="view" id="v1">
@@ -672,6 +708,6 @@ body{padding-left:var(--rail)}
 </div>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003b"></script>
+<script src="/agent-builder/app.js?v=20261003c"></script>
 </body>
 </html>
