@@ -104,7 +104,7 @@
     { cat: 'ai', kind: 'Role-play', title: 'AI Engineer Technical Interview', desc: 'ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI for mid-to-senior engineers.', mins: '25 min', format: 'Voice' },
     { cat: 'ai', kind: 'Role-play', title: 'Prompt Engineer Screening', desc: 'Prompt design, evaluation methods and failure analysis with live scenario questions.', mins: '20 min', format: 'Voice' },
     { cat: 'ai', kind: 'Role-play', title: 'ML Ops Engineer Deep-Dive', desc: 'Pipelines, drift monitoring, model serving and rollback strategy for production ML.', mins: '30 min', format: 'Voice' },
-    { cat: 'ai', kind: 'Assessment', title: 'Data Scientist Case Study', desc: 'Candidate walks through a churn-prediction case: framing, features, metrics, trade-offs.', mins: '30 min', format: 'Voice' },
+    { cat: 'ai', kind: 'Assessment', title: 'Data Scientist Case Study', desc: 'The participant walks through a churn-prediction case: framing, features, metrics, trade-offs.', mins: '30 min', format: 'Voice' },
     { cat: 'sales', kind: 'Role-play', title: 'SDR Cold Call', desc: 'Tara plays a busy VP of Operations. Book a meeting in under five minutes.', mins: '10 min', format: 'Voice' },
     { cat: 'sales', kind: 'Role-play', title: 'Enterprise Discovery Call', desc: 'Uncover pain, budget and decision process with a cautious IT director.', mins: '20 min', format: 'Voice' },
     { cat: 'sales', kind: 'Role-play', title: 'Pricing Objection Handling', desc: 'A procurement lead pushes back hard on price. Defend value without discounting.', mins: '15 min', format: 'Voice' },
@@ -347,7 +347,7 @@
   const PURPOSES = [['Hiring', 'Hiring'], ['HR', 'HR'], ['L&D', 'Learning & Development']];
   const PURPOSE_DEFAULTS = { Hiring: { attempts: '1' }, HR: { attempts: '1' }, 'L&D': { attempts: 'Unlimited' } };
   const PURPOSE_HINT = {
-    Hiring: 'A candidate, one attempt at a booked time. The result, with a recommendation, appears in Results for admins.',
+    Hiring: 'A participant applying for a role, one attempt at a booked time. The result, with a recommendation, appears in Results for admins.',
     HR: 'An employee or manager conversation. Results show themes, observations and follow-ups for admins, not a verdict.',
     'L&D': 'A learner practising, with retries. Coaching and progress across attempts appear in Results for admins.'
   };
@@ -551,16 +551,16 @@
     const langs = (OPT.languages || []).length ? OPT.languages : [voiceOf(c.voice).language];
     m.append(h('section', { id: 'advanced', class: 'adv' },
       h('button', { type: 'button', 'aria-expanded': String(S.advOpen), onclick: () => { S.advOpen = !S.advOpen; renderMain(); } },
-        h('span', null, h('b', { text: 'Advanced' }), h('small', { text: 'Language, proctoring, camera, recording consent' })), h('span', { class: 'spark', style: S.advOpen ? 'transform:rotate(180deg)' : null, html: ICON.chev })),
+        h('span', null, h('b', { text: 'Advanced' }), h('small', { text: 'Language, proctoring defaults, recording consent' })), h('span', { class: 'spark', style: S.advOpen ? 'transform:rotate(180deg)' : null, html: ICON.chev })),
       S.advOpen ? h('div', { class: 'advbody' },
         h('div', { class: 'fld' }, h('label', { for: 'adv-lang', text: 'Language' }),
           h('select', { id: 'adv-lang', class: 'inp', onchange: (e) => { const v = (OPT.voices || []).find((x) => x.language === e.target.value); if (v) setVoice(v.key); } },
             langs.map((l) => h('option', { value: l, text: l, selected: voiceOf(c.voice).language === l }))),
           h('small', { class: 'advhint', text: 'Changing the language picks a voice that speaks it, and the persona takes that voice\'s name. Fine-tune the voice in Persona.' })),
-        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Proctoring' }), seg('Proctoring', 'proctoring', OPT.proctoring || ['Off', 'Basic', 'Strict']),
-          h('small', { class: 'advhint', text: 'Saved with each published version for the proctoring suite, which applies it.' })),
-        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Camera' }), seg('Camera', 'camera', OPT.camera || ['Off', 'Optional', 'Required']),
-          h('small', { class: 'advhint', text: 'Saved for the proctoring suite. Nothing is sent to the voice agent.' })),
+        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Image proctoring (default)' }), yesNo('adv-img', !!c.image_proctoring, (v) => { c.image_proctoring = v; touch(); }),
+          h('small', { class: 'advhint', text: 'Default for new invitations; each invitation can change it. Applied by the proctoring suite.' })),
+        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Safe Assessment Browser (default)' }), yesNo('adv-sab', !!c.safe_browser, (v) => { c.safe_browser = v; touch(); }),
+          h('small', { class: 'advhint', text: 'Default for new invitations; each invitation can change it. Applied by the proctoring suite.' })),
         h('div', { class: 'togrow', style: 'grid-column:1 / -1' }, h('span', null, h('b', { text: 'Recording consent' }), h('small', { text: 'Ask participants to agree to recording before they start.' })),
           h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(c.consent), 'aria-label': 'Recording consent', onclick: () => { c.consent = !c.consent; touch(); renderMain(); } }, h('i')))) : null));
 
@@ -636,7 +636,7 @@
       h('p', { text: all ? 'Every conversation across your published role-plays. Open a report for the evidence, your notes and your recommendation.'
         : (D.agent.purpose === 'Hiring' ? 'Job role: ' : 'Role-play: ') + (D.agent.role || D.agent.title) + ' · ' + D.agent.title + (avg != null ? ' · average score ' + avg : '') })));
     main.append(h('hr', { class: 'repdivide' }));
-    const search = h('input', { type: 'search', placeholder: 'Search by Candidate', value: R.q, 'aria-label': 'Search by candidate', oninput: (e) => { R.q = e.target.value; R.page = 0; renderTable(); } });
+    const search = h('input', { type: 'search', placeholder: 'Search by participant', value: R.q, 'aria-label': 'Search by participant', oninput: (e) => { R.q = e.target.value; R.page = 0; renderTable(); } });
     const fbtn = h('button', { class: 'iconbtn', type: 'button', title: 'Filters', 'aria-label': 'Filters', 'aria-expanded': String(!!R.filtersOpen), html: SVGI.filter, onclick: () => { R.filtersOpen = !R.filtersOpen; renderReport(); } });
     if (activeFilters()) fbtn.append(h('span', { class: 'badge', text: String(activeFilters()) }));
     main.append(h('div', { class: 'reptools' },
@@ -670,7 +670,7 @@
     if (!total) wrap.append(h('div', { class: 'repempty', text: R.data.rows.length ? 'No reports match your search or filters.' : (all ? 'No one has taken a published role-play yet.' : 'No one has been invited yet. Use Invite participants to send invitations.') }));
     else {
       const th = (label, info) => h('th', { scope: 'col' }, label, info ? h('span', { class: 'info', title: info, html: SVGI.info }) : null);
-      const head = h('tr', null, th(all ? 'Candidate' : 'Candidate Name'), all ? th('Role-play') : null, th('Date'), th('Status'), th('Score'),
+      const head = h('tr', null, th(all ? 'Participant' : 'Participant Name'), all ? th('Role-play') : null, th('Date'), th('Status'), th('Score'),
         th('Proctoring Details', 'Proctoring settings for this role-play. The proctoring suite applies them and adds its findings.'),
         th('Recommendation', 'Your decision when you have reviewed the attempt; otherwise the AI recommendation, backed by quotes in the report.'), th('Action'));
       const body = h('tbody', null, page.map((x) => h('tr', null,
@@ -794,7 +794,7 @@
         h('p', { class: 'sub', text: 'Every participant who has taken the published version. Scores are backed by quotes from what they said; skills the conversation didn\'t reach are Not assessed.' })),
         h('span', { style: 'display:flex;gap:8px' }, S.row && S.row.published_version ? h('button', { class: 'obtn ghost', type: 'button', text: 'Open reports', onclick: () => $('repBtn').click() }) : null,
           h('button', { class: 'obtn ghost', type: 'button', text: 'Refresh', onclick: loadResults }))));
-    if (!list.length) { sec.append(h('p', { class: 'resnote', text: S.row && S.row.published_version ? 'No one has taken it yet. Share the candidate link from the sidebar.' : 'Publish this agent and share its link to collect results.' })); return sec; }
+    if (!list.length) { sec.append(h('p', { class: 'resnote', text: S.row && S.row.published_version ? 'No one has taken it yet. Invite participants from the sidebar or the header.' : 'Publish this agent and share its link to collect results.' })); return sec; }
     const fmtDate = (t) => t ? new Date(t * 1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
     list.forEach((x) => {
       const ev = x.evaluation;
@@ -888,7 +888,7 @@
     try {
       await saveNow();
       const row = await api('/agents/' + encodeURIComponent(S.agentId) + '/publish', { method: 'POST' });
-      S.row = row; renderSide(); toast('Published as version ' + row.published_version + '. The candidate link is in the sidebar.');
+      S.row = row; renderSide(); toast('Published as version ' + row.published_version + '. The participant link is in the sidebar.');
     } catch (e) {
       const d = e.detail || {};
       toast(d.missing ? 'Finish ' + d.missing.join(', ').toLowerCase() + ' first.' : d.leaked ? 'Reword this first: the instructions or questions repeat the "what a 5 looks like" text of a skill, which the voice agent must not see: "' + String(d.leaked[0]).slice(0, 90) + (String(d.leaked[0]).length > 90 ? '…' : '') + '"' : e.message);
@@ -897,76 +897,115 @@
   // One access code per participant, for the published version. The link opens the participant flow.
   $('invBtn').addEventListener('click', () => openInvite('email'));
 
-  /* ---------- Invite participants: email an invitation, or switch the open link on ---------- */
+  /* ---------- Send Invitation: email up to ten people, or the open link ---------- */
+  const COIN = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="6"/><path d="M15.5 9.6A6 6 0 1 1 9.6 15.5"/><path d="M9 6.5v5"/></svg>';
+  const LINKI = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>';
   async function openInvite(tab) {
-    S.inv = { tab: tab || 'email', list: null, last: null, busy: false };
-    renderInvite(); $('invDlg').showModal(); loadInvites();
+    S.inv = { tab: tab || 'email', data: null, sent: null, busy: false };
+    $('invDlg').showModal(); renderInvite();
+    try { S.inv.data = await api('/agents/' + encodeURIComponent(S.agentId) + '/invitation'); }
+    catch (e) { toast(e.message); $('invDlg').close(); return; }
+    const d = S.inv.data;
+    S.inv.email = { text: '', p: Object.assign({}, d.defaults) };
+    S.inv.link = { enabled: d.open_link.enabled, p: Object.assign({}, d.open_link.proctoring || d.defaults) };
+    renderInvite();
   }
-  async function loadInvites() {
-    try { const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/invites'); S.inv.list = r.invites; S.row.open_link = r.open_link; } catch (e) { S.inv.list = []; }
-    renderInvite(); renderSide();
+  const parseEmails = (t) => t.split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean);
+  const okEmail = (e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
+  function info(text) { return h('span', { class: 'ii', title: text, 'aria-label': text, html: SVGI.info }); }
+  function yesNo(name, value, onchange) {
+    return h('div', { class: 'yn', role: 'radiogroup', 'aria-label': name }, [[true, 'Yes'], [false, 'No']].map(([v, l]) =>
+      h('label', null, h('input', { type: 'radio', name: name, checked: value === v, onchange: () => onchange(v) }), h('span', { text: l }))));
   }
-  function copyBtn(text, label) {
-    return h('button', { class: 'obtn ghost', type: 'button', text: label || 'Copy', onclick: (e) => { const b = e.currentTarget, was = b.textContent;
-      navigator.clipboard.writeText(text).then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = was; }, 1500); }, () => toast('Copy isn\'t allowed here. Select the text instead.')); } });
+  function proctorBlock(key, st) {
+    return h('div', { class: 'invsec' }, h('h3', { text: 'Proctoring Settings' }),
+      h('div', { class: 'procgrid' },
+        h('div', null, h('span', { class: 'lbl' }, 'Image Proctoring', info('Saved with each attempt for the proctoring suite, which captures and reviews images. Nothing changes in the conversation.')),
+          yesNo(key + '-img', st.p.image_proctoring, (v) => { st.p.image_proctoring = v; })),
+        h('div', null, h('span', { class: 'lbl' }, 'Enable Safe Assessment Browser', info('Saved with each attempt for the proctoring suite, which applies the safe browser.')),
+          yesNo(key + '-sab', st.p.safe_browser, (v) => { st.p.safe_browser = v; }))));
+  }
+  function linkField(url, label) {
+    return h('div', { class: 'invsec' }, h('span', { class: 'lbl' }, label, info(url ? 'Anyone with this link can join. Each person signs in with their own name and email.' : 'Switch on the open link to get one link for everyone.')),
+      h('div', { class: 'linkfield' + (url ? '' : ' off') }, h('span', { class: 'lk', html: LINKI }), h('span', { class: 'url', text: url || 'Open link is off' }),
+        h('button', { type: 'button', class: 'copyl', disabled: !url, text: 'Copy Link', onclick: (e) => { const b = e.currentTarget; navigator.clipboard.writeText(url).then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy Link'; }, 1500); }, () => toast('Copy isn\'t allowed here. Select the link instead.')); } })));
+  }
+  function editor(htmlStr, placeholders) {
+    const ed = h('div', { class: 'rte-body', contenteditable: 'true', role: 'textbox', 'aria-multiline': 'true', 'aria-label': 'Invitation template', html: htmlStr });
+    const cmd = (c, v) => { ed.focus(); document.execCommand(c, false, v); };
+    const btn = (label, title, fn) => h('button', { type: 'button', class: 'rte-b', title, 'aria-label': title, html: label, onmousedown: (e) => e.preventDefault(), onclick: fn });
+    const block = h('select', { class: 'rte-s', 'aria-label': 'Text style', onchange: (e) => { cmd('formatBlock', e.target.value); e.target.value = 'p'; } },
+      [['p', 'Paragraph'], ['h2', 'Heading'], ['h3', 'Subheading'], ['blockquote', 'Quote']].map(([v, l]) => h('option', { value: v, text: l })));
+    const bar = h('div', { class: 'rte-bar' },
+      btn('&#8630;', 'Undo', () => cmd('undo')), btn('&#8631;', 'Redo', () => cmd('redo')), h('span', { class: 'rte-sep' }), block, h('span', { class: 'rte-sep' }),
+      btn('<b>B</b>', 'Bold', () => cmd('bold')), btn('<i>I</i>', 'Italic', () => cmd('italic')),
+      btn(LINKI, 'Link', () => { const u = window.prompt ? window.prompt('Link address (https://…)') : ''; if (u && /^(https?:\/\/|mailto:)/i.test(u)) cmd('createLink', u); else if (u) toast('Use an address starting with https:// or mailto:'); }),
+      h('span', { class: 'rte-sep' }),
+      btn('&#8226;&#8212;', 'Bulleted list', () => cmd('insertUnorderedList')), btn('1&#8212;', 'Numbered list', () => cmd('insertOrderedList')));
+    const chips = h('div', { class: 'rte-chips' }, h('span', { text: 'Insert:' }), placeholders.map((ph) =>
+      h('button', { type: 'button', class: 'chip', text: ph, onmousedown: (e) => e.preventDefault(), onclick: () => cmd('insertText', ph) })));
+    return { el: h('div', { class: 'rte' }, bar, ed, chips), get: () => ed.innerHTML };
   }
   function renderInvite() {
-    const st = S.inv, body = $('invBody'); body.textContent = '';
-    $('invTitle').textContent = 'Invite participants · ' + S.agent.title;
+    const st = S.inv, d = st.data, body = $('invBody'), foot = $('invFoot');
+    body.textContent = ''; foot.textContent = ''; body.scrollTop = 0;
+    $('invTitle').textContent = 'Send Invitation';
+    $('invSub').textContent = d ? d.label + ': ' + d.title : '';
+    $('invCredits').innerHTML = d ? COIN + '<span>Credits: <b>' + d.credits + '</b></span>' : '';
     const tabs = $('invTabs'); tabs.textContent = '';
-    [['email', 'Email invitation'], ['link', 'Open link']].forEach(([id, label]) => tabs.append(h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.tab === id), text: label, onclick: () => { st.tab = id; renderInvite(); } })));
+    [['email', 'Email Invitation'], ['link', 'Open Link Invitation']].forEach(([id, label]) => tabs.append(h('button', { type: 'button', role: 'tab', 'aria-selected': String(st.tab === id), text: label, onclick: () => { st.tab = id; st.sent = null; renderInvite(); } })));
+    if (!d) { body.append(h('p', { class: 'invsub', text: 'Loading…' })); return; }
+    const cancel = h('button', { class: 'obtn ghost', type: 'button', text: 'Cancel', onclick: () => $('invDlg').close() });
+    if (st.tab === 'email' && st.sent) {
+      const r = st.sent;
+      body.append(h('div', { class: 'invsec' }, h('h3', { text: r.email_configured ? 'Invitations sent' : 'Invitations created' }),
+        h('p', { class: 'invsub', text: r.email_configured ? 'Each participant got their own link and access code.' : 'Email isn\'t set up on this server yet, so copy each invitation and send it yourself.' }),
+        h('div', { class: 'invlist' }, r.results.map((x) => h('div', { class: 'invrow' },
+          h('div', null, h('b', { text: x.email }), h('small', { text: x.sent ? 'Sent' : x.error ? x.error : 'Ready to send' })),
+          h('span', { class: 'code', text: x.code }), copyBtn(x.text, 'Copy invitation'), copyBtn(x.link, 'Copy link'))))));
+      foot.append(h('button', { class: 'obtn ghost', type: 'button', text: 'Invite more', onclick: () => { st.sent = null; renderInvite(); } }), h('button', { class: 'cwt', type: 'button', text: 'Done', onclick: () => $('invDlg').close() }));
+      return;
+    }
     if (st.tab === 'email') {
-      const name = h('input', { id: 'inv-name', class: 'inp', type: 'text', placeholder: 'Maya Rao', autocomplete: 'off' });
-      const mail = h('input', { id: 'inv-email', class: 'inp', type: 'email', placeholder: 'maya@company.com', autocomplete: 'off' });
-      const note = h('textarea', { id: 'inv-note', class: 'inp', rows: '3', maxlength: '1500', placeholder: 'Optional: a line from you, added to the email' });
-      const send = h('button', { class: 'cwt', type: 'button', text: OPT.email_configured ? 'Send invitation' : 'Create invitation', disabled: st.busy, onclick: async () => {
-        if (!mail.value.trim()) { toast('Enter the participant\'s email address.'); mail.focus(); return; }
-        st.busy = true; renderInviteBusy(send);
-        try {
-          st.last = await api('/agents/' + encodeURIComponent(S.agentId) + '/invites', { method: 'POST', body: { name: name.value.trim(), email: mail.value.trim(), message: note.value, send_email: !!OPT.email_configured } });
-          toast(st.last.sent ? 'Invitation sent to ' + mail.value.trim() + '.' : 'Invitation created. Copy it below and send it yourself.');
-          st.busy = false; await loadInvites(); return;
-        } catch (e) { toast((e.detail && e.detail.message) || e.message); }
+      const em = st.email;
+      const list = parseEmails(em.text), bad = list.filter((e) => !okEmail(e));
+      const hint = h('p', { class: 'hint' + (bad.length || list.length > d.max_emails ? ' bad' : ''), text: bad.length ? 'Check these addresses: ' + bad.join(', ') : list.length > d.max_emails ? 'You can enter up to ' + d.max_emails + ' email addresses at one time (' + list.length + ' entered).' : 'You can enter up to ' + d.max_emails + ' email addresses at one time' });
+      const send = h('button', { class: 'cwt', type: 'button', text: d.email_configured ? 'Send Invitation' : 'Create Invitations' });
+      const sync = () => { const l = parseEmails(em.text), b = l.filter((e) => !okEmail(e)); send.disabled = st.busy || !l.length || b.length > 0 || l.length > d.max_emails;
+        hint.className = 'hint' + (b.length || l.length > d.max_emails ? ' bad' : ''); hint.textContent = b.length ? 'Check these addresses: ' + b.join(', ') : l.length > d.max_emails ? 'You can enter up to ' + d.max_emails + ' email addresses at one time (' + l.length + ' entered).' : 'You can enter up to ' + d.max_emails + ' email addresses at one time'; };
+      const ta = h('textarea', { id: 'inv-emails', class: 'inp', rows: '3', placeholder: 'Enter Multiple Email Addresses', value: em.text, oninput: (e) => { em.text = e.target.value; sync(); } });
+      const ed = editor(d.template, d.placeholders);
+      send.onclick = async () => {
+        st.busy = true; send.disabled = true; send.textContent = d.email_configured ? 'Sending…' : 'Creating…';
+        try { st.sent = await api('/agents/' + encodeURIComponent(S.agentId) + '/invitations', { method: 'POST', body: { emails: parseEmails(em.text), template_html: ed.get(), image_proctoring: em.p.image_proctoring, safe_browser: em.p.safe_browser } });
+          d.template = ed.get(); em.text = ''; toast(st.sent.email_configured ? 'Invitations sent.' : 'Invitations created.'); }
+        catch (e) { toast(e.message); }
         st.busy = false; renderInvite();
+      };
+      body.append(
+        h('div', { class: 'invsec' }, h('label', { class: 'lbl', for: 'inv-emails' }, 'Emails', h('span', { class: 'req', text: ' *' }), info('Separate addresses with commas, spaces or new lines. Each person gets their own link and access code.')), ta, hint),
+        linkField(d.open_link.enabled ? d.open_link.link : '', d.label + ' link'),
+        proctorBlock('em', em),
+        h('div', { class: 'invsec' }, h('span', { class: 'lbl' }, 'Invitation Template', info('Placeholders are filled for each participant. Their personal link and access code are always added at the end.')), ed.el,
+          !d.email_configured ? h('p', { class: 'hint', text: 'Email isn\'t set up on this server yet. Invitations are created for you to copy and send.' }) : null));
+      foot.append(cancel, send); sync();
+    } else {
+      const ln = st.link;
+      const save = h('button', { class: 'cwt', type: 'button', text: 'Save', onclick: async () => {
+        save.disabled = true;
+        try { const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/open-link', { method: 'POST', body: { enabled: ln.enabled, image_proctoring: ln.p.image_proctoring, safe_browser: ln.p.safe_browser } });
+          d.open_link = r; S.row.open_link = r; toast(r.enabled ? 'Open link is on.' : 'Open link is off. It no longer works.'); renderSide(); }
+        catch (e) { toast(e.message); }
+        renderInvite();
       } });
       body.append(
-        h('p', { class: 'invsub', text: 'Each person gets their own access code for the published version (v' + S.row.published_version + '). ' +
-          (OPT.email_configured ? 'The invitation is emailed from ' + OPT.email_from + '.' : 'Email isn\'t set up on this server yet, so the invitation is created for you to copy and send yourself.') }),
-        h('div', { class: 'invgrid' },
-          h('div', { class: 'fld' }, h('label', { for: 'inv-name', text: 'Name' }), name),
-          h('div', { class: 'fld' }, h('label', { for: 'inv-email', text: 'Email' }), mail),
-          h('div', { class: 'fld', style: 'grid-column:1 / -1' }, h('label', { for: 'inv-note', text: 'Message' }), note)),
-        h('div', { class: 'invact' }, send));
-      if (st.last) {
-        body.append(h('div', { class: 'invlast' },
-          h('div', { class: 'top' }, h('b', { text: st.last.sent ? 'Sent' : 'Ready to send' }), st.last.email_error ? h('small', { text: st.last.email_error }) : null),
-          h('pre', { class: 'invmail', text: 'Subject: ' + st.last.subject + '\n\n' + st.last.text }),
-          h('div', { class: 'row' }, copyBtn(st.last.text, 'Copy invitation'), copyBtn(st.last.link, 'Copy link'), h('span', { class: 'code', text: st.last.code }))));
-      }
-      body.append(h('h3', { class: 'invh', text: 'Invited' }));
-      if (st.list === null) body.append(h('p', { class: 'invsub', text: 'Loading…' }));
-      else if (!st.list.length) body.append(h('p', { class: 'invsub', text: 'No one yet.' }));
-      else body.append(h('div', { class: 'invlist' }, st.list.map((i) => h('div', { class: 'invrow' },
-        h('div', null, h('b', { text: i.name || i.email || 'Participant' }), h('small', { text: (i.email || '') + (i.emailed ? ' · emailed' : '') })),
-        h('span', { class: 'invst ' + i.status.toLowerCase().replace(/\s/g, ''), text: i.status }),
-        h('span', { class: 'code', text: i.code }), copyBtn(i.link, 'Copy link')))));
-    } else {
-      const ol = S.row.open_link || {};
-      const url = ol.enabled ? location.origin + ol.path : '';
-      body.append(
-        h('p', { class: 'invsub', text: 'One link anyone can use. Each person signs in with their own name and email, so their attempts and results stay separate. It\'s off until you switch it on; switching it off stops the link working at once.' }),
-        h('div', { class: 'togrow' }, h('span', null, h('b', { text: 'Open link' }), h('small', { text: ol.enabled ? 'On: anyone with the link can join.' : 'Off' })),
-          h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(!!ol.enabled), 'aria-label': 'Open link', onclick: async () => {
-            try { const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/open-link', { method: 'POST', body: { enabled: !ol.enabled } }); S.row.open_link = r; toast(r.enabled ? 'Open link is on.' : 'Open link is off. The link no longer works.'); }
-            catch (e) { toast(e.message); }
-            renderInvite(); renderSide();
-          } }, h('i'))));
-      if (ol.enabled) body.append(h('div', { class: 'invlast' },
-        h('a', { href: url, target: '_blank', rel: 'noopener', text: url.replace(/^https?:\/\//, '') }),
-        h('div', { class: 'row' }, h('span', { class: 'code', text: ol.code }), copyBtn(url, 'Copy link'))));
+        h('div', { class: 'invsec' }, h('h3', { text: 'Enable ' + d.label + ' link' }), yesNo('ol-on', ln.enabled, (v) => { ln.enabled = v; }),
+          h('p', { class: 'hint', text: 'Note: Enable to allow access, Disable to block it.' })),
+        proctorBlock('ol', ln),
+        linkField(d.open_link.enabled ? d.open_link.link : '', d.label + ' link'));
+      foot.append(cancel, save);
     }
   }
-  function renderInviteBusy(btn) { btn.disabled = true; btn.textContent = OPT.email_configured ? 'Sending…' : 'Creating…'; }
   $('invClose').addEventListener('click', () => $('invDlg').close());
 
   /* ---------- Help ---------- */

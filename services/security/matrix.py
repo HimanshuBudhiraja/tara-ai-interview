@@ -217,6 +217,8 @@ DECLARED: dict[tuple[str, str], str] = {
     ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/invites"): RECRUITER_AUTHENTICATED,
     ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/open-link"): RECRUITER_AUTHENTICATED,
     ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/duplicate"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/invitation"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/invitations"): RECRUITER_AUTHENTICATED,
     ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/report"): RECRUITER_AUTHENTICATED,
     ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/report.xlsx"): RECRUITER_AUTHENTICATED,
     ("GET", "/api/recruiter/agent-builder/reports"): RECRUITER_AUTHENTICATED,

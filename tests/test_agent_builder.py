@@ -497,11 +497,11 @@ def test_complete_and_feedback_then_the_recruiter_sees_it(client):
 def test_every_agent_is_voice_only(client):
     row = _draft(client)["done"]
     aid = row["agent_id"]
-    row["cfg"].update(format="Chat", proctoring="Strict", camera="Off")
+    row["cfg"].update(format="Chat", image_proctoring=True)
     out = client.put(f"{BASE}/agents/{aid}", json={**{k: row[k] for k in ("fields", "agent", "cfg")}}).json()
     assert out["cfg"]["format"] == "Voice only"
-    # Proctoring and camera are stored as chosen, for the proctoring suite.
-    assert out["cfg"]["proctoring"] == "Strict" and out["cfg"]["camera"] == "Off"
+    # Proctoring defaults are stored as chosen, for the proctoring suite.
+    assert out["cfg"]["image_proctoring"] is True and out["cfg"]["safe_browser"] is False
 
 def test_nothing_about_the_role_play_is_public_before_sign_in(client):
     _published_invite(client)
@@ -803,15 +803,19 @@ def test_a_session_is_evaluated_once_and_only_admins_see_it(client, monkeypatch)
 
 
 def test_proctoring_is_fields_for_the_suite_and_nothing_else(client):
-    aid, code = _publish_with(client, purpose="Hiring", proctoring="Strict", camera="Required")
-    assert store.load(aid)["published"]["cfg"]["proctoring"] == "Strict"
-    v = TestClient(app).post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
-    # Handed to the suite with the session; the participant page and the voice call don't act on it.
-    assert v["proctoring"] == {"mode": "Strict", "camera": "Required"} and v["call"]["camera_required"] is False
+    aid, _ = _publish_with(client, purpose="Hiring", image_proctoring=True)
+    inv = client.get(f"{BASE}/agents/{aid}/invitation").json()
+    assert inv["defaults"] == {"image_proctoring": True, "safe_browser": False} and inv["label"] == "AI Interview"
+    r = client.post(f"{BASE}/agents/{aid}/invitations", json={"emails": ["a@x.test"], "image_proctoring": False, "safe_browser": True}).json()
+    code = r["results"][0]["code"]
+    v = TestClient(app).post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "a@x.test", "consent": True}).json()
+    # The invitation's settings travel with the session for the suite; the page and the call don't act on them.
+    assert v["proctoring"] == {"image_proctoring": False, "safe_browser": True} and v["call"]["camera_required"] is False
     row = store.load(aid)
     body = rx.web_call_body(row["published"] | {"agent_id": aid}, "agent_x")
-    assert "Strict" not in json.dumps(body) and "proctor" not in json.dumps(body).lower()
-
+    assert "proctor" not in json.dumps(body).lower() and "safe_browser" not in json.dumps(body)
+    rep = client.get(f"{BASE}/agents/{aid}/report").json()
+    assert any(x["proctoring"] == "Safe browser" for x in rep["rows"])
 
 def test_a_published_role_play_is_locked_and_can_be_duplicated(client, monkeypatch):
     aid, code = _published_invite(client)
@@ -883,3 +887,23 @@ def test_the_report_grid_and_an_admin_review(client, monkeypatch):
     # Another agent's attempt is not reachable through this agent.
     other = client.post(f"{BASE}/agents/{aid}/duplicate").json()["agent_id"]
     assert client.get(f"{BASE}/agents/{other}/attempts/{sid}/report").status_code == 404
+
+
+def test_bulk_invitations_use_a_safe_template(client, monkeypatch):
+    from services.notify import email, template as tmpl
+
+    aid, _ = _published_invite(client)
+    bad = client.post(f"{BASE}/agents/{aid}/invitations", json={"emails": ["ok@x.test", "nope"]})
+    assert bad.status_code == 422 and "nope" in bad.json()["detail"]
+    assert client.post(f"{BASE}/agents/{aid}/invitations", json={"emails": [f"p{i}@x.test" for i in range(11)]}).status_code == 422
+    sent = []
+    monkeypatch.setattr(email, "configured", lambda: True)
+    monkeypatch.setattr(email, "send", lambda to, subject, text, html=None: sent.append((to, html)))
+    tpl = '<p>Hi {PARTICIPANT_NAME}, welcome to <b>{ROLE_PLAY}</b>.</p><script>alert(1)</script><img src=x onerror=alert(1)><a href="javascript:x">x</a>'
+    r = client.post(f"{BASE}/agents/{aid}/invitations", json={"emails": ["maya.rao@x.test", "MAYA.RAO@x.test", "lee@x.test"], "template_html": tpl}).json()
+    assert [x["email"] for x in r["results"]] == ["maya.rao@x.test", "lee@x.test"]            # de-duplicated
+    assert all(x["sent"] for x in r["results"]) and len(sent) == 2
+    html_ = sent[0][1]
+    assert "Hi Maya," in html_ and "<b>" in html_ and r["results"][0]["code"] in html_ and r["results"][0]["link"] in html_
+    assert "<script" not in html_ and "onerror" not in html_ and "javascript:" not in html_ and "<img" not in html_
+    assert tmpl.sanitize('<div onclick="x">a<style>b</style></div>') == "<p>a</p>"

@@ -273,6 +273,8 @@ LOG_LEVEL = _first("TARA_LOG_LEVEL", default="INFO").upper()
 #: The origins the browser actually loads Tara from. Used to build candidate
 #: links and to state, in one place, what the deployment's public addresses are.
 PUBLIC_URL = _first("TARA_PUBLIC_URL", default="").rstrip("/")
+#: Signs invitation emails ({COMPANY_NAME} in the template).
+COMPANY_NAME = _first("TARA_COMPANY_NAME", default="iMocha")
 RECRUITER_URL = _first("TARA_RECRUITER_URL", default="").rstrip("/")
 
 

@@ -137,7 +137,8 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
         },
         "voice_sample_url": voice_sample(v.voice_id),
         # For the proctoring suite to read and apply; this page does not act on it.
-        "proctoring": {"mode": cfg.get("proctoring") or "Off", "camera": cfg.get("camera") or "Off"},
+        "proctoring": row.get("proctoring") or {"image_proctoring": bool(cfg.get("image_proctoring")),
+                                                "safe_browser": bool(cfg.get("safe_browser"))},
         "org_label": HIRING_LABEL if purpose_of(row) == "Hiring" else ORG_LABEL,
         "hiring": purpose_of(row) == "Hiring",
         "purpose": purpose_of(row),
@@ -209,6 +210,9 @@ def sign_in(body: SignIn, response: Response) -> dict[str, Any]:
             "snapshot": {k: published[k] for k in ("fields", "agent", "cfg")},
             "status": "signed_in", "calls": [], "created_at": time.time(),
             "attempt": len(mine) + 1,
+            # For the proctoring suite: what this invitation (or the open link) asked for.
+            "proctoring": invite.get("proctoring") or {"image_proctoring": bool(published["cfg"].get("image_proctoring")),
+                                                       "safe_browser": bool(published["cfg"].get("safe_browser"))},
         }
         if not invite.get("shared"):
             invite["session_id"] = row["session_id"]

@@ -57,11 +57,11 @@ SPEAKERS = ("Tara opens", "Participant opens")
 #: Voice only. Video and typed (Chat) conversations were removed on 2026-10-02.
 FORMATS = ("Voice only",)
 SOUNDS = ("None", "Phone ring", "Video join", "Doorbell")
-#: Proctoring and camera, set in Advanced. Fields only: they are saved with the
-#: scenario and handed to the separate proctoring suite, which applies them.
-#: Nothing here changes the conversation or is sent to the voice agent.
-PROCTORING = ("Off", "Basic", "Strict")
-CAMERA = ("Off", "Optional", "Required")
+#: Proctoring is two Yes/No settings (image proctoring, Safe Assessment
+#: Browser). Fields only: set as defaults in Advanced and per invitation, saved
+#: with each session, and applied by the separate proctoring suite. Nothing here
+#: changes the conversation or is sent to the voice agent.
+PROCTORING_KEYS = ("image_proctoring", "safe_browser")
 #: Builder test calls are real calls, kept short.
 TEST_CALL_MINUTES = 5
 LANGUAGES = ("English", "Hindi", "French", "Spanish", "German")

@@ -717,6 +717,52 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 .dlbanner.busy{border-color:#B2DDFF;background:#F5FAFF;color:#175CD3}
 .drawerback{position:fixed;inset:0;background:rgba(12,17,29,.35);z-index:70}
 .repdrawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);z-index:71;border-radius:0;border:0;border-left:1px solid var(--line);max-height:none;padding:20px 22px 40px;box-sizing:border-box;background:var(--white);overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+
+/* ===== Send Invitation (Figma layout, purple) ===== */
+.invdlg{width:min(640px,calc(100vw - 32px))}
+.invhd{display:flex;justify-content:space-between;gap:16px;padding:24px 26px 10px}
+.invhd h2{margin:0;font-size:20px;font-weight:700}
+.invhd p{margin:6px 0 0;font-size:14.5px;color:var(--muted-2)}
+.invhr{display:flex;align-items:center;gap:16px}
+.credits{display:flex;align-items:center;gap:8px;font-size:14.5px;color:var(--ink-2)}
+.credits svg{color:var(--accent)}
+.credits b{color:var(--accent-ink);font-weight:600}
+.xcirc{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--ink-2);background:#fff;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.invtabs{display:grid;grid-template-columns:1fr 1fr;margin:6px 26px 0;border-bottom:1px solid var(--line)}
+.invtabs button{background:none;border:0;border-bottom:3px solid transparent;padding:12px 8px;font:inherit;font-size:15px;color:var(--ink-3);cursor:pointer}
+.invtabs button[aria-selected="true"]{color:var(--accent-ink);border-bottom-color:var(--accent);font-weight:500}
+.invbody{padding:18px 26px;gap:20px;justify-content:flex-start}
+.invbody > *{flex:none}
+.procgrid{align-items:start}
+.invsec{display:flex;flex-direction:column;gap:8px}
+.invsec h3{margin:0;font-size:15.5px;font-weight:600;color:var(--ink)}
+.invsec .lbl{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ink-3)}
+.invsec .req{color:#D92D20}
+.ii{display:inline-flex;color:var(--faint);cursor:help}
+.invsec textarea.inp{height:auto;min-height:84px;padding:10px 12px;resize:vertical;font:inherit;font-size:14px}
+.hint{margin:0;font-size:13px;color:var(--muted-2)}
+.hint.bad{color:#B42318}
+.linkfield{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.linkfield .lk{display:flex;align-items:center;padding:0 12px;background:var(--uu-gray-50,#F9FAFB);color:var(--ink-3);border-right:1px solid var(--line)}
+.linkfield .url{flex:1;min-width:0;padding:11px 12px;font-size:14px;color:var(--muted-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linkfield .copyl{border:0;border-left:1px solid var(--accent);background:#fff;color:var(--accent-ink);font:inherit;font-size:14px;font-weight:500;padding:0 16px;cursor:pointer}
+.linkfield.off .copyl{border-left-color:var(--line);color:var(--faint);cursor:not-allowed}
+.procgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px}
+@media (max-width:560px){.procgrid{grid-template-columns:1fr}}
+.yn{display:flex;gap:22px;margin-top:6px}
+.yn label{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;cursor:pointer}
+.yn input{accent-color:var(--accent);width:18px;height:18px;margin:0}
+.rte{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.rte-bar{display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:6px 8px;border-bottom:1px solid var(--line);background:var(--uu-gray-50,#F9FAFB)}
+.rte-b{min-width:32px;height:30px;border:0;border-radius:6px;background:transparent;color:var(--ink-2);font:inherit;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.rte-b:hover{background:#fff;color:var(--accent-ink)}
+.rte-s{height:30px;border:0;background:transparent;font:inherit;font-size:14px;padding:0 6px}
+.rte-sep{width:1px;height:20px;background:var(--line);margin:0 6px}
+.rte-body{min-height:200px;max-height:320px;overflow-y:auto;padding:12px 14px;font-size:14.5px;line-height:1.6;color:var(--ink);outline:none}
+.rte-body p{margin:0 0 10px}.rte-body blockquote{margin:0 0 10px;padding-left:12px;border-left:3px solid var(--lav)}
+.rte-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted-2)}
+.rte-chips .chip{border:1px solid var(--lav-2);background:var(--soft-2);color:var(--accent-ink);border-radius:999px;padding:3px 9px;font:inherit;font-size:12px;cursor:pointer}
+.invfoot{display:flex;justify-content:flex-end;gap:12px;padding:14px 26px 22px;border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -734,11 +780,15 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
   <a href="#" id="subReports">Reports</a>
 </nav>
 <div class="ainote" id="aiNote" hidden></div>
-<dialog id="invDlg" class="smdlg" aria-labelledby="invTitle">
-  <div class="smhd"><div><h2 id="invTitle">Invite participants</h2></div>
-    <button class="xbtn" type="button" id="invClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-  <div class="smbar"><div role="tablist" aria-label="Invite by" class="ttabs" id="invTabs"></div></div>
-  <div class="smlist" id="invBody"></div>
+<dialog id="invDlg" class="smdlg invdlg" aria-labelledby="invTitle">
+  <div class="invhd">
+    <div><h2 id="invTitle">Send Invitation</h2><p id="invSub"></p></div>
+    <div class="invhr"><span class="credits" id="invCredits"></span>
+      <button class="xcirc" type="button" id="invClose" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  </div>
+  <div role="tablist" aria-label="Invite by" class="invtabs" id="invTabs"></div>
+  <div class="smlist invbody" id="invBody"></div>
+  <div class="invfoot" id="invFoot"></div>
 </dialog>
 <dialog id="helpDlg" class="smdlg helpdlg" aria-labelledby="helpTitle">
   <div class="smhd"><div><h2 id="helpTitle">How it works</h2><p>Build a voice role-play or assessment, test it, publish it, invite people, and read the results.</p></div>
@@ -795,7 +845,7 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
       <div class="tplh">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h2 id="mine-h">Your role-plays</h2>
-          <p>Everything created so far. Open one to test it, change it, or share its candidate link.</p>
+          <p>Everything created so far. Open one to test it, change it, or share its participant link.</p>
         </div>
       </div>
       <div class="tgrid" id="minecards"></div>
@@ -882,7 +932,7 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
         <div class="scorebox" id="scorebox" hidden></div>
         <div class="tfoot">
           <button class="obtn ghost" type="button" id="scoreBtn" disabled>Score this test against the skills</button>
-          <span>Test sessions are never shared with candidates.</span>
+          <span>Test sessions are never shared with participants.</span>
         </div>
       </div>
     </aside>
@@ -903,6 +953,6 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 <aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003p"></script>
+<script src="/agent-builder/app.js?v=20261003s"></script>
 </body>
 </html>

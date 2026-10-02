@@ -43,6 +43,7 @@ from services.ai.workloads import agent_builder as ab
 from services.assessment import agent_builder_retell as rx
 from services.evaluation import simulation as sim
 from services.notify import email
+from services.notify import template as tmpl
 from services.data import built_agents as store
 from services.security import ratelimit
 
@@ -123,9 +124,9 @@ def clean_cfg(cfg: dict[str, Any], base: dict[str, Any] | None = None) -> dict[s
         # Hindi voice told to speak French would be a configuration nobody meant.
         "language": rx.voice(v).language,
         "consent": bool(cfg.get("consent", True)),
-        # Fields for the proctoring suite, which applies them; the builder only stores them.
-        "proctoring": _one(cfg.get("proctoring"), rx.PROCTORING, "Off"),
-        "camera": _one(cfg.get("camera"), rx.CAMERA, "Off"),
+        # Defaults for the proctoring suite, which applies them; the builder only stores them.
+        "image_proctoring": bool(cfg.get("image_proctoring", False)),
+        "safe_browser": bool(cfg.get("safe_browser", False)),
         **_purpose_cfg(cfg),
     }
 
@@ -241,7 +242,17 @@ def _open_link(row: dict[str, Any]) -> dict[str, Any]:
     inv = next((i for i in row.get("invites") or [] if i.get("shared")), None)
     on = bool(inv and not inv.get("revoked"))
     return {"enabled": on, "code": inv["code"] if on else "",
-            "path": f"/participant?code={inv['code']}" if on else ""}
+            "path": f"/participant?code={inv['code']}" if on else "",
+            "proctoring": (inv or {}).get("proctoring") or _proctoring(row)}
+
+
+def _proctoring(row: dict[str, Any], image: bool | None = None, safe: bool | None = None,
+                current: dict[str, Any] | None = None) -> dict[str, bool]:
+    """Proctoring for one invitation or the open link: what was asked, else what it had, else the role-play default."""
+    cfg = (row.get("published") or {}).get("cfg") or row["cfg"]
+    cur = current or {}
+    return {"image_proctoring": bool(image if image is not None else cur.get("image_proctoring", cfg.get("image_proctoring", False))),
+            "safe_browser": bool(safe if safe is not None else cur.get("safe_browser", cfg.get("safe_browser", False)))}
 
 
 def _new_row(p: dict[str, Any], c: dict[str, Any], brief: str, mode: str, org: str) -> dict[str, Any]:
@@ -274,7 +285,6 @@ def options() -> dict[str, Any]:
                    for v in rx.VOICES],
         "difficulties": rx.DIFFICULTIES, "depths": rx.DEPTHS, "depth_minutes": rx.DEPTH_MINUTES,
         "endings": rx.ENDINGS, "speakers": rx.SPEAKERS, "formats": rx.FORMATS, "sounds": rx.SOUNDS,
-        "proctoring": rx.PROCTORING, "camera": rx.CAMERA,
         "languages": sorted({v.language for v in rx.VOICES}),
         "test_call_minutes": rx.TEST_CALL_MINUTES,
         "email_configured": email.configured(), "email_from": email.sender(),
@@ -692,7 +702,7 @@ def invite(agent_id: str, body: InviteBody, request: Request) -> dict[str, Any]:
     code = _unique_code()
     link = f"{_base(request)}/participant?code={code}"
     subject, text = invitation_email(row, _s(body.name), code, link, body.message)
-    entry = {"code": code, "name": _s(body.name), "email": addr, "created_at": time.time()}
+    entry = {"code": code, "name": _s(body.name), "email": addr, "created_at": time.time(), "proctoring": _proctoring(row)}
     sent, error = False, ""
     if body.send_email:
         try:
@@ -727,8 +737,85 @@ def list_invites(agent_id: str, request: Request) -> dict[str, Any]:
     return {"invites": sorted(out, key=lambda x: x["created_at"] or 0, reverse=True), "open_link": _open_link(row)}
 
 
+def _invite_values(row: dict[str, Any], name: str) -> dict[str, str]:
+    pub = row["published"]
+    target, _ = rx.lengths(pub["cfg"])
+    return {"PARTICIPANT_NAME": (name.split() or ["there"])[0], "ROLE_PLAY": pub["agent"]["title"],
+            "LANGUAGE": pub["cfg"].get("language") or rx.voice(pub["cfg"].get("voice") or "").language,
+            "DURATION": str(target), "COMPANY_NAME": config.COMPANY_NAME}
+
+
+@router.get("/agents/{agent_id}/invitation")
+def invitation(agent_id: str, request: Request) -> dict[str, Any]:
+    """Everything the Send Invitation window shows."""
+    row = _row(agent_id, request)
+    if not row.get("published"):
+        raise HTTPException(409, "Publish the agent before inviting anyone.")
+    purpose = _purpose(row)
+    out = _open_link(row)
+    if out["enabled"]:
+        out["link"] = _base(request) + out["path"]
+    return {"title": row["published"]["agent"]["title"], "purpose": purpose,
+            "label": "AI Interview" if purpose == "Hiring" else "Role-play",
+            "template": row.get("invite_template") or tmpl.default_template(purpose),
+            "placeholders": ["{" + p + "}" for p in tmpl.PLACEHOLDERS],
+            "defaults": _proctoring(row), "open_link": out, "max_emails": 10,
+            "credits": "Unlimited", "email_configured": email.configured(), "email_from": email.sender()}
+
+
+class InvitationsBody(BaseModel):
+    emails: list[str] = Field(min_length=1, max_length=10)
+    template_html: str = Field(default="", max_length=20000)
+    image_proctoring: bool = False
+    safe_browser: bool = False
+
+
+@router.post("/agents/{agent_id}/invitations")
+def send_invitations(agent_id: str, body: InvitationsBody, request: Request) -> dict[str, Any]:
+    """Up to ten people at once: each gets their own access code and, when email is
+    set up, the invitation from the template with their link and code added."""
+    row = _row(agent_id, request)
+    if not row.get("published"):
+        raise HTTPException(409, "Publish the agent before inviting anyone.")
+    emails, seen = [], set()
+    for e in body.emails:
+        e = _s(e).lower()
+        if e and e not in seen:
+            seen.add(e)
+            emails.append(e)
+    bad = [e for e in emails if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", e)]
+    if bad:
+        raise HTTPException(422, "These aren't valid email addresses: " + ", ".join(bad))
+    tpl = body.template_html.strip() or tmpl.default_template(_purpose(row))
+    row["invite_template"] = tmpl.sanitize(tpl)
+    proctoring = _proctoring(row, body.image_proctoring, body.safe_browser)
+    subject = f"Your invitation: {row['published']['agent']['title']}"
+    results = []
+    for e in emails:
+        code = _unique_code()
+        link = f"{_base(request)}/participant?code={code}"
+        name = e.split("@")[0].replace(".", " ").title()
+        html_ = (tmpl.fill(tpl, _invite_values(row, name))
+                 + f'<p>Your link: <a href="{link}">{link}</a><br>Your access code: <b>{code}</b></p>')
+        entry = {"code": code, "name": "", "email": e, "created_at": time.time(), "proctoring": proctoring}
+        sent, err = False, ""
+        if email.configured():
+            try:
+                email.send(e, subject, tmpl.to_text(html_), html_)
+                sent, entry["emailed_at"] = True, time.time()
+            except email.EmailNotSent as exc:
+                err = str(exc)
+        row.setdefault("invites", []).append(entry)
+        results.append({"email": e, "code": code, "link": link, "sent": sent, "error": err,
+                        "text": tmpl.to_text(html_)})
+    store.save(row)
+    return {"subject": subject, "results": results, "email_configured": email.configured()}
+
+
 class OpenLinkBody(BaseModel):
     enabled: bool
+    image_proctoring: bool | None = None
+    safe_browser: bool | None = None
 
 
 @router.post("/agents/{agent_id}/open-link")
@@ -740,11 +827,14 @@ def open_link(agent_id: str, body: OpenLinkBody, request: Request) -> dict[str, 
     inv = next((i for i in row.get("invites") or [] if i.get("shared")), None)
     if body.enabled:
         if inv is None:
-            row.setdefault("invites", []).append({"code": _unique_code(), "shared": True, "created_at": time.time()})
+            inv = {"code": _unique_code(), "shared": True, "created_at": time.time()}
+            row.setdefault("invites", []).append(inv)
         else:
             inv.pop("revoked", None)
     elif inv is not None:
         inv["revoked"] = True
+    if inv is not None:
+        inv["proctoring"] = _proctoring(row, body.image_proctoring, body.safe_browser, inv.get("proctoring"))
     store.save(row)
     out = _open_link(row)
     if out["enabled"]:
@@ -795,6 +885,12 @@ _LEVEL = {
 }
 
 
+def _proctoring_label(p: dict[str, Any] | None) -> str:
+    p = p or {}
+    on = [n for k, n in (("image_proctoring", "Image"), ("safe_browser", "Safe browser")) if p.get(k)]
+    return " + ".join(on) or "Off"
+
+
 def _ai_level(rec: str) -> str:
     r = (rec or "").lower()
     if r.startswith(("proceed", "advanced", "proficient")):
@@ -823,7 +919,7 @@ def _report_row(r: dict[str, Any], skills: list[str]) -> dict[str, Any]:
         "overall": ev.get("overall"), "band": ev.get("band", ""), "ai_recommendation": ev.get("recommendation", ""),
         "recommendation": rec, "recommendation_source": src,
         "recommendation_level": _LEVEL.get(rec, "") if src == "admin" else _ai_level(rec),
-        "proctoring": ((r.get("snapshot") or {}).get("cfg") or {}).get("proctoring") or "Off",
+        "proctoring": _proctoring_label(r.get("proctoring")),
         "coverage": ev.get("weight_coverage"),
         "skills": {n: (by[n]["score"] if n in by else None) for n in skills},
         "review": review,
@@ -841,7 +937,7 @@ def _pending_rows(row: dict[str, Any], started_codes: set[str]) -> list[dict[str
                     "attempt": 0, "status": "Pending", "evaluation": "", "date": i.get("created_at"),
                     "started_at": None, "ended_at": None, "duration_sec": 0, "early": False, "overall": None, "band": "",
                     "ai_recommendation": "", "recommendation": "", "recommendation_source": "", "recommendation_level": "",
-                    "proctoring": (row.get("published") or {}).get("cfg", {}).get("proctoring") or "Off",
+                    "proctoring": _proctoring_label(i.get("proctoring")),
                     "coverage": None, "skills": {}, "review": {}, "problems": []})
     return out
 
@@ -917,7 +1013,7 @@ def _xlsx(rows: list[dict[str, Any]], skills: list[str], title: str) -> Response
     wb = Workbook()
     ws = wb.active
     ws.title = "Reports"
-    head = (["Candidate", "Email", "Role-play", "Attempt", "Date", "Status", "Duration (min)", "Score", "Band",
+    head = (["Participant", "Email", "Role-play", "Attempt", "Date", "Status", "Duration (min)", "Score", "Band",
              "AI recommendation", "Decision", "Decision by", "Evaluation notes", "Proctoring"] + skills)
     ws.append(head)
     for c in ws[1]:
