@@ -178,13 +178,23 @@ def rename_persona(agent: dict[str, Any], old: str, new: str) -> None:
     old = (old or "").strip()
     if not old or old == new:
         return
+    new = (new or "").strip()
+    if not new:
+        return
     bare = re.sub(r"^(dr|mr|mrs|ms|prof)\.?\s+", "", old, flags=re.I)
-    names = {old, bare, bare.split()[0]}
-    for key in ("opening_line", "closing_line", "instructions", "description"):
-        text = agent.get(key) or ""
-        for n in sorted(names, key=len, reverse=True):
-            text = re.sub(rf"\b{re.escape(n)}\b", new, text)
-        agent[key] = text
+    new_first = re.sub(r"^(dr|mr|mrs|ms|prof)\.?\s+", "", new, flags=re.I).split()[0]
+    # Longest first, so the full name is replaced whole before the first name.
+    pairs = sorted({old: new, bare: new, bare.split()[0]: new_first}.items(), key=lambda p: -len(p[0]))
+
+    def swap(text: str) -> str:
+        for n, to in pairs:
+            text = re.sub(rf"\b{re.escape(n)}\b", to, text)
+        return text
+
+    for key in ("title", "opening_line", "closing_line", "instructions", "description"):
+        agent[key] = swap(agent.get(key) or "")
+    for q in agent.get("questions") or []:
+        q["text"] = swap(q.get("text") or "")
 
 
 def normalise_plan(raw: dict[str, Any], mode: str = "roleplay") -> dict[str, Any]:

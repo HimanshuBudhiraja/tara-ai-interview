@@ -668,3 +668,18 @@ def test_the_participant_never_hears_tara_only_the_persona():
     assert "Tara" not in v["opening_line"] and "Maya" in v["opening_line"]
     assert v["conversation_instructions"].startswith("Maya plays")
     assert v["candidate_name"] == "Tara Singh"  # a participant may really be called Tara
+
+
+def test_renaming_the_persona_reaches_every_line_and_question():
+    agent = {"title": "Pricing call with Dr. Maya Rao", "opening_line": "Hi, I'm Maya Rao from Acme.",
+             "closing_line": "Thanks, Maya signing off.", "instructions": "Maya is a skeptical buyer.",
+             "description": "You'll speak with Dr. Maya Rao.", "questions": [{"text": "Maya asks why the price rose.", "tag": "x"}],
+             "persona": {"name": "Dr. Maya Rao"}}
+    ab.rename_persona(agent, "Dr. Maya Rao", "Adrian Cole")
+    assert agent["title"] == "Pricing call with Adrian Cole"
+    assert agent["opening_line"] == "Hi, I'm Adrian Cole from Acme."
+    assert agent["closing_line"] == "Thanks, Adrian signing off."
+    assert agent["instructions"].startswith("Adrian is")
+    assert agent["questions"][0]["text"] == "Adrian asks why the price rose."
+    ab.rename_persona(agent, "Adrian Cole", "")  # an empty name never wipes text
+    assert "Adrian" in agent["opening_line"]

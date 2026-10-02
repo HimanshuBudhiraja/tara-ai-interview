@@ -462,11 +462,11 @@
         h('div', { class: 'fld' }, h('label', { for: 'close-t', text: 'Closing line' }), h('textarea', { id: 'close-t', class: 'inp', rows: '3', value: a.closing_line, oninput: bind(a, 'closing_line') })))));
 
     m.append(h('section', { id: 'persona', class: 'card', style: 'gap:22px', 'aria-labelledby': 'per-h' },
-      h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'per-h', text: 'Persona' }), h('p', { class: 'sub', text: 'Who participants will meet. Tara stays in character the whole time.' })),
+      h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'per-h', text: 'Persona' }), h('p', { class: 'sub', text: 'Who participants will meet. Change the name and it updates everywhere the participant hears or reads it.' })),
       h('div', { class: 'prow' },
         h('div', { class: 'pava' }, h('span', { class: 'bigava', id: 'pAva', text: initials(a.persona.name) })),
         h('div', { class: 'pgrid' },
-          h('div', { class: 'fld' }, h('label', { for: 'pn', text: 'Name' }), h('input', { id: 'pn', class: 'inp', type: 'text', value: a.persona.name, oninput: (e) => { a.persona.name = e.target.value; $('pAva').textContent = initials(a.persona.name); syncTestHead(); touch(); } })),
+          h('div', { class: 'fld' }, h('label', { for: 'pn', text: 'Name' }), h('input', { id: 'pn', class: 'inp', type: 'text', value: a.persona.name, onfocus: () => { S.nameWas = a.persona.name; }, oninput: (e) => { a.persona.name = e.target.value; $('pAva').textContent = initials(a.persona.name); syncTestHead(); touch(); }, onchange: (e) => { const n = renameEverywhere(S.nameWas, e.target.value); S.nameWas = e.target.value; if (n) { touch(); renderMain(); toast('Updated the name in ' + n + ' place' + (n === 1 ? '' : 's') + '.'); } } })),
           h('div', { class: 'fld' }, h('label', { for: 'pt', text: 'Title' }), h('input', { id: 'pt', class: 'inp', type: 'text', value: a.persona.role, oninput: (e) => { a.persona.role = e.target.value; syncTestHead(); touch(); } })),
           h('div', { class: 'fld' }, h('label', { for: 'pv', text: 'Voice' }),
             h('select', { id: 'pv', class: 'inp', onchange: (e) => { setVoice(e.target.value); } },
@@ -548,18 +548,28 @@
   /* The persona's name follows the voice: pick Adrian and the persona is
    * Adrian, in the name field, the opening line and the instructions. */
   const voiceName = (k) => voiceOf(k).label.split(' —')[0];
+  /* Swap the persona's name everywhere the participant hears or reads it:
+   * title, opening, closing, instructions, description and every question.
+   * Matches the full name, the name without a title ("Dr."), and the first name. */
+  function renameEverywhere(before, after) {
+    const a = S.agent;
+    before = (before || '').trim(); after = (after || '').trim();
+    if (!before || !after || before === after) return 0;
+    const bare = before.replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '');
+    const afterFirst = after.replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '').split(/\s+/)[0];
+    // Longest first, so "Dr. Maya Rao" is replaced whole before "Maya" alone.
+    const pairs = [[before, after], [bare, after], [bare.split(/\s+/)[0], afterFirst]]
+      .filter(([n], i, all) => n && all.findIndex(([m]) => m === n) === i).sort((x, y) => y[0].length - x[0].length);
+    const swap = (t) => { pairs.forEach(([n, to]) => { t = t.replace(new RegExp('\\b' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), to); }); return t; };
+    let changed = 0;
+    ['title', 'opening_line', 'closing_line', 'instructions', 'description'].forEach((k) => { const t = swap(a[k] || ''); if (t !== a[k]) { a[k] = t; changed++; } });
+    (a.questions || []).forEach((q) => { const t = swap(q.text || ''); if (t !== q.text) { q.text = t; changed++; } });
+    return changed;
+  }
   function setVoice(key) {
     const a = S.agent, c = S.cfg, before = a.persona.name, after = voiceName(key);
     c.voice = key; c.language = voiceOf(key).language;
-    if (before && before !== after) {
-      const bare = before.replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '');
-      const names = [before, bare, bare.split(/\s+/)[0]].filter((n, i, all) => n && all.indexOf(n) === i).sort((x, y) => y.length - x.length);
-      ['opening_line', 'closing_line', 'instructions', 'description'].forEach((k) => {
-        let t = a[k] || '';
-        names.forEach((n) => { t = t.replace(new RegExp('\\b' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), after); });
-        a[k] = t;
-      });
-    }
+    renameEverywhere(before, after);
     a.persona.name = after;
     touch(); renderMain(); syncTestHead(); resetTest(true);
   }

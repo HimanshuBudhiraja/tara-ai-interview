@@ -321,6 +321,11 @@ def revise(agent_id: str, body: ReviseBody, request: Request,
         out = ab.revise(row, body.instruction.strip())
     except LLMError as exc:
         raise _no_model() from exc
+    # A revision that renames the persona renames it everywhere it is said.
+    old_name = (row["agent"].get("persona") or {}).get("name") or ""
+    new_name = ((out["agent"].get("persona") or {}).get("name") or "").strip()
+    if new_name and new_name != old_name:
+        ab.rename_persona(out["agent"], old_name, new_name)
     row["cfg"] = clean_cfg(out["cfg"])
     row["agent"] = clean_agent({**out["agent"], "depth": row["cfg"]["depth"], "voice": row["cfg"]["voice"]})
     row["fields"] = clean_fields(out["fields"], row["cfg"])
