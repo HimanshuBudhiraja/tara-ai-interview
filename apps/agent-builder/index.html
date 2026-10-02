@@ -481,7 +481,7 @@ textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
 .mic.on:hover:not(:disabled){background:var(--uu-error-700)!important}
 .mic.on:focus-visible{box-shadow:var(--uu-ring-error)}
 
-/* button groups: Interview/Roleplay/Assessment, the persona and settings choices, template filters */
+/* button groups: Role-play/Assessment, the persona and settings choices, template filters */
 .modes,.seg,.ttabs{
   display:inline-flex;flex-wrap:nowrap;gap:0;padding:0;background:#fff;
   border:1px solid var(--uu-gray-300);border-radius:8px;overflow:hidden;box-shadow:var(--uu-shadow-xs);
@@ -495,12 +495,14 @@ textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
 .modes button{height:36px;min-height:36px;padding:8px 14px}
 .modes button:last-child,.seg button:last-child,.ttabs button:last-child{border-right:0}
 .modes button:hover,.seg button:hover,.ttabs button:hover{background:var(--uu-gray-50);color:var(--uu-gray-800)}
-.modes button[aria-pressed="true"],.seg button[aria-pressed="true"],.ttabs button[aria-selected="true"]{
-  background:var(--uu-gray-50);color:var(--uu-gray-800);border-color:var(--uu-gray-300);box-shadow:none;
+/* selected option: blue text on a pale blue fill, so the choice is unmistakable */
+.modes button[aria-pressed="true"],.seg button[aria-pressed="true"],.ttabs button[aria-selected="true"],.tabs button[aria-selected="true"],
+.modes button[aria-pressed="true"]:hover,.seg button[aria-pressed="true"]:hover,.ttabs button[aria-selected="true"]:hover{
+  background:#EFF8FF;color:#1570EF;border-color:var(--uu-gray-300);box-shadow:inset 0 0 0 1px #84CAFF;
 }
 .ttabs button i{font-style:normal;font-size:12px;line-height:18px;font-weight:500;padding:0 8px;border-radius:16px;
   background:var(--uu-gray-50);border:1px solid var(--uu-gray-200);color:var(--uu-gray-700)}
-.ttabs button[aria-selected="true"] i{background:#fff;color:var(--uu-gray-700)}
+.ttabs button[aria-selected="true"] i{background:#fff;color:#1570EF;border-color:#B2DDFF}
 
 /* toggle (md) */
 .sw{width:44px;height:24px;padding:2px;border-radius:12px;border:0;background:var(--uu-gray-100);justify-content:flex-start;transition:background-color .15s linear}
@@ -531,7 +533,7 @@ textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
     <div class="hero">
       <span class="newb"><span>NEW</span>Conversational Agent Builder</span>
       <h1 class="h1big">What should <span>Tara</span> do?</h1>
-      <p class="herop">Describe the interview or roleplay in plain words. Tara drafts the persona, questions, rubric and conversation flow — you review and publish.</p>
+      <p class="herop">Describe the role-play or assessment in plain words. Tara drafts the persona, questions, skills and conversation flow — you review and publish.</p>
       <div class="pbox">
         <label class="sr" for="brief">Describe your agent</label>
         <textarea id="brief" placeholder="e.g. A 25-minute technical interview for a senior AI Engineer at DeepMind. Probe ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI. Be friendly but rigorous."></textarea>
@@ -546,7 +548,7 @@ textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
       <div class="tplh">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h2 id="tpl-h">Or start with a template</h2>
-          <p>Pre-built agents with persona, questions and rubric ready to tailor.</p>
+          <p>Pre-built agents with persona, questions and skills ready to tailor.</p>
         </div>
         <div role="tablist" aria-label="Template categories" class="ttabs" id="ttabs"></div>
       </div>
@@ -634,6 +636,6 @@ textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
 </div>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261002e"></script>
+<script src="/agent-builder/app.js?v=20261002f"></script>
 </body>
 </html>
