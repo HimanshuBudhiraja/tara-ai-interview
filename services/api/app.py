@@ -89,7 +89,9 @@ async def _guard_recruiter_routes(request: Request, call_next):
     """
     path = request.url.path
     recruiter_namespace = path.startswith("/api/recruiter") or path.startswith("/api/admin")
-    if recruiter_namespace and config.RECRUITER_AUTH_REQUIRED and not accounts.any_user_exists():
+    open_builder = config.BUILDER_OPEN and "/agent-builder" in path
+    if (recruiter_namespace and config.RECRUITER_AUTH_REQUIRED and not open_builder
+            and not accounts.any_user_exists()):
         return JSONResponse(
             status_code=503,
             content={
@@ -337,6 +339,9 @@ async def _startup() -> None:
     if not accounts.any_user_exists():
         print("[boot] ⚠ no accounts yet — create one with "
               "`python -m tools.make_user --email you@example.com --admin`", flush=True)
+    if config.BUILDER_OPEN:
+        print("[boot] ⚠ TARA_BUILDER_OPEN is on: the Agent Builder is open to anyone "
+              "with the URL, no sign-in. Switch it off after the demo.", flush=True)
     for problem in config.require_production_configuration():
         print(f"[boot] ⚠ production configuration: {problem}", flush=True)
 

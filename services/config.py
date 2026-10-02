@@ -213,6 +213,13 @@ def is_production() -> bool:
 #: honoured only for requests from this machine — see `builder.builder_scope`.
 LOCAL_NO_LOGIN = _flag("TARA_LOCAL_NO_LOGIN", False)
 
+#: Demo switch: opens the Agent Builder (its page and /agent-builder API) to
+#: anyone with the URL, with no sign-in, even in production. Everything else in
+#: the recruiter console stays behind the login. Anyone who finds the URL can
+#: then start billed Retell and OpenRouter calls and read participant sessions,
+#: so it is off unless set and is meant to be switched off after the demo.
+BUILDER_OPEN = _flag("TARA_BUILDER_OPEN", False)
+
 
 # Recruiter routes now require an authenticated session in every deployment.
 # The flag survives with a narrower meaning: it is the one that says "and refuse

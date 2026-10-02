@@ -49,6 +49,10 @@ def builder_scope(request: Request) -> None:
     from services.security import principal as security
 
     host = request.client.host if request.client else ""
+    # TARA_BUILDER_OPEN (demo): the Agent Builder answers without a sign-in.
+    if (config.BUILDER_OPEN and "/agent-builder" in request.url.path
+            and security.optional_principal(request) is None):
+        return None
     if (config.LOCAL_NO_LOGIN and not config.is_production() and host in _LOCAL
             and security.optional_principal(request) is None):
         return None

@@ -318,6 +318,15 @@ def test_signed_out_is_refused(data_dir):
     assert TestClient(app).get(f"{BASE}/options").status_code == 401
 
 
+def test_builder_open_demo_switch_opens_only_the_agent_builder(data_dir, monkeypatch):
+    monkeypatch.setattr(config, "BUILDER_OPEN", True)
+    monkeypatch.setattr(config, "ENVIRONMENT", "production")
+    c = TestClient(app)
+    assert c.get(f"{BASE}/options").status_code == 200
+    # The rest of the recruiter console still needs a sign-in.
+    assert c.get("/api/recruiter/interviews").status_code in (401, 503)
+
+
 # --------------------------------------------------------------------------- #
 #  The webhook
 # --------------------------------------------------------------------------- #
