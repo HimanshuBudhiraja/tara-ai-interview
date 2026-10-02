@@ -105,7 +105,27 @@ def clean_cfg(cfg: dict[str, Any], base: dict[str, Any] | None = None) -> dict[s
     }
 
 
+def persona_only(agent: dict[str, Any]) -> dict[str, Any]:
+    """Participants only meet the persona, so no line says "Tara".
+
+    Whatever wrote the text (a draft, Ask Tara, Generate more, the Skill
+    Master, or a person typing), every "Tara" in the title, description,
+    instructions, opening, closing and questions becomes the persona's
+    first name.
+    """
+    first = rx.persona_first((agent.get("persona") or {}).get("name"))
+    for key in ("title", "description", "instructions", "opening_line", "closing_line"):
+        agent[key] = rx._TARA.sub(first, agent.get(key) or "")
+    for q in agent.get("questions") or []:
+        q["text"] = rx._TARA.sub(first, q.get("text") or "")
+    return agent
+
+
 def clean_agent(agent: dict[str, Any]) -> dict[str, Any]:
+    return persona_only(_clean_agent(agent))
+
+
+def _clean_agent(agent: dict[str, Any]) -> dict[str, Any]:
     persona = agent.get("persona") or {}
     rubric = []
     for r in agent.get("rubric") or []:
@@ -371,6 +391,7 @@ def draft_skills(agent_id: str, body: SkillNames, request: Request,
         if not (r.get("anchor") or "").strip():
             r["anchor"] = anchor
     row["agent"]["questions"] += out["questions"]
+    persona_only(row["agent"])
     row["reviewed"] = False
     row["version"] = int(row.get("version") or 0) + 1
     return {**public(store.save(row)), "added": len(out["questions"])}
@@ -385,6 +406,7 @@ def generate_questions(agent_id: str, request: Request,
     except LLMError as exc:
         raise _no_model() from exc
     row["agent"]["questions"] += added
+    persona_only(row["agent"])
     row["version"] = int(row.get("version") or 0) + 1
     return {**public(store.save(row)), "added": len(added)}
 

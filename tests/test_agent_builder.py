@@ -683,3 +683,15 @@ def test_renaming_the_persona_reaches_every_line_and_question():
     assert agent["questions"][0]["text"] == "Adrian asks why the price rose."
     ab.rename_persona(agent, "Adrian Cole", "")  # an empty name never wipes text
     assert "Adrian" in agent["opening_line"]
+
+
+def test_the_config_never_keeps_tara_whoever_wrote_the_line(client):
+    row = _draft(client)["done"]
+    agent = copy.deepcopy(row["agent"])
+    agent["persona"]["name"] = "Dr. Maya Rao"
+    agent["instructions"] = "Tara conducts a friendly interview."
+    agent["questions"][0]["text"] = "Tara asks about pricing."
+    r = client.put(f"{BASE}/agents/{row['agent_id']}", json={"fields": row["fields"], "agent": agent, "cfg": row["cfg"], "reviewed": False})
+    out = r.json()["agent"]
+    assert out["instructions"] == "Maya conducts a friendly interview."
+    assert out["questions"][0]["text"] == "Maya asks about pricing."

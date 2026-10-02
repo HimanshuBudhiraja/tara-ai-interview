@@ -566,6 +566,22 @@
     (a.questions || []).forEach((q) => { const t = swap(q.text || ''); if (t !== q.text) { q.text = t; changed++; } });
     return changed;
   }
+  /* Participants only meet the persona: whoever wrote a line (Tara's draft or
+   * a person typing), "Tara" becomes the persona's first name. The server does
+   * the same on every save; this keeps the screen in step when a field is left. */
+  function personaOnly() {
+    const a = S.agent; if (!a) return false;
+    const first = (a.persona.name || '').replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '').split(/\s+/)[0] || 'the persona';
+    let changed = false;
+    const fix = (t) => { const n = (t || '').replace(/\bTara\b/g, first); if (n !== t) changed = true; return n; };
+    ['title', 'description', 'instructions', 'opening_line', 'closing_line'].forEach((k) => { a[k] = fix(a[k]); });
+    (a.questions || []).forEach((q) => { q.text = fix(q.text); });
+    return changed;
+  }
+  document.addEventListener('focusout', (e) => {
+    if (!S.agent || !e.target.closest || !e.target.closest('#v3') || !/^(TEXTAREA|INPUT)$/.test(e.target.tagName)) return;
+    setTimeout(() => { if (personaOnly()) { touch(); renderMain(); } }, 0);
+  });
   function setVoice(key) {
     const a = S.agent, c = S.cfg, before = a.persona.name, after = voiceName(key);
     c.voice = key; c.language = voiceOf(key).language;
