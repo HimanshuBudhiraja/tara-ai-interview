@@ -40,6 +40,7 @@ from services import config
 from services.ai.brain import LLMError
 from services.ai.workloads import agent_builder as ab
 from services.assessment import agent_builder_retell as rx
+from services.evaluation import simulation as sim
 from services.data import built_agents as store
 from services.security import ratelimit
 
@@ -68,6 +69,11 @@ def _row(agent_id: str, request: Request) -> dict[str, Any]:
     # exist, so an id cannot be probed for.
     if row is None or row.get("org_id") != _org(request):
         raise HTTPException(404, "No such agent.")
+    if "purpose" not in (row.get("cfg") or {}):
+        # Agents made before Purpose existed: a first guess, saved on the next edit.
+        a = row["agent"]
+        row["cfg"] = clean_cfg({**row["cfg"], "purpose": sim.infer_purpose(
+            row.get("brief", ""), a.get("title", ""), a.get("type_label", ""), row["fields"].get("role", ""))})
     return row
 
 
@@ -102,6 +108,18 @@ def clean_cfg(cfg: dict[str, Any], base: dict[str, Any] | None = None) -> dict[s
         "consent": bool(cfg.get("consent", True)),
         # Proctoring only ever meant turning the camera on, and there is no video.
         "proctoring": "Off",
+        **_purpose_cfg(cfg),
+    }
+
+
+def _purpose_cfg(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Purpose, and the attempt and feedback policy that follow from it."""
+    purpose = cfg.get("purpose") if cfg.get("purpose") in sim.PURPOSES else "L&D"
+    d = sim.PURPOSE_DEFAULTS[purpose]
+    return {
+        "purpose": purpose,
+        "attempts": cfg.get("attempts") if cfg.get("attempts") in sim.ATTEMPTS else d["attempts"],
+        "feedback": cfg.get("feedback") if cfg.get("feedback") in sim.FEEDBACK else d["feedback"],
     }
 
 
@@ -202,7 +220,8 @@ def public(row: dict[str, Any]) -> dict[str, Any]:
 
 def _new_row(p: dict[str, Any], c: dict[str, Any], brief: str, mode: str, org: str) -> dict[str, Any]:
     agent = clean_agent({**p["agent"], **c})
-    cfg = clean_cfg({"tone": p["fields"]["difficulty"], "depth": agent["depth"], "voice": agent["voice"]})
+    cfg = clean_cfg({"tone": p["fields"]["difficulty"], "depth": agent["depth"], "voice": agent["voice"],
+                     "purpose": sim.infer_purpose(brief, agent["title"], agent["type_label"], p["fields"].get("role", ""))})
     return {
         "agent_id": store.new_id(agent["title"]),
         "org_id": org,
@@ -486,9 +505,17 @@ async def _retell_transcript(call_id: str) -> list[dict[str, str]]:
     return transcript_of(r.json())
 
 
-def transcript_of(call: dict[str, Any]) -> list[dict[str, str]]:
-    return [{"role": "agent" if t.get("role") == "agent" else "user", "text": _s(t.get("content"))}
-            for t in call.get("transcript_object") or [] if _s(t.get("content"))]
+def transcript_of(call: dict[str, Any]) -> list[dict[str, Any]]:
+    """Retell's transcript as turns, each with the second it started (from word timings)."""
+    out = []
+    for t in call.get("transcript_object") or []:
+        if not _s(t.get("content")):
+            continue
+        words = t.get("words") or []
+        start = words[0].get("start") if words and isinstance(words[0], dict) else None
+        out.append({"role": "agent" if t.get("role") == "agent" else "user", "text": _s(t.get("content")),
+                    "t": round(float(start), 1) if isinstance(start, (int, float)) else None})
+    return out
 
 
 @router.post("/agents/{agent_id}/score")
@@ -506,9 +533,12 @@ async def score(agent_id: str, body: ScoreBody, request: Request) -> dict[str, A
     if sum(1 for t in transcript if t["role"] == "user") < 2:
         raise HTTPException(422, "The participant needs to answer at least twice before this can be scored.")
     try:
-        result = ab.score(row, transcript)
+        result = _evaluate(row, transcript)
     except LLMError as exc:
         raise _no_model() from exc
+    except sim.EvaluationError as exc:
+        raise HTTPException(422, {"message": "This test couldn't be evaluated: " + "; ".join(exc.problems),
+                                  "problems": exc.problems}) from exc
     result["transcript"] = transcript
     if body.call_id:
         test["result"] = result
@@ -591,6 +621,8 @@ def participant_sessions(agent_id: str, request: Request) -> dict[str, Any]:
         {"session_id": r["session_id"], "name": r.get("name", ""), "email": r.get("email", ""),
          "status": r["status"], "version": r["version"], "early": bool(r.get("early")),
          "elapsed_sec": r.get("elapsed_sec", 0), "ended_at": r.get("ended_at"),
+         "attempt": int(r.get("attempt") or 1),
+         "evaluation": r.get("evaluation"), "evaluation_error": r.get("evaluation_error"),
          "result": r.get("result"), "result_error": r.get("result_error"),
          "feedback": r.get("feedback"), "transcript": r.get("transcript") or [],
          "booking": r.get("booking")}
@@ -616,6 +648,13 @@ def verify_signature(raw: bytes, header: str, api_key: str, now_ms: int | None =
     return hmac.compare_digest(expected, digest)
 
 
+def _evaluate(row: dict[str, Any], transcript: list[dict[str, Any]]) -> dict[str, Any]:
+    """A builder test, scored by the same engine and rules as a real session."""
+    from services.assessment.agent_builder_flow import FLOW
+
+    return sim.evaluate({**row, "cfg": clean_cfg(row["cfg"])}, transcript, complete=ab._complete, flow=FLOW)
+
+
 def _score_in_background(agent_id: str, call_id: str, transcript: list[dict[str, str]]) -> None:
     row = store.load(agent_id)
     if row is None:
@@ -626,7 +665,7 @@ def _score_in_background(agent_id: str, call_id: str, transcript: list[dict[str,
     test["transcript"] = transcript
     if sum(1 for t in transcript if t["role"] == "user") >= 2:
         try:
-            test["result"] = {**ab.score(row, transcript), "transcript": transcript}
+            test["result"] = {**_evaluate(row, transcript), "transcript": transcript}
         except Exception:  # noqa: BLE001 — scoring can be retried from the page
             pass
     store.save(row)

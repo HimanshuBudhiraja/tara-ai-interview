@@ -338,10 +338,18 @@
   function loadRow(row) {
     S.row = row; S.agentId = row.agent_id;
     S.fields = row.fields; S.agent = row.agent; S.cfg = row.cfg; S.reviewed = row.reviewed;
-    S.askMsg = ''; S.editQ = -1;
+    S.askMsg = ''; S.editQ = -1; S.sessions = null;
     try { history.replaceState(null, '', '?agent=' + encodeURIComponent(row.agent_id)); } catch (e) { /* ignore */ }
     resetTest(false);
   }
+  /* Purpose: who the result is for, and the attempt and feedback policy that follow. */
+  const PURPOSES = [['Hiring', 'Hiring'], ['HR', 'HR'], ['L&D', 'Learning & Development']];
+  const PURPOSE_DEFAULTS = { Hiring: { attempts: '1', feedback: 'Hidden' }, HR: { attempts: '1', feedback: 'Hidden' }, 'L&D': { attempts: 'Unlimited', feedback: 'Immediate' } };
+  const PURPOSE_HINT = {
+    Hiring: 'A candidate, one attempt at a booked time. The result goes to the hiring team with a recommendation.',
+    HR: 'An employee or manager conversation. The result is themes, observations and follow-ups for HR, not a verdict.',
+    'L&D': 'A learner practising. They see their result and coaching straight away and can practise again.'
+  };
   function seg(label, key, opts) {
     return h('div', { role: 'group', 'aria-label': label, class: 'seg' }, opts.map((o) => h('button', { type: 'button', 'aria-pressed': String(S.cfg[key] === o), text: o, onclick: () => { S.cfg[key] = o; touch(); renderMain(); } })));
   }
@@ -357,7 +365,8 @@
       { id: 'rubric', label: 'Skills', group: 'AGENT SETUP', done: rubOk, review: !rubOk },
       { id: 'questions', label: 'Potential AI Questions', group: 'OPTIONAL', opt: true, done: a.questions.length > 0 },
       { id: 'settings', label: 'Conversation settings', group: 'OPTIONAL', opt: true },
-      { id: 'advanced', label: 'Advanced', group: 'OPTIONAL', opt: true }
+      { id: 'advanced', label: 'Advanced', group: 'OPTIONAL', opt: true },
+      { id: 'results', label: 'Results' + (S.sessions && S.sessions.length ? ' (' + S.sessions.length + ')' : ''), group: 'AFTER PUBLISHING', opt: true, done: !!(S.sessions && S.sessions.some((x) => x.evaluation)) }
     ];
   }
   function renderSide() {
@@ -446,7 +455,11 @@
         h('div', { class: 'fld' }, h('label', { for: 'f-type', text: 'Scenario type' }), sel('f-type', 'type', typeOpts)),
         h('div', { class: 'fld' }, h('label', { for: 'f-role', text: 'Role or situation' }), h('input', { id: 'f-role', class: 'inp', type: 'text', value: S.fields.role || '', oninput: bind(S.fields, 'role') })),
         h('div', { class: 'fld', style: 'grid-column:1 / -1' }, h('label', { for: 'f-skills', text: 'What to assess' }), h('input', { id: 'f-skills', class: 'inp', type: 'text', value: S.fields.skills || '', oninput: bind(S.fields, 'skills') }))
-      )));
+      ),
+      h('div', { class: 'segwrap', style: 'margin-top:4px' }, h('span', { class: 'lbl', text: 'Purpose' }),
+        h('div', { role: 'group', 'aria-label': 'Purpose', class: 'seg' }, PURPOSES.map(([id, label]) => h('button', { type: 'button', 'aria-pressed': String(S.cfg.purpose === id), text: label,
+          onclick: () => { S.cfg.purpose = id; Object.assign(S.cfg, PURPOSE_DEFAULTS[id]); touch(); renderMain(); } }))),
+        h('small', { style: 'font-size:13px;color:var(--muted-2)', text: PURPOSE_HINT[S.cfg.purpose] || '' }))));
 
     m.append(h('section', { id: 'desc', class: 'card', style: 'gap:14px', 'aria-labelledby': 'desc-h' },
       h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'desc-h', text: 'Participant-facing description' }), h('p', { class: 'sub', text: 'Shown to participants before they start. Keep it short and encouraging.' })),
@@ -528,6 +541,8 @@
       srow('Who speaks first', 'Tara greets the participant in character.', 'speaker', ['Tara opens', 'Participant opens']),
       srow('Introduction sound', 'Played as the session begins.', 'sound', ['None', 'Phone ring', 'Video join', 'Doorbell']),
       srow('Ending', 'How the conversation wraps up.', 'ending', ['Tara decides', 'Hard time limit', 'No end time']),
+      srow('Attempts', 'How many times one person may take it. Set by Purpose; change it here.', 'attempts', ['1', '3', 'Unlimited']),
+      srow('Results for the participant', 'Immediate shows their score and coaching when they finish.', 'feedback', ['Hidden', 'Immediate']),
       h('div', { class: 'srow', style: 'border-bottom:none;padding-bottom:0' },
         h('span', { class: 'tt' }, h('b', { text: 'Conversation length' }), h('small', { text: 'Set by Follow-up depth in Persona (' + c.depth + '). Change it there.' })),
         h('span', { style: 'display:flex;flex-direction:column;gap:4px' },
@@ -542,8 +557,37 @@
         h('div', { class: 'togrow', style: 'grid-column:1 / -1' }, h('span', null, h('b', { text: 'Recording consent' }), h('small', { text: 'Ask participants to agree to recording before they start.' })),
           h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(c.consent), 'aria-label': 'Recording consent', onclick: () => { c.consent = !c.consent; touch(); renderMain(); } }, h('i')))) : null));
 
+    m.append(resultsSection());
 
     window.scrollTo(0, keepY);
+  }
+  /* ---------- Results: every participant's attempts, with the evidence-backed report ---------- */
+  async function loadResults() {
+    if (!S.agentId) return;
+    try { S.sessions = (await api('/agents/' + encodeURIComponent(S.agentId) + '/sessions')).sessions || []; } catch (e) { S.sessions = []; }
+    if (S.view === 3) { renderMain(); renderSide(); }
+  }
+  function resultsSection() {
+    const list = S.sessions || [];
+    const sec = h('section', { id: 'results', class: 'card', 'aria-labelledby': 'res-h' },
+      h('div', { class: 'ch2' }, h('div', { class: 'tt' }, h('h2', { id: 'res-h', text: 'Results' }),
+        h('p', { class: 'sub', text: 'Every participant who has taken the published version. Scores are backed by quotes from what they said; skills the conversation didn\'t reach are Not assessed.' })),
+        h('button', { class: 'obtn ghost', type: 'button', text: 'Refresh', onclick: loadResults })));
+    if (!list.length) { sec.append(h('p', { class: 'resnote', text: S.row && S.row.published_version ? 'No one has taken it yet. Share the candidate link from the sidebar.' : 'Publish this agent and share its link to collect results.' })); return sec; }
+    const fmtDate = (t) => t ? new Date(t * 1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
+    list.forEach((x) => {
+      const ev = x.evaluation;
+      const status = ev ? (ev.overall == null ? 'Not rated' : Math.round(ev.overall) + ' · ' + ev.band)
+        : x.status !== 'complete' ? 'In progress' : x.evaluation_error ? 'Not evaluated' : 'Evaluating…';
+      const d = h('details', { class: 'resskill' },
+        h('summary', null, h('span', { class: 'scp ' + (ev && ev.overall != null ? (ev.overall >= 70 ? 'hi' : ev.overall >= 50 ? 'mid' : 'lo') : 'na'), text: ev && ev.overall != null ? String(Math.round(ev.overall)) : '–' }),
+          h('b', { text: (x.name || x.email || 'Participant') + (x.attempt > 1 ? ' · attempt ' + x.attempt : '') }),
+          h('span', { class: 'resw', text: status + (x.ended_at ? ' · ' + fmtDate(x.ended_at) : '') })));
+      if (ev) d.append(resultView(ev));
+      else if (x.evaluation_error) d.append(h('p', { class: 'resnote', text: 'Not evaluated: ' + (x.evaluation_error.problems || []).join('; ') + '.' }));
+      sec.append(d);
+    });
+    return sec;
   }
   /* The persona's name follows the voice: pick Adrian and the persona is
    * Adrian, in the name field, the opening line and the instructions. */
@@ -593,7 +637,7 @@
     const a = S.agent; if (!a) return;
     $('tAva').textContent = initials(a.persona.name); $('tName').textContent = a.persona.name; $('tRole').textContent = a.persona.role || a.type_label;
   }
-  function renderS3() { if (!S.agent) { go(1); return; } renderSide(); renderMain(); syncTestHead(); renderTest(); }
+  function renderS3() { if (!S.agent) { go(1); return; } renderSide(); renderMain(); syncTestHead(); renderTest(); loadResults(); }
 
   async function revise(instr) {
     instr = (instr || '').trim(); if (!instr || S.askBusy) return;
@@ -663,16 +707,45 @@
   }
   function renderScore() {
     const box = $('scorebox');
-    if (S.scoreBusy) { box.hidden = false; box.textContent = ''; box.append(h('span', { class: 'eyebrow', text: 'SCORING AGAINST THE SKILLS…' })); return; }
+    if (S.scoreBusy) { box.hidden = false; box.textContent = ''; box.append(h('span', { class: 'eyebrow', text: 'EVALUATING AGAINST THE SKILLS…' })); return; }
     if (!S.score) { box.hidden = true; return; }
     box.hidden = false; box.textContent = '';
-    box.append(h('span', { class: 'eyebrow', text: 'TEST SCORE' + (S.score.weighted_score != null ? ' · ' + S.score.weighted_score + ' / 5 WEIGHTED' : '') }));
-    if (S.score.err) { box.append(h('p', { style: 'font-size:13px;color:var(--bad)', text: S.score.err })); return; }
-    if (S.score.overall_text) box.append(h('p', { style: 'font-size:13.5px;color:var(--ink-2)', text: S.score.overall_text }));
-    (S.score.scores || []).forEach((r) => {
-      const n = r.score, cls = n == null ? 'na' : n >= 4 ? 'hi' : n >= 3 ? 'mid' : 'lo';
-      box.append(h('div', { class: 'scr' }, h('span', { class: 'scp ' + cls, text: n == null ? '–' : n + '/5' }), h('div', null, h('b', { text: r.name }), h('span', { text: r.note }))));
+    if (S.score.err) { box.append(h('span', { class: 'eyebrow', text: 'TEST RESULT' }), h('p', { style: 'font-size:13px;color:var(--bad)', text: S.score.err })); return; }
+    box.append(resultView(S.score, { compact: true }));
+  }
+  /* One rendering of an evaluation, used by the test panel and the Results page. */
+  function resultView(r, opts) {
+    opts = opts || {};
+    const ev = {}; (r.evidence || []).forEach((e) => { ev[e.id] = e; });
+    const mmss = (x) => x == null ? '' : String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(Math.round(x % 60)).padStart(2, '0');
+    const wrap = h('div', { class: 'resv' });
+    wrap.append(h('div', { class: 'reshead' },
+      h('div', null, h('span', { class: 'eyebrow', text: (opts.compact ? 'TEST RESULT · ' : '') + (r.purpose || '').toUpperCase() }),
+        h('div', { class: 'resbig' }, h('b', { text: r.overall == null ? '—' : String(Math.round(r.overall)) }), h('span', { text: r.overall == null ? 'not rated' : '/ 100 · ' + r.band }))),
+      h('p', { class: 'resrec', text: r.recommendation })));
+    if (r.weight_coverage != null && r.weight_coverage < 1) wrap.append(h('p', { class: 'resnote', text: Math.round(r.weight_coverage * 100) + '% of the skill weight was assessed. Skills the conversation didn\'t reach are marked Not assessed, not scored 0.' }));
+    (r.skills || []).forEach((sk) => {
+      const na = sk.status !== 'ASSESSED';
+      const cls = na ? 'na' : sk.score >= 70 ? 'hi' : sk.score >= 50 ? 'mid' : 'lo';
+      const row = h('details', { class: 'resskill' },
+        h('summary', null, h('span', { class: 'scp ' + cls, text: na ? 'N/A' : String(sk.score) }), h('b', { text: sk.name }),
+          h('span', { class: 'resw', text: na ? 'Not assessed' : (sk.weight != null ? Math.round(sk.weight) + '% weight' : '') })));
+      if (na) row.append(h('p', { class: 'resnote', text: 'Not assessed: ' + (sk.reason || 'not enough evidence in the conversation') + '.' }));
+      else {
+        if (sk.rationale) row.append(h('p', { class: 'resnote', text: sk.rationale }));
+        const crit = Object.entries(sk.criteria || {}).filter(([, v]) => v != null);
+        if (crit.length) row.append(h('div', { class: 'rescrit' }, crit.map(([k, v]) => h('span', { text: k + ' ' + v + '/5' }))));
+        (sk.evidence_ids || []).map((i) => ev[i]).filter(Boolean).forEach((e) => row.append(h('blockquote', { class: 'resq ' + e.polarity },
+          h('span', { class: 'resqmeta', text: (e.t != null ? mmss(e.t) + ' · ' : '') + e.criterion + ' · ' + e.polarity }), '“' + e.quote + '”', e.why ? h('small', { text: e.why }) : null)));
+      }
+      wrap.append(row);
     });
+    const N = r.narrative || {};
+    const LISTS = [['did_well', 'What went well'], ['improve', 'What to improve'], ['try_next', 'Try next time'], ['strengths', 'Strengths'], ['development_areas', 'Development areas'], ['themes', 'Themes'], ['observations', 'Observations'], ['follow_ups', 'Follow-ups']];
+    if (N.summary) wrap.append(h('p', { class: 'resnote', text: N.summary }));
+    LISTS.forEach(([k, label]) => { if ((N[k] || []).length) wrap.append(h('div', { class: 'reslist' }, h('b', { text: label }), h('ul', null, N[k].map((it) => h('li', { text: it.text }))))); });
+    if (r.versions) wrap.append(h('p', { class: 'resver', text: 'Scenario ' + r.versions.scenario + ' · rubric ' + r.versions.rubric + (r.versions.flow ? ' · flow ' + r.versions.flow : '') + ' · ' + r.versions.evaluation }));
+    return wrap;
   }
   function renderStatus() {
     const v = S.voice, st = $('tStat');
@@ -708,7 +781,7 @@
     S.scoreBusy = true; renderTest();
     try {
       S.score = await api('/agents/' + encodeURIComponent(S.agentId) + '/score', { method: 'POST', body: { transcript: turns() } });
-    } catch (e) { S.score = { err: e.message }; }
+    } catch (e) { S.score = { err: (e.detail && e.detail.message) || e.message }; }
     S.scoreBusy = false; renderTest();
   }
   $('tRestart').addEventListener('click', () => resetTest(true));

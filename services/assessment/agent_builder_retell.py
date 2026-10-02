@@ -227,7 +227,9 @@ def persona_first(name: Any) -> str:
 #: Turn-taking tuned on real interview calls (the "it races / talks over me"
 #: fixes). Sent on every call, so they hold whatever the agent in Retell is set to.
 TURN_TAKING = {
-    "responsiveness": 0.4,
+    # 0.8: replies come soon after the participant stops, as in a real
+    # conversation. 0.4 left a noticeable pause before every reply.
+    "responsiveness": 0.8,
     # 0.7: the participant can cut in and Tara yields, as a person would;
     # background noise and short sounds still don't stop her mid-sentence.
     "interruption_sensitivity": 0.7,

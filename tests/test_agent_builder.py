@@ -410,7 +410,7 @@ def test_a_participant_signs_in_and_sees_only_the_published_agent(client, data_d
         assert r_["name"] in v["agent"]["skills"]
         assert r_["anchor"] not in blob                  # descriptors stay hidden
     assert agent["instructions"] not in blob and agent["questions"][0]["text"] not in blob
-    assert "weight" not in blob and "result" not in blob
+    assert "weight" not in blob and v["result"] is None   # no result before it is complete
     assert v["call"]["target_minutes"] in (10, 20, 30)
     sid = v["session_id"]
     assert p.get(f"/api/participant/session/{sid}").status_code == 200
@@ -524,7 +524,7 @@ def test_publishing_makes_one_shared_candidate_link_everyone_can_use(client):
 
 def test_every_call_carries_the_tuned_turn_taking():
     agent = rx.web_call_body(_row(), "agent_x")["agent_override"]["agent"]
-    assert agent["responsiveness"] == 0.4 and agent["interruption_sensitivity"] == 0.7
+    assert agent["responsiveness"] == 0.8 and agent["interruption_sensitivity"] == 0.7
     assert agent["backchannel_frequency"] == 0.2 and agent["enable_backchannel"] is True
 
 
@@ -707,3 +707,71 @@ def test_long_skill_names_are_not_a_leak_only_anchors_are():
     row["agent"]["questions"][0]["tag"] = "Cross-Functional Collaboration"
     row["fields"]["skills"] = "Cross-Functional Collaboration, design critique"
     assert rx.leaked_cues(rx.web_call_body(row, "agent_x"), row) == []
+
+
+# --------------------------------------------------------------------------- #
+#  Purpose, attempts, results
+# --------------------------------------------------------------------------- #
+def _publish_with(client, **cfg) -> tuple[str, str]:
+    row = _draft(client)["done"]
+    aid = row["agent_id"]
+    client.put(f"{BASE}/agents/{aid}", json={"fields": row["fields"], "agent": row["agent"],
+                                            "cfg": {**row["cfg"], **cfg}, "reviewed": True})
+    assert client.post(f"{BASE}/agents/{aid}/publish").status_code == 200
+    inv = client.post(f"{BASE}/agents/{aid}/invites", json={"name": "Lee", "email": "l@x.test"})
+    return aid, inv.json()["code"]
+
+
+def test_purpose_sets_the_attempt_and_feedback_defaults(client):
+    row = _draft(client)["done"]   # "a technical interview": a first guess of Hiring
+    assert row["cfg"]["purpose"] == "Hiring" and row["cfg"]["attempts"] == "1" and row["cfg"]["feedback"] == "Hidden"
+    out = client.put(f"{BASE}/agents/{row['agent_id']}", json={"fields": row["fields"], "agent": row["agent"],
+                     "cfg": {**row["cfg"], "purpose": "L&D", "attempts": None, "feedback": None}}).json()
+    assert out["cfg"]["attempts"] == "Unlimited" and out["cfg"]["feedback"] == "Immediate"
+
+
+def test_a_learner_can_practise_again_and_sees_their_result(client, monkeypatch):
+    from services.api import participant as part
+
+    aid, code = _publish_with(client, purpose="L&D", attempts="Unlimited", feedback="Immediate")
+    p = TestClient(app)
+    s1 = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
+    assert s1["attempt"] == 1 and s1["purpose"] == "L&D"
+    done = p.post(f"/api/participant/session/{s1['session_id']}/complete", json={"early": False, "elapsed_sec": 300}).json()
+    assert done["result_status"] in ("pending", "unavailable")   # no model in tests
+    s2 = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
+    assert s2["attempt"] == 2 and s2["session_id"] != s1["session_id"]
+
+
+def test_a_limited_attempt_policy_is_enforced(client):
+    aid, code = _publish_with(client, purpose="L&D", attempts="3", feedback="Immediate")
+    p = TestClient(app)
+    for n in range(3):
+        sid = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()["session_id"]
+        p.post(f"/api/participant/session/{sid}/complete", json={"early": False, "elapsed_sec": 60})
+    r = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True})
+    assert r.status_code == 409 and "all 3 attempts" in r.json()["detail"]["message"]
+
+
+def test_a_session_is_evaluated_once_and_hiring_results_stay_hidden(client, monkeypatch):
+    from services.api import participant as part
+    from services.data import agent_sessions
+    from tests.test_simulation_evaluation import EVIDENCE, JUDGED, TRANSCRIPT, FakeLLM
+
+    aid, code = _published_invite(client)                     # a Hiring agent
+    p = TestClient(app)
+    sid = p.post("/api/participant/sign-in", json={"code": code, "name": "A", "email": "a@x.test", "consent": True}).json()["session_id"]
+    row = agent_sessions.load(sid)
+    row["snapshot"]["agent"]["rubric"] = [{"name": "Negotiation", "anchor": "x", "weight": 60},
+                                          {"name": "Discovery", "anchor": "y", "weight": 40}]
+    row.update(status="complete", transcript=TRANSCRIPT, calls=["call_1"])
+    llm = FakeLLM(EVIDENCE, JUDGED)
+    monkeypatch.setattr(ab, "_complete", llm)
+    part.evaluate_session(row)
+    part.evaluate_session(row)                                # a retried webhook / second completion
+    assert row["evaluation"]["purpose"] == "Hiring" and len(llm.calls) == 3
+    agent_sessions.save(row)
+    v = p.get(f"/api/participant/session/{sid}").json()
+    assert v["result"] is None and v["result_status"] == "hidden"
+    recruiter = client.get(f"{BASE}/agents/{aid}/sessions").json()["sessions"][0]
+    assert recruiter["evaluation"]["overall"] is not None

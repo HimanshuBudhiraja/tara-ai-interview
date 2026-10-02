@@ -23,7 +23,6 @@ already said.
 """
 from __future__ import annotations
 
-import re
 
 import secrets
 import time
@@ -50,15 +49,18 @@ RETELL = "https://api.retellai.com"
 #: is reviewed by whoever invited the participant.
 HIRING_LABEL = "the hiring team"
 ORG_LABEL = "the team that invited you"
-_HIRING = re.compile(r"\b(interview\w*|hiring|hire|recruit\w*|candidate\w*|screening|job applica\w*)\b", re.I)
 
 
-def is_hiring(snap: dict[str, Any]) -> bool:
-    """Whether the scenario is about hiring someone, read from what it says."""
+def purpose_of(row: dict[str, Any]) -> str:
+    """The session's purpose: as configured when it was published, else a guess from its text."""
+    from services.evaluation import simulation as sim
+
+    snap = row.get("snapshot") or row
+    p = (snap.get("cfg") or {}).get("purpose")
+    if p in sim.PURPOSES:
+        return p
     a, f = snap.get("agent") or {}, snap.get("fields") or {}
-    text = " ".join(str(x) for x in (a.get("title"), a.get("type_label"), a.get("description"),
-                                      f.get("role"), snap.get("brief")) if x)
-    return bool(_HIRING.search(text))
+    return sim.infer_purpose(a.get("title", ""), a.get("type_label", ""), a.get("description", ""), f.get("role", ""))
 
 
 # --------------------------------------------------------------------------- #
@@ -134,12 +136,48 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
             "voice_configured": bool(config.RETELL_API_KEY and config.RETELL_AGENT_BUILDER_AGENT_ID),
         },
         "voice_sample_url": voice_sample(v.voice_id),
-        "org_label": HIRING_LABEL if is_hiring(snap) else ORG_LABEL,
-        "hiring": is_hiring(snap),
+        "org_label": HIRING_LABEL if purpose_of(row) == "Hiring" else ORG_LABEL,
+        "hiring": purpose_of(row) == "Hiring",
+        "purpose": purpose_of(row),
+        "attempt": int(row.get("attempt") or 1),
+        "attempts": (snap.get("cfg") or {}).get("attempts") or "1",
+        **_participant_result(row),
         "calls": len(row.get("calls") or []),
         "submitted_at": row.get("ended_at"),
         "booking": booking_view(row),
     }
+
+
+def _participant_result(row: dict[str, Any]) -> dict[str, Any]:
+    """The result, for the participant, only when the scenario shows it to them.
+
+    Never the weights, the anchors or the reasoning behind each criterion: the
+    participant sees their scores, their own words as evidence, and coaching.
+    """
+    if (row["snapshot"].get("cfg") or {}).get("feedback") != "Immediate" or row["status"] != "complete":
+        return {"result": None, "result_status": "hidden"}
+    ev = row.get("evaluation")
+    if not ev:
+        err = row.get("evaluation_error")
+        return {"result": None, "result_status": "unavailable" if err and err.get("calls_key") else "pending"}
+    return {"result_status": "ready", "result": {
+        "overall": ev["overall"], "band": ev["band"], "recommendation": ev["recommendation"],
+        "skills": [{"name": r["name"], "status": r["status"], "score": r["score"], "evidence_ids": r["evidence_ids"]}
+                   for r in ev["skills"]],
+        "evidence": [{k: e[k] for k in ("id", "skill", "quote", "t", "polarity", "why")} for e in ev["evidence"]],
+        "narrative": ev.get("narrative") or {},
+        "attempt": ev.get("attempt", 1),
+        "history": _attempt_history(row),
+    }}
+
+
+def _attempt_history(row: dict[str, Any]) -> list[dict[str, Any]]:
+    """This person's evaluated attempts at this scenario, oldest first, for progression."""
+    rows = [r for r in sessions.for_agent(row["agent_id"]) if r.get("invite_code") == row.get("invite_code")
+            and r.get("email") == row.get("email") and r.get("evaluation")]
+    rows.sort(key=lambda r: int(r.get("attempt") or 1))
+    return [{"attempt": int(r.get("attempt") or 1), "overall": r["evaluation"]["overall"],
+             "skills": {s["name"]: s["score"] for s in r["evaluation"]["skills"]}} for r in rows]
 
 
 def booking_view(row: dict[str, Any]) -> dict[str, Any] | None:
@@ -183,22 +221,25 @@ def sign_in(body: SignIn, response: Response) -> dict[str, Any]:
         raise HTTPException(409, {"error": "authFail", "message": "This conversation isn't open yet."})
 
     email = body.email.strip().lower()
-    if invite.get("shared"):
-        # A shared candidate link: one session per person (by email), so a
-        # dropped tab rejoins, and a submitted conversation can't be sat twice.
-        row = next((r for r in sessions.for_agent(agent_row["agent_id"])
-                    if r.get("invite_code") == invite["code"] and r.get("email") == email), None)
-    else:
-        row = sessions.load(invite["session_id"]) if invite.get("session_id") else None
-    if row and row["status"] == "complete":
-        raise HTTPException(409, {"error": "completed", "message": "This conversation has already been submitted."})
+    # Every attempt this person has made with this code: a shared link is one
+    # person per email; a personal code is its one invitee.
+    mine = [r for r in sessions.for_agent(agent_row["agent_id"]) if r.get("invite_code") == invite["code"]
+            and (r.get("email") == email or not invite.get("shared"))]
+    row = next((r for r in mine if r["status"] != "complete"), None)  # a dropped tab rejoins
     grant = secrets.token_urlsafe(32)
     if row is None:
+        # A new attempt, if the scenario's attempt policy allows one.
+        limit = (published.get("cfg") or {}).get("attempts") or "1"
+        if limit != "Unlimited" and len(mine) >= int(limit):
+            raise HTTPException(409, {"error": "completed", "message":
+                                      "This conversation has already been submitted." if limit == "1"
+                                      else f"You've used all {limit} attempts for this conversation."})
         row = {
             "session_id": sessions.new_id(), "agent_id": agent_row["agent_id"], "org_id": agent_row["org_id"],
             "version": published["version"], "invite_code": invite["code"],
             "snapshot": {k: published[k] for k in ("fields", "agent", "cfg")},
             "status": "signed_in", "calls": [], "created_at": time.time(),
+            "attempt": len(mine) + 1,
         }
         if not invite.get("shared"):
             invite["session_id"] = row["session_id"]
@@ -379,14 +420,40 @@ async def _score(session_id: str) -> None:
             await asyncio.sleep(3 * (attempt + 1))
     row = sessions.load(session_id) or row
     row["transcript"] = transcript
-    if sum(1 for t in transcript if t.get("role") == "user") >= 2:
-        try:
-            row["result"] = ab.score(_snapshot(row), transcript)
-        except Exception as exc:  # noqa: BLE001 — scoring can be re-run from the recruiter side
-            row["result_error"] = type(exc).__name__
-    else:
-        row["result_error"] = "too_short"
+    evaluate_session(row)
     sessions.save(row)
+
+
+def evaluate_session(row: dict[str, Any]) -> None:
+    """Run the evaluation engine once per set of calls; store a valid result or why not.
+
+    Idempotent: a second completion, a retried webhook or a page refresh with the
+    same calls never produces a second result.
+    """
+    from services.assessment.agent_builder_flow import FLOW
+    from services.evaluation import simulation as sim
+
+    key = ",".join(row.get("calls") or []) or "typed"
+    if (row.get("evaluation") or {}).get("calls_key") == key:
+        return
+    transcript = row.get("transcript") or []
+    if sum(1 for t in transcript if t.get("role") == "user") < 2:
+        row["evaluation_error"] = {"problems": ["the conversation was too short to evaluate"], "calls_key": key}
+        return
+    snap = _snapshot(row)
+    snap["cfg"] = {**snap["cfg"], "purpose": purpose_of(row)}
+    try:
+        result = sim.evaluate(snap, transcript, complete=ab._complete, flow=FLOW)
+    except sim.EvaluationError as exc:  # failed the integrity check: never saved as a result
+        row["evaluation_error"] = {"problems": exc.problems, "calls_key": key}
+        return
+    except Exception as exc:  # noqa: BLE001 — model unavailable; can be re-run later
+        row["evaluation_error"] = {"problems": [type(exc).__name__], "calls_key": ""}
+        return
+    result["calls_key"] = key
+    result["attempt"] = int(row.get("attempt") or 1)
+    row["evaluation"] = result
+    row.pop("evaluation_error", None)
 
 
 @router.post("/session/{session_id}/complete")

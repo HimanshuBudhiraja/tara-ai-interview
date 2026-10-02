@@ -262,10 +262,33 @@
               <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Submitted</dt><dd style="margin:0; font-weight:600;">{{ submittedAt }}</dd></div>
               <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Reference</dt><dd style="margin:0; font-family:'JetBrains Mono',monospace; font-size:13px;">{{ refCode }}</dd></div>
             </dl>
+            <sc-if value="{{ resPending }}" hint-placeholder-val="{{ false }}">
+              <div role="status" style="margin:32px 0 0; padding:16px 18px; border-radius:12px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); font-size:14.5px; color:var(--ink2,#3B4252); display:flex; align-items:center; gap:10px;"><span style="width:8px; height:8px; border-radius:50%; background:#7C5CFC; animation:taraPulse 1.4s ease-in-out infinite;"></span>Preparing your results. This usually takes under a minute.</div>
+            </sc-if>
+            <sc-if value="{{ resReady }}" hint-placeholder-val="{{ false }}">
+              <section aria-label="Your results" style="margin:32px 0 0;">
+                <h2 style="font-size:15px; font-weight:700; margin:0 0 10px;">Your results</h2>
+                <div style="display:flex; align-items:baseline; gap:8px;"><span style="font-size:40px; font-weight:800; letter-spacing:-.04em;">{{ resOverall }}</span><span style="font-size:14px; color:var(--ink4,#767F93);">/ 100 · {{ resBand }}</span></div>
+                <p style="font-size:14.5px; line-height:1.55; color:var(--ink3,#545C6E); margin:6px 0 16px;">{{ resRec }}</p>
+                <sc-for list="{{ resSkills }}" as="rs" hint-placeholder-count="4">
+                  <div style="padding:10px 0; border-bottom:1px solid rgba(var(--ln),.06);">
+                    <div style="display:flex; justify-content:space-between; gap:12px; font-size:14px;"><span style="font-weight:600;">{{ rs.name }}</span><span style="font-weight:700; color:{{ rs.color }};">{{ rs.label }}</span></div>
+                    <div style="height:6px; border-radius:999px; background:var(--track,#E4E7EE); margin-top:6px;"><div style="height:100%; width:{{ rs.pct }}; border-radius:999px; background:{{ rs.color }};"></div></div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ resHasWell }}"><h3 style="font-size:14px; font-weight:700; margin:22px 0 6px;">What went well</h3><sc-for list="{{ resWell }}" as="w" hint-placeholder-count="2"><p style="font-size:14.5px; line-height:1.6; color:var(--ink2,#3B4252); margin:0 0 8px; padding-left:14px; border-left:3px solid #12B76A;">{{ w.text }}</p></sc-for></sc-if>
+                <sc-if value="{{ resHasImprove }}"><h3 style="font-size:14px; font-weight:700; margin:22px 0 6px;">What to improve</h3><sc-for list="{{ resImprove }}" as="w" hint-placeholder-count="2"><p style="font-size:14.5px; line-height:1.6; color:var(--ink2,#3B4252); margin:0 0 8px; padding-left:14px; border-left:3px solid #F79009;">{{ w.text }}</p></sc-for></sc-if>
+                <sc-if value="{{ resHasNext }}"><h3 style="font-size:14px; font-weight:700; margin:22px 0 6px;">Try next time</h3><sc-for list="{{ resNext }}" as="w" hint-placeholder-count="2"><p style="font-size:14.5px; line-height:1.6; color:var(--ink2,#3B4252); margin:0 0 8px; padding-left:14px; border-left:3px solid #4C7CF8;">{{ w.text }}</p></sc-for></sc-if>
+                <sc-if value="{{ resHasHistory }}"><h3 style="font-size:14px; font-weight:700; margin:22px 0 8px;">Your attempts</h3><div style="display:flex; flex-wrap:wrap; gap:8px;"><sc-for list="{{ resHistory }}" as="hh" hint-placeholder-count="2"><span style="font-size:13px; font-weight:600; padding:6px 10px; border-radius:8px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08);">Attempt {{ hh.n }} · {{ hh.score }}</span></sc-for></div></sc-if>
+                <sc-if value="{{ canRetry }}"><button type="button" onClick="{{ practiseAgain }}" style="margin-top:22px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(135deg,#4C7CF8,#1B3FB0); border:none; border-radius:10px; height:46px; padding:0 22px; cursor:pointer;">Practise again</button></sc-if>
+              </section>
+            </sc-if>
+            <sc-if value="{{ showNextSteps }}" hint-placeholder-val="{{ true }}">
             <h2 style="font-size:15px; font-weight:700; margin:32px 0 4px;">What happens next</h2>
             <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--blueInk,#2456DB); padding-top:2px;">01</span><div><strong style="color:var(--ink,#0D1017);">{{ orgName }} reviews your conversation</strong> with {{ personaFirst }}.</div></div>
             <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--blueInk,#2456DB); padding-top:2px;">02</span><div><strong style="color:var(--ink,#0D1017);">{{ nextEmail }}</strong> at {{ email }}.</div></div>
             <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--greenInk,#05603A); padding-top:2px;">—</span><div><strong style="color:var(--ink,#0D1017);">Nothing else is needed from you.</strong> It's safe to close this window.</div></div>
+            </sc-if>
           </div>
         </section>
         <section aria-label="Feedback" style="flex:1 1 440px; min-width:0; padding:56px clamp(24px,5vw,72px) 80px; background:var(--surface,#FFFFFF); border-left:1px solid rgba(var(--ln),.07);">
@@ -366,7 +389,7 @@
             <div style="font-size:13px; font-weight:600; color:var(--ink4,#767F93); margin:{{ eyebrowGap }} 0 10px;">{{ stageLabel }} · {{ personaFirst }}</div>
             <h1 style="font-size:{{ taraFont }}; font-weight:700; letter-spacing:-.03em; line-height:1.3; margin:0; max-width:32ch; text-wrap:pretty;"><span>{{ taraSpoken }}</span><span style="color:var(--mute,#C9CEDA);">{{ taraRest }}</span></h1>
             <sc-if value="{{ showStageHint }}"><p style="font-size:15px; line-height:1.55; color:var(--ink3,#545C6E); margin:16px 0 0; max-width:48ch;">{{ youHint }}</p></sc-if>
-            <sc-if value="{{ showYouText }}"><p style="font-size:14px; line-height:1.55; color:var(--ink2,#3B4252); margin:10px 0 0; max-width:60ch; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;"><span style="font-weight:700; color:var(--blueInk,#2456DB);">You · </span>{{ youText }}</p></sc-if>
+            <sc-if value="{{ showYouText }}"><p data-you-text style="font-size:14px; line-height:1.55; color:var(--ink2,#3B4252); margin:10px 0 0; max-width:60ch; max-height:min(40vh,12lh); overflow-y:auto; overscroll-behavior:contain; white-space:pre-wrap; overflow-wrap:anywhere;"><span style="font-weight:700; color:var(--blueInk,#2456DB);">You · </span>{{ youText }}</p></sc-if>
             <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">{{ chatBox }}</sc-if>
           </sc-if>
 
@@ -907,7 +930,7 @@ class Component extends DCLogic {
       this.setState({ sid });
       const v = await this.api('/session/' + encodeURIComponent(sid));
       this.setState({ v, name: v.participant.name, email: v.participant.email, consent: true, screen: v.status === 'complete' ? 'complete' : 'overview', submittedAt: v.status === 'complete' ? 'Earlier' : '' });
-      if (v.status !== 'complete') this.loadSlots();
+      if (v.status !== 'complete') this.loadSlots(); else this.pollResult();
     } catch (e) { try { sessionStorage.removeItem(Component.KEY); } catch (x) { /* ignore */ } this.setState({ sid: '' }); }
   }
   applyTheme() {
@@ -1077,8 +1100,31 @@ class Component extends DCLogic {
     this.stopCall(); this.stopStreams();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     this.setState({ screen: 'complete', early, fbDone: false, confirmEnd: false, helpOpen: false, issueOpen: false, submittedAt: 'Today, ' + time });
-    try { await this.api(this.sess('/complete'), 'POST', { early: !!early, elapsed_sec: this.state.elapsed }); }
+    try { const v = await this.api(this.sess('/complete'), 'POST', { early: !!early, elapsed_sec: this.state.elapsed }); this.setState({ v }); this.pollResult(); }
     catch (e) { this.toastMsg("Couldn't confirm the submission. Keep this window open and try again."); }
+  }
+  /* Learning scenarios show the result straight away: poll until it is ready
+     (the evaluation runs on the server and takes under a minute). */
+  pollResult(tries) {
+    tries = tries || 0;
+    const v = this.state.v;
+    if (!v || v.result_status !== 'pending' || tries > 24) return;
+    clearTimeout(this.resT);
+    this.resT = setTimeout(async () => {
+      try { const nv = await this.api(this.sess(''), 'GET'); this.setState({ v: nv }); } catch (e) { /* try again */ }
+      this.pollResult(tries + 1);
+    }, 5000);
+  }
+  async practiseAgain() {
+    const v = this.state.v; if (!v) return;
+    let code = '';
+    try { code = (JSON.parse(sessionStorage.getItem(Component.KEY) || '{}')).code || ''; } catch (e) { /* none */ }
+    code = code || this.state.code || '';
+    try {
+      const nv = await this.api('/sign-in', 'POST', { code, name: v.participant.name, email: v.participant.email, consent: true });
+      try { sessionStorage.setItem(Component.KEY, JSON.stringify({ sid: nv.session_id, code })); } catch (x) { /* ignore */ }
+      this.setState({ v: nv, sid: nv.session_id, early: false, transcript: [] }, () => this.go('overview'));
+    } catch (e) { this.toastMsg(e.message); }
   }
   openError(key) {
     const E = Component.errs(this.persona(), this.org());
@@ -1274,7 +1320,7 @@ class Component extends DCLogic {
         } catch (x) {
           this.setState({ submitting: false });
           if (x.code === 'authFail') this.openError('authFail');
-          else if (x.code === 'completed') this.setState({ errors: { code: 'This conversation has already been submitted.' } });
+          else if (x.code === 'completed') this.setState({ errors: { code: x.message || 'This conversation has already been submitted.' } });
           else if (x.code === 'consent') this.setState({ errors: { consent: 'Please agree to continue.' } });
           else this.toastMsg(x.message);
         }
@@ -1364,6 +1410,23 @@ class Component extends DCLogic {
       errPrimaryLabel: s.recovering ? (ek === 'busy' ? 'Checking availability…' : 'Reconnecting…') : (e ? e.primary : ''),
       errPrimary: () => e && !s.recovering && this.errAction(e.pa), errSecondary: () => e && this.errAction(e.sa), hasSecondary: !!(e && e.secondary),
 
+      ...(() => {
+        const R = vp && vp.result, rs = vp ? vp.result_status : 'hidden';
+        const col = (n) => n == null ? '#A3ABBD' : n >= 70 ? '#12B76A' : n >= 50 ? '#F79009' : '#F04438';
+        const N = (R && R.narrative) || {};
+        const more = vp && (vp.attempts === 'Unlimited' || (+vp.attempts > (vp.attempt || 1)));
+        return {
+          resPending: s.screen === 'complete' && rs === 'pending', resReady: !!R,
+          showNextSteps: rs === 'hidden',
+          resOverall: R && R.overall != null ? String(Math.round(R.overall)) : '–', resBand: R ? R.band : '', resRec: R ? R.recommendation : '',
+          resSkills: R ? R.skills.map((k) => ({ name: k.name, label: k.status === 'ASSESSED' ? String(k.score) : 'Not assessed', pct: (k.score || 0) + '%', color: col(k.score) })) : [],
+          resWell: N.did_well || [], resImprove: N.improve || [], resNext: N.try_next || [],
+          resHasWell: !!(N.did_well || []).length, resHasImprove: !!(N.improve || []).length, resHasNext: !!(N.try_next || []).length,
+          resHistory: R ? (R.history || []).map((x) => ({ n: x.attempt, score: x.overall == null ? '–' : Math.round(x.overall) })) : [],
+          resHasHistory: !!(R && (R.history || []).length > 1),
+          canRetry: !!(R && more), practiseAgain: () => this.practiseAgain()
+        };
+      })(),
       completeLead: s.early ? 'You ended the conversation early. What you covered has been submitted.' : 'Your conversation with ' + PF + ' has been submitted. Thanks for taking part.',
       durationLabel: Math.max(1, Math.round(s.elapsed / 60)) + ' min', submittedAt: s.submittedAt || 'Today',
       ratings, ratingLabel: s.rating ? RL[s.rating - 1] : 'Select a rating', fbQuestions, comment: s.comment, onComment: (ev) => this.setState({ comment: ev.target.value }),
@@ -1386,6 +1449,14 @@ class Component extends DCLogic {
     };
   }
 }
+</script>
+<script>
+/* What you're saying, under the orb, grows with your answer; if it gets long
+   enough to scroll, keep the newest words in view. */
+(function () {
+  const pin = () => document.querySelectorAll('[data-you-text]').forEach((el) => { el.scrollTop = el.scrollHeight; });
+  new MutationObserver(pin).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+})();
 </script>
 </body>
 </html>
