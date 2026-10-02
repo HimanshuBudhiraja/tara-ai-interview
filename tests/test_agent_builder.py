@@ -48,6 +48,8 @@ def client(data_dir, tenant, monkeypatch):
         raise brain.LLMError("offline")
 
     monkeypatch.setattr(brain.RuntimeBrain, "complete_json", _no_model)
+    # The Agent Builder calls the gateway on its own workloads; keep every test offline.
+    monkeypatch.setattr(ab, "_complete", _no_model)
     c = TestClient(app)
     sign_in(c, tenant)
     return c
@@ -231,7 +233,7 @@ def test_revise_applies_the_change_and_unreviews_the_rubric(client, monkeypatch)
     changed = copy.deepcopy(row["agent"])
     changed["persona"]["style"] = "blunt, skeptical"
     from services.ai import brain
-    monkeypatch.setattr(brain.RuntimeBrain, "complete_json", lambda *a, **k: {
+    monkeypatch.setattr(ab, "_complete", lambda *a, **k: {
         "scenario": row["fields"], "agent": changed,
         "settings": {"difficulty": "Tough", "followUpDepth": "Light", "voice": "carola"},
         "summary": "Made it tougher and shorter.",
@@ -607,3 +609,14 @@ def test_the_slot_under_way_can_still_be_booked_while_joinable():
     starts = slots.offered(now=datetime.now(timezone.utc))
     first = starts[0]
     assert first + timedelta(minutes=slots.JOIN_LATE_MIN) > datetime.now(timezone.utc)
+
+
+
+def test_each_llm_use_has_its_own_model_slot():
+    from services.ai.gateway import Workload, workload_config
+    uses = {"agent_designer": "AGENT_DESIGNER_MODEL", "agent_reviser": "AGENT_REVISER_MODEL",
+            "question_suggester": "QUESTION_SUGGESTER_MODEL", "rehearsal": "REHEARSAL_MODEL",
+            "agent_scorer": "AGENT_SCORER_MODEL"}
+    for w, var in uses.items():
+        assert workload_config(Workload(w)).model == getattr(config, var)
+    assert workload_config(Workload.AGENT_SCORER).temperature == 0.0

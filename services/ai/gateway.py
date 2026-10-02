@@ -80,6 +80,13 @@ class Workload(str, Enum):
     #: person who has just stopped talking, and a two-second gap reads as
     #: the character hesitating rather than as a system thinking.
     COUNTERPARTY = "counterparty"
+    #: The Agent Builder. One per distinct job, so each runs on the model
+    #: that suits it (see config.py), and telemetry says which job cost what.
+    AGENT_DESIGNER = "agent_designer"
+    AGENT_REVISER = "agent_reviser"
+    QUESTION_SUGGESTER = "question_suggester"
+    REHEARSAL = "rehearsal"
+    AGENT_SCORER = "agent_scorer"
 
 
 class AIError(RuntimeError):
@@ -144,6 +151,14 @@ _DEFAULTS: dict[Workload, tuple[float, int, float]] = {
     # the same four sentences to every subject, and a scenario people can
     # rehearse is a scenario that has stopped measuring anything.
     Workload.COUNTERPARTY: (0.8, 160, config.LLM_TIMEOUT_SEC),
+    Workload.AGENT_DESIGNER: (0.5, 6000, 150.0),
+    Workload.AGENT_REVISER: (0.2, 6000, 150.0),
+    Workload.QUESTION_SUGGESTER: (0.7, 1500, 60.0),
+    # Warm like the counterparty: a rehearsal that says the same thing every
+    # time teaches the recruiter nothing about the real call.
+    Workload.REHEARSAL: (0.7, 300, 30.0),
+    # Cold: the same transcript should get the same scores.
+    Workload.AGENT_SCORER: (0.0, 3000, 150.0),
 }
 
 _MODELS: dict[Workload, str] = {
@@ -154,6 +169,11 @@ _MODELS: dict[Workload, str] = {
     Workload.SCORING: config.SCORING_MODEL,
     Workload.REPORT_GENERATOR: config.REPORT_GENERATOR_MODEL,
     Workload.COUNTERPARTY: config.COUNTERPARTY_MODEL,
+    Workload.AGENT_DESIGNER: config.AGENT_DESIGNER_MODEL,
+    Workload.AGENT_REVISER: config.AGENT_REVISER_MODEL,
+    Workload.QUESTION_SUGGESTER: config.QUESTION_SUGGESTER_MODEL,
+    Workload.REHEARSAL: config.REHEARSAL_MODEL,
+    Workload.AGENT_SCORER: config.AGENT_SCORER_MODEL,
 }
 
 

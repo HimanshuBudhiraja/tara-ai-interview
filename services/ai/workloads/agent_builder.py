@@ -68,8 +68,22 @@ _CONTENT_SHAPE = """{
 }"""
 
 
-def _complete(system: str, user: str, max_tokens: int = 4000) -> dict[str, Any]:
-    return get_llm().complete_json(system, user, max_tokens=max_tokens)
+def _complete(system: str, user: str, max_tokens: int = 4000, workload: str = "agent_designer") -> dict[str, Any]:
+    """One JSON call on the workload's own model. Raises `LLMError` with no
+    provider, or when the model's answer can't be used, so callers fall back
+    or say so rather than crash."""
+    from services.ai.gateway import AIError, Workload, _extract_json, get_gateway
+
+    gateway = get_gateway()
+    if not gateway.live:
+        raise LLMError("no model provider configured — set OPENROUTER_API_KEY")
+    result = gateway.generate(Workload(workload), system, user, max_tokens=max_tokens)
+    if not result.success:
+        raise LLMError(result.error or "model call failed")
+    try:
+        return _extract_json(result.text)
+    except AIError as exc:
+        raise LLMError(str(exc)) from exc
 
 
 def _voices_prompt() -> str:
@@ -92,7 +106,7 @@ def plan(brief: str, mode: str) -> tuple[dict[str, Any], str]:
         + "\n\nReturn only JSON in this shape:\n" + _PLAN_SHAPE
     )
     try:
-        return normalise_plan(_complete(_RULES, user, 2500), mode), "model"
+        return normalise_plan(_complete(_RULES, user, 3000, "agent_designer"), mode), "model"
     except LLMError:
         return normalise_plan(_offline_plan(brief, mode), mode), "template"
 
@@ -110,7 +124,7 @@ def content(p: dict[str, Any]) -> tuple[dict[str, Any], str]:
         + "\n\nReturn only JSON in this shape:\n" + _CONTENT_SHAPE
     )
     try:
-        return normalise_content(_complete(_RULES, user, 3000)), "model"
+        return normalise_content(_complete(_RULES, user, 4000, "agent_designer")), "model"
     except LLMError:
         return normalise_content(_offline_content(p)), "template"
 
@@ -271,7 +285,7 @@ def revise(row: dict[str, Any], instruction: str) -> dict[str, Any]:
           "\n\nReturn only JSON: {\"scenario\": {...same keys...}, \"agent\": {...same keys...}, "
           "\"settings\": {...same keys...}, \"summary\": \"one short sentence on what changed\"}"
     )
-    out = _complete(_RULES, user, 5000)
+    out = _complete(_RULES, user, 6000, "agent_reviser")
     a = out.get("agent") or {}
     st = out.get("settings") or {}
     p = normalise_plan({
@@ -309,7 +323,7 @@ def more_questions(row: dict[str, Any], n: int = 3) -> list[dict[str, str]]:
           "each tagged with one competency's exact name. "
           'Return only JSON: {"questions": [{"text": "...", "tag": "..."}]}'
     )
-    out = _complete(_RULES, user, 1200)
+    out = _complete(_RULES, user, 1500, "question_suggester")
     names = {r["name"].lower(): r["name"] for r in a["rubric"]}
     return [{"text": _s(q.get("text")), "tag": names.get(_s(q.get("tag")).lower(), _s(q.get("tag")))}
             for q in (out.get("questions") or [])[:n] if isinstance(q, dict) and _s(q.get("text"))]
@@ -347,7 +361,7 @@ def test_reply(row: dict[str, Any], messages: list[dict[str, str]], candidate_na
     )
     user = ("The conversation so far. Only the PARTICIPANT lines are the other person:\n"
             + fence(convo) + "\n\nYour next line:")
-    result = gateway.generate(Workload.COUNTERPARTY, system, user, max_tokens=220)
+    result = gateway.generate(Workload.REHEARSAL, system, user, max_tokens=300)
     if not result.success or not result.text.strip():
         raise LLMError(result.error or "no reply")
     return result.text.strip().strip('"')
@@ -376,7 +390,7 @@ def score(row: dict[str, Any], transcript: list[dict[str, str]]) -> dict[str, An
         + '\n\nReturn only JSON: {"overall": "two sentences", "scores": '
           '[{"name": "competency", "score": 3, "note": "one sentence of evidence"}]}'
     )
-    out = _complete(_RULES, user, 2000)
+    out = _complete(_RULES, user, 3000, "agent_scorer")
     names = {r["name"].lower(): r for r in a["rubric"]}
     rows = []
     for s in out.get("scores") or []:

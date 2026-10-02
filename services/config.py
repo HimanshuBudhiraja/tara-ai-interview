@@ -121,6 +121,21 @@ REPORT_GENERATOR_MODEL = _first("REPORT_GENERATOR_MODEL", "TARA_MODEL_DEEP", def
 # the one place the subject is waiting mid-conversation.
 COUNTERPARTY_MODEL = _first("COUNTERPARTY_MODEL", "TARA_MODEL_FAST", default=_DEFAULT_MODEL)
 
+# The Agent Builder's five uses of a model, each with the model that suits it.
+# Every one is overridable by env var; the defaults were chosen on 2026-10-02
+# from the OpenRouter catalogue and smoke-tested against it.
+#   drafting an agent from a brief   quality matters, the recruiter waits once
+#   "Ask Tara" revisions             must change one thing and preserve the rest
+#   "Generate more" questions        small, fast, cheap
+#   typed rehearsal (Test Tara chat) the SAME model the live Retell flow runs,
+#                                    so a rehearsal behaves like the real call
+#   scoring a conversation           fairness and consistency over speed
+AGENT_DESIGNER_MODEL = _first("AGENT_DESIGNER_MODEL", default="anthropic/claude-sonnet-5.5")
+AGENT_REVISER_MODEL = _first("AGENT_REVISER_MODEL", default="anthropic/claude-sonnet-5.5")
+QUESTION_SUGGESTER_MODEL = _first("QUESTION_SUGGESTER_MODEL", default="google/gemini-3.8-flash")
+REHEARSAL_MODEL = _first("REHEARSAL_MODEL", default="openai/gpt-5.4-mini")
+AGENT_SCORER_MODEL = _first("AGENT_SCORER_MODEL", default="anthropic/claude-opus-5.5")
+
 # Kept for the runtime modules that still read them by these names.
 MODEL_FAST = ANSWER_CLASSIFIER_MODEL
 MODEL_DEEP = INTERVIEW_DESIGNER_MODEL
