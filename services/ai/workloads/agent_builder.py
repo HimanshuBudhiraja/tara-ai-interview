@@ -44,6 +44,9 @@ Rules:
 - Use only organisation names the brief gives. Never invent a real company.
 - Persona: a believable full name, a role that fits, and a short style.
 - Spoken lines (opening, closing) must sound natural said aloud: 1-3 short sentences.
+- The participant only ever meets the persona. In the opening, the closing, the
+  questions and the description, the persona speaks and introduces itself by its
+  own name; never write "Tara" or "iMocha" in anything the participant hears or reads.
 - No lists or markdown inside any string."""
 
 _PLAN_SHAPE = """{

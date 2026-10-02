@@ -101,6 +101,10 @@ def voice_sample(voice_id: str) -> str:
     return _PREVIEWS.get(voice_id, "")
 
 
+def _persona_only(agent: dict[str, Any], text: str) -> str:
+    return rx._TARA.sub(rx.persona_first((agent.get("persona") or {}).get("name")), text or "")
+
+
 def view(row: dict[str, Any]) -> dict[str, Any]:
     """Everything the participant's screens show, and nothing the scorer uses."""
     snap = row["snapshot"]
@@ -113,9 +117,11 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
         "status": row["status"],
         "participant": {"name": row["name"], "email": row["email"]},
         "agent": {
-            "title": a["title"], "type_label": a["type_label"],
+            # The participant only meets the persona: any "Tara" in what they
+            # read becomes the persona's first name, as it does in the call.
+            "title": _persona_only(a, a["title"]), "type_label": a["type_label"],
             "persona": {"name": a["persona"]["name"], "role": a["persona"]["role"]},
-            "description": a["description"],
+            "description": _persona_only(a, a["description"]),
             "skills": [r["name"] for r in a["rubric"]],
             "voice": v.label.split(" —")[0], "language": v.language,
         },

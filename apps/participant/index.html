@@ -9,7 +9,7 @@
 <x-dc>
 <helmet>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tara · Role-play simulation</title>
+<title>Role-play simulation · iMocha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -33,23 +33,23 @@
   <div data-screen-label="01 Entry" style="min-height:100vh; display:flex; flex-wrap:wrap; background:var(--surface,#FFFFFF);">
     <section aria-label="Scenario" style="flex:1 1 480px; min-width:0; display:flex; flex-direction:column; padding:32px clamp(24px,5vw,72px); background:var(--hero,linear-gradient(160deg,#EEF3FF 0%,#F4F1FF 100%)); border-right:1px solid rgba(var(--ln),.06);">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
-        <div style="display:flex; align-items:center; gap:10px;"><sc-if value="{{ isLight }}"><img src="/participant/assets/tara-logo.png" alt="" width="28" height="28" style="display:block;"></sc-if><sc-if value="{{ isDark }}"><img src="/participant/assets/tara-logo-white.png" alt="" width="28" height="28" style="display:block;"></sc-if><span style="font-size:16px; font-weight:800; letter-spacing:-.025em;">Tara</span></div>
+        <div style="display:flex; align-items:center; gap:10px;"><sc-if value="{{ isLight }}"><img src="/participant/assets/tara-logo.png" alt="" width="28" height="28" style="display:block;"></sc-if><sc-if value="{{ isDark }}"><img src="/participant/assets/tara-logo-white.png" alt="" width="28" height="28" style="display:block;"></sc-if><span style="font-size:16px; font-weight:800; letter-spacing:-.025em;">iMocha</span></div>
         <span style="font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink4,#767F93);">{{ refCode }}</span>
       </div>
       <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:56px 0 40px; max-width:520px; animation:taraIn 450ms cubic-bezier(0,0,.2,1);">
         <div style="font-size:13px; font-weight:700; color:var(--violetInk,#6741E0);">Role-play simulation</div>
         <h2 style="font-size:clamp(28px,3vw,36px); font-weight:800; letter-spacing:-.035em; line-height:1.15; margin:10px 0 14px; text-wrap:balance;">How it works</h2>
-        <p style="font-size:15.5px; line-height:1.65; color:var(--ink2,#3B4252); margin:0 0 32px; max-width:48ch; text-wrap:pretty;">You'll interact with Tara in a realistic workplace scenario. Tara will play a defined role/persona and respond dynamically based on the conversation.</p>
+        <p style="font-size:15.5px; line-height:1.65; color:var(--ink2,#3B4252); margin:0 0 32px; max-width:48ch; text-wrap:pretty;">You'll have a spoken conversation with an AI persona in a realistic workplace scenario. The persona will play a defined role/persona and respond dynamically based on the conversation.</p>
         <ol style="margin:0; padding:0; list-style:none; border-top:1px solid rgba(var(--ln),.08);">
           <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">1</span><div><div style="font-weight:600;">Sign in</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">Use the name, email and access code from your invitation.</div></div></div>
-          <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">2</span><div><div style="font-weight:600;">Read the scenario</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">You'll see who Tara plays and what the conversation is about.</div></div></div>
+          <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">2</span><div><div style="font-weight:600;">Read the scenario</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">You'll see who you'll be speaking with and what the conversation is about.</div></div></div>
           <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">3</span><div><div style="font-weight:600;">Run a quick setup check</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">We check your microphone, speakers and connection, and your camera if it's needed.</div></div></div>
           <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">4</span><div><div style="font-weight:600;">Have the conversation</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">Speak naturally, as you would in the real situation. There's no script.</div></div></div>
           <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:14px; padding:13px 0; border-bottom:1px solid rgba(var(--ln),.08); font-size:14px;"><span style="width:24px; height:24px; border-radius:50%; background:var(--tintB,#EEF3FF); color:#1B3FB0; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;">5</span><div><div style="font-weight:600;">Submit</div><div style="color:var(--ink4,#767F93); line-height:1.55; margin-top:2px;">Your conversation is sent to the team that invited you.</div></div></div>
         </ol>
         <p style="font-size:13px; line-height:1.6; color:var(--ink4,#767F93); margin:20px 0 0; max-width:52ch;">For the best experience, use Chrome or Edge in a quiet place, with headphones if you have them.</p>
       </div>
-      <div style="font-size:13px; color:var(--ink3,#545C6E);">Powered by <span style="font-weight:700; color:var(--ink,#0D1017);">Tara</span> · iMocha</div>
+      <div style="font-size:13px; color:var(--ink3,#545C6E);">Powered by <span style="font-weight:700; color:var(--ink,#0D1017);">iMocha</span></div>
     </section>
 
     <section aria-label="Sign in" style="flex:1 1 440px; min-width:0; display:flex; flex-direction:column; padding:32px clamp(24px,5vw,72px);">
@@ -95,7 +95,7 @@
     <header style="display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; padding:14px clamp(20px,4vw,40px); background:var(--surface,#FFFFFF); border-bottom:1px solid rgba(var(--ln),.07); position:sticky; top:0; z-index:10;">
       <div style="display:flex; align-items:center; gap:10px; min-width:0;">
         <sc-if value="{{ isLight }}"><img src="/participant/assets/tara-logo.png" alt="" width="28" height="28" style="display:block; flex:none;"></sc-if><sc-if value="{{ isDark }}"><img src="/participant/assets/tara-logo-white.png" alt="" width="28" height="28" style="display:block; flex:none;"></sc-if>
-        <span style="font-size:16px; font-weight:800; letter-spacing:-.025em;">Tara</span>
+        <span style="font-size:16px; font-weight:800; letter-spacing:-.025em;">iMocha</span>
         <span style="width:1px; height:18px; background:rgba(var(--ln),.12); margin:0 6px;"></span>
         <span style="font-size:13.5px; font-weight:600; color:var(--ink3,#545C6E); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ agentTitle }}</span>
       </div>
@@ -134,7 +134,7 @@
               <p style="font-size:13.5px; line-height:1.6; color:var(--ink3,#545C6E); margin:14px 0 0;">{{ youGoal }}</p>
             </div>
             <div style="padding:20px 22px;">
-              <div style="font-size:12px; font-weight:700; color:var(--ink4,#767F93); margin-bottom:12px;">Persona Tara will play</div>
+              <div style="font-size:12px; font-weight:700; color:var(--ink4,#767F93); margin-bottom:12px;">Who you'll speak with</div>
               <div style="display:flex; align-items:center; gap:12px;">
                 <span style="width:40px; height:40px; border-radius:50%; background:var(--tintP,#F4F1FF); color:var(--violetInk,#6741E0); font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; flex:none;">PR</span>
                 <div><div style="font-size:15px; font-weight:700;">{{ personaName }}</div><div style="font-size:13px; color:var(--ink4,#767F93);">{{ personaRole }}</div></div>
@@ -176,7 +176,7 @@
             <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; font-size:14px;"><dt style="color:var(--ink4,#767F93);">Format</dt><dd style="margin:0; font-weight:600;">{{ formatLabel }}</dd></div>
           </dl>
           <div style="margin:6px 22px 0; padding:16px; border-radius:12px; background:var(--subtle,#F8F9FB); border:1px solid rgba(var(--ln),.06);">
-            <div style="font-size:14px; font-weight:700;">How would you like Tara to speak?</div>
+            <div style="font-size:14px; font-weight:700;">How fast should {{ personaFirst }} speak?</div>
             <div style="font-size:12.5px; color:var(--ink4,#767F93); margin:3px 0 12px;">A comfort setting, applied when the conversation starts.</div>
             <div role="radiogroup" aria-label="Rate of speech" style="display:grid; grid-template-columns:repeat(3,1fr); padding:3px; border-radius:10px; background:rgba(var(--ln),.06);">
               <sc-for list="{{ speeds }}" as="sp" hint-placeholder-count="3">
@@ -200,7 +200,7 @@
     <sc-if value="{{ isCheck }}" hint-placeholder-val="{{ false }}">
       <main data-screen-label="03 Setup check" style="max-width:1120px; margin:0 auto; padding:48px clamp(20px,4vw,40px) 96px; animation:taraIn 400ms cubic-bezier(0,0,.2,1);">
         <h1 style="font-size:clamp(24px,2.8vw,30px); font-weight:800; letter-spacing:-.03em; line-height:1.15; margin:0 0 8px;">Setup check</h1>
-        <p style="font-size:15px; line-height:1.6; color:var(--ink3,#545C6E); margin:0 0 28px; max-width:56ch;">Tara needs to hear you clearly for the conversation to flow. If anything needs fixing, we'll show you what to do.</p>
+        <p style="font-size:15px; line-height:1.6; color:var(--ink3,#545C6E); margin:0 0 28px; max-width:56ch;">{{ personaFirst }} needs to hear you clearly for the conversation to flow. If anything needs fixing, we'll show you what to do.</p>
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr)); gap:24px; align-items:start;">
           <div style="background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); border-radius:14px; padding:14px;">
             <div style="position:relative; aspect-ratio:16/10; border-radius:10px; overflow:hidden; background:{{ camPreviewBg }}; display:flex; align-items:center; justify-content:center;">
@@ -257,7 +257,7 @@
             <p style="font-size:15.5px; line-height:1.65; color:var(--ink3,#545C6E); margin:0 0 28px; max-width:46ch;">{{ completeLead }}</p>
             <dl style="margin:0; border-top:1px solid rgba(var(--ln),.1);">
               <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Scenario</dt><dd style="margin:0; font-weight:600; text-align:right;">{{ scenarioLine }}</dd></div>
-              <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Tara played</dt><dd style="margin:0; font-weight:600; text-align:right;">{{ personaFull }}</dd></div>
+              <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">You spoke with</dt><dd style="margin:0; font-weight:600; text-align:right;">{{ personaFull }}</dd></div>
               <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Conversation length</dt><dd style="margin:0; font-weight:600;">{{ durationLabel }}</dd></div>
               <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Submitted</dt><dd style="margin:0; font-weight:600;">{{ submittedAt }}</dd></div>
               <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Reference</dt><dd style="margin:0; font-family:'JetBrains Mono',monospace; font-size:13px;">{{ refCode }}</dd></div>
@@ -321,7 +321,7 @@
     <header style="flex:none; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:20px; height:64px; padding:0 clamp(16px,2.5vw,28px); background:var(--surface,#FFFFFF); border-bottom:1px solid rgba(var(--ln),.07);">
       <div style="display:flex; align-items:center; gap:10px; min-width:0;">
         <sc-if value="{{ isLight }}"><img src="/participant/assets/tara-logo.png" alt="" width="26" height="26" style="display:block; flex:none;"></sc-if><sc-if value="{{ isDark }}"><img src="/participant/assets/tara-logo-white.png" alt="" width="26" height="26" style="display:block; flex:none;"></sc-if>
-        <span style="font-size:15px; font-weight:800; letter-spacing:-.025em;">Tara</span>
+        <span style="font-size:15px; font-weight:800; letter-spacing:-.025em;">iMocha</span>
         <span style="width:1px; height:18px; background:rgba(var(--ln),.12); margin:0 4px; flex:none;"></span>
         <span style="font-size:13.5px; font-weight:600; color:var(--ink3,#545C6E); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:{{ headerTitleDisplay }};">{{ scenarioLine }}</span>
       </div>
@@ -363,7 +363,7 @@
           </sc-if>
 
           <sc-if value="{{ showTaraText }}">
-            <div style="font-size:13px; font-weight:600; color:var(--ink4,#767F93); margin:{{ eyebrowGap }} 0 10px;">{{ stageLabel }} · {{ personaFirst }}, played by Tara</div>
+            <div style="font-size:13px; font-weight:600; color:var(--ink4,#767F93); margin:{{ eyebrowGap }} 0 10px;">{{ stageLabel }} · {{ personaFirst }}</div>
             <h1 style="font-size:{{ taraFont }}; font-weight:700; letter-spacing:-.03em; line-height:1.3; margin:0; max-width:32ch; text-wrap:pretty;"><span>{{ taraSpoken }}</span><span style="color:var(--mute,#C9CEDA);">{{ taraRest }}</span></h1>
             <sc-if value="{{ showStageHint }}"><p style="font-size:15px; line-height:1.55; color:var(--ink3,#545C6E); margin:16px 0 0; max-width:48ch;">{{ youHint }}</p></sc-if>
             <sc-if value="{{ showYouText }}"><p style="font-size:14px; line-height:1.55; color:var(--ink2,#3B4252); margin:10px 0 0; max-width:60ch; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;"><span style="font-weight:700; color:var(--blueInk,#2456DB);">You · </span>{{ youText }}</p></sc-if>
@@ -480,8 +480,8 @@
         <div style="position:relative; z-index:5; width:0; height:0; align-self:center;"><div style="position:absolute; right:-290px; bottom:64px; width:0;"><sc-if value="{{ issueOpen }}">
               <div style="position:absolute; right:0; bottom:0; width:290px; border-radius:12px; padding:6px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); box-shadow:0 18px 40px -16px rgba(13,16,23,.3); z-index:6; animation:taraIn 200ms cubic-bezier(0,0,.2,1);">
                 <div style="font-size:12px; font-weight:700; color:var(--ink4,#767F93); padding:9px 10px 5px;">What's happening?</div>
-                <button type="button" onClick="{{ openErr.cantHearTara }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">I can't hear Tara</button>
-                <button type="button" onClick="{{ openErr.cantHearYou }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">Tara can't hear me</button>
+                <button type="button" onClick="{{ openErr.cantHearTara }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">I can't hear {{ personaFirst }}</button>
+                <button type="button" onClick="{{ openErr.cantHearYou }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">{{ personaFirst }} can't hear me</button>
                 <button type="button" onClick="{{ openErr.camUnavailable }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">My camera isn't working</button>
                 <button type="button" onClick="{{ openErr.poorNet }}" style="display:block; width:100%; text-align:left; font-size:13.5px; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink,#0D1017); cursor:pointer;" style-hover="background:var(--page,#F1F3F7);">My connection is slow</button>
                 <div style="height:1px; background:rgba(var(--ln),.07); margin:5px 8px;"></div>
@@ -505,7 +505,7 @@
               <div style="font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#A3ABBD; margin-bottom:8px;">You're talking with</div>
               <div style="display:flex; align-items:center; gap:10px;">
                 <span style="width:34px; height:34px; border-radius:50%; background:var(--tintP,#F4F1FF); color:#6741E0; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; flex:none;">{{ personaInitials }}</span>
-                <div><div style="font-size:13.5px; font-weight:700; color:var(--ink,#171B24);">{{ personaName }}</div><div style="font-size:12px; color:var(--ink4,#767F93);">{{ personaRole }} · played by Tara</div></div>
+                <div><div style="font-size:13.5px; font-weight:700; color:var(--ink,#171B24);">{{ personaName }}</div><div style="font-size:12px; color:var(--ink4,#767F93);">{{ personaRole }}</div></div>
               </div>
             </div>
             <div style="padding:14px 20px; border-bottom:1px solid rgba(var(--ln),.06);">
@@ -567,8 +567,8 @@
     </div>
     <sc-if value="{{ isLive }}"><div style="margin:4px 22px 6px; font-size:13px; font-weight:600; color:var(--blueInk,#1B3FB0); background:var(--tintB,#EEF3FF); border-radius:9px; padding:9px 12px;">The conversation is paused while Help is open.</div></sc-if>
     <div style="flex:1; overflow-y:auto; padding:6px 22px;">
-      <div style="padding:14px 0; border-bottom:1px solid rgba(var(--ln),.06);"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">How does the role-play work?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">Tara plays {{ personaFirst }} and responds to what you say. There's no script to follow. Speak as you would in a real meeting.</div></div>
-      <div style="padding:14px 0; border-bottom:1px solid rgba(var(--ln),.06);"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">When should I speak?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">When the status says "Your turn". Speak naturally; when you pause, Tara knows you have finished and replies.</div></div>
+      <div style="padding:14px 0; border-bottom:1px solid rgba(var(--ln),.06);"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">How does the role-play work?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">{{ personaFirst }} responds to what you say. There's no script to follow. Speak as you would in a real meeting.</div></div>
+      <div style="padding:14px 0; border-bottom:1px solid rgba(var(--ln),.06);"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">When should I speak?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">When the status says "Your turn". Speak naturally; when you finish, {{ personaFirst }} replies.</div></div>
       <div style="padding:14px 0; border-bottom:1px solid rgba(var(--ln),.06);"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">Can I hear something again?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">Yes. Just ask {{ personaFirst }} to repeat, as you would in a real conversation. Everything said is also in the conversation history.</div></div>
       <div style="padding:14px 0;"><div style="font-size:14px; font-weight:700; margin-bottom:5px;">What if I get disconnected?</div><div style="font-size:13.5px; color:var(--ink3,#545C6E); line-height:1.6;">Select Resume conversation and you rejoin at the same point. If you close the window, sign in again with the same access code.</div></div>
     </div>
@@ -673,13 +673,13 @@ class Component extends DCLogic {
 
   static errs(p, org) {
     return {
-      micUnavailable: { label: 'Mic unavailable', sev: 'error', title: "Your microphone isn't available", what: "Tara can't find a microphone. It may be unplugged, or another app is using it.", todo: 'Reconnect your microphone or close other apps using it, then try again.', cont: p + " will pick up from the last point. Nothing you've said is lost.", primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: 'Microphone reconnected' },
+      micUnavailable: { label: 'Mic unavailable', sev: 'error', title: "Your microphone isn't available", what: "We can't find a microphone. It may be unplugged, or another app is using it.", todo: 'Reconnect your microphone or close other apps using it, then try again.', cont: p + " will pick up from the last point. Nothing you've said is lost.", primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: 'Microphone reconnected' },
       camUnavailable: { label: 'Camera unavailable', sev: 'warn', title: "Your camera isn't available", what: 'Your camera was disconnected, or another app is using it.', todo: 'Reconnect your camera or close other apps using it, then try again.', cont: 'You can also continue with audio only. ' + org + ' will see a note that your camera was off.', primary: 'Try again', pa: 'retry', secondary: 'Continue without camera', sa: 'continue', ok: 'Camera reconnected' },
-      permission: { label: 'Permission issue', sev: 'error', title: 'Microphone access is blocked', what: 'Your browser is blocking Tara from using your microphone.', todo: "Select the lock icon in your browser's address bar, set Microphone to Allow, then try again.", cont: 'The conversation resumes as soon as access is allowed.', primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: 'Microphone access allowed' },
+      permission: { label: 'Permission issue', sev: 'error', title: 'Microphone access is blocked', what: 'Your browser is blocking this page from using your microphone.', todo: "Select the lock icon in your browser's address bar, set Microphone to Allow, then try again.", cont: 'The conversation resumes as soon as access is allowed.', primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: 'Microphone access allowed' },
       poorNet: { label: 'Poor connection', sev: 'warn', title: 'Your connection is unstable', what: 'Your internet speed dropped, so ' + p + "'s replies may be delayed.", todo: 'Move closer to your router or pause other downloads.', cont: 'You can keep going. Everything you say is saved as you go.', primary: 'Keep going', pa: 'continue', secondary: 'Test again', sa: 'check', ok: 'Connection is stable again' },
-      cantHearYou: { label: "Tara can't hear you", sev: 'warn', title: "Tara can't hear you", what: 'No sound is reaching Tara from your microphone.', todo: "Check you're not muted and that the right microphone is selected.", cont: 'Once your audio is back, ' + p + ' will pick up where you left off.', primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: 'Tara can hear you again' },
-      cantHearTara: { label: "Can't hear Tara", sev: 'warn', title: "You can't hear Tara", what: p + "'s voice isn't playing through your speakers or headphones.", todo: 'Turn up your volume and check your output device. Replies are also shown on screen.', cont: 'After a test sound, the conversation carries on.', primary: 'Play test sound', pa: 'tone', secondary: 'Check devices', sa: 'check', ok: 'Audio is working' },
-      interrupted: { label: 'Conversation interrupted', sev: 'error', title: 'The conversation was interrupted', what: 'The connection to Tara dropped unexpectedly.', todo: 'Check your internet connection, then resume.', cont: "You'll rejoin at the same point with " + p + '. Everything so far is saved.', primary: 'Resume conversation', pa: 'resume', secondary: null, sa: null, ok: 'Conversation resumed' },
+      cantHearYou: { label: p + " can't hear you", sev: 'warn', title: p + " can't hear you", what: 'No sound is reaching ' + p + ' from your microphone.', todo: "Check you're not muted and that the right microphone is selected.", cont: 'Once your audio is back, ' + p + ' will pick up where you left off.', primary: 'Try again', pa: 'retry', secondary: 'Check devices', sa: 'check', ok: p + ' can hear you again' },
+      cantHearTara: { label: "Can't hear " + p, sev: 'warn', title: "You can't hear " + p, what: p + "'s voice isn't playing through your speakers or headphones.", todo: 'Turn up your volume and check your output device. Replies are also shown on screen.', cont: 'After a test sound, the conversation carries on.', primary: 'Play test sound', pa: 'tone', secondary: 'Check devices', sa: 'check', ok: 'Audio is working' },
+      interrupted: { label: 'Conversation interrupted', sev: 'error', title: 'The conversation was interrupted', what: 'The connection dropped unexpectedly.', todo: 'Check your internet connection, then resume.', cont: "You'll rejoin at the same point with " + p + '. Everything so far is saved.', primary: 'Resume conversation', pa: 'resume', secondary: null, sa: null, ok: 'Conversation resumed' },
       authFail: { label: 'Authentication failed', sev: 'error', pre: true, compact: true, orb: 'alert', title: 'This access code is not valid', what: 'It may have expired or been entered incorrectly. Check your invitation email, or ask ' + org + ' for a new one.', primary: 'Back to sign in', pa: 'toLogin', secondary: null, sa: null, ok: '' },
       busy: { label: 'Too many users', sev: 'warn', pre: true, compact: true, orb: 'alert', title: 'All sessions are in use', what: 'Please try again in a few minutes. Your progress is safe.', primary: 'Try again', pa: 'waitRetry', secondary: null, sa: null, ok: '' },
       expired: { label: 'Session expired', sev: 'error', title: 'Your session has expired', what: 'For your security, this session has ended.', todo: 'Sign in again with the access code from your invitation email.', cont: 'The conversation so far is saved.', primary: 'Sign in again', pa: 'login', secondary: null, sa: null, ok: '' }
@@ -862,7 +862,7 @@ class Component extends DCLogic {
     return data;
   }
   sess(path) { return '/session/' + encodeURIComponent(this.state.sid) + (path || ''); }
-  persona() { const v = this.state.v; return v ? v.agent.persona.name : 'Tara'; }
+  persona() { const v = this.state.v; return v ? v.agent.persona.name : 'Your conversation partner'; }
   org() { const v = this.state.v; return v ? v.org_label : 'the team that invited you'; }
   isChat() { const v = this.state.v; return !!(v && v.call.format === 'Chat'); }
   cameraUsed() { const v = this.state.v; return !!(v && v.call.camera_used); }
@@ -963,7 +963,7 @@ class Component extends DCLogic {
   async runChecks() {
     this.setState({ checks: { mic: 'checking', camera: this.cameraUsed() ? 'checking' : 'ready', speaker: 'checking', network: 'checking', perms: 'checking' }, camLive: false, micHeard: false });
     const t0 = performance.now(); let net = 'attention';
-    try { const r = await fetch('/api/health', { cache: 'no-store' }); const ms = performance.now() - t0; net = r.ok && ms < 1500 && navigator.onLine !== false ? 'ready' : 'attention'; this.setState(s => ({ devLabels: { ...s.devLabels, network: 'Stable · ' + Math.round(ms) + ' ms to Tara' } })); } catch (e) { net = 'failed'; }
+    try { const r = await fetch('/api/health', { cache: 'no-store' }); const ms = performance.now() - t0; net = r.ok && ms < 1500 && navigator.onLine !== false ? 'ready' : 'attention'; this.setState(s => ({ devLabels: { ...s.devLabels, network: 'Stable · ' + Math.round(ms) + ' ms' } })); } catch (e) { net = 'failed'; }
     this.setCheck('network', net);
     const mic = await this.probe('mic'); this.setCheck('mic', mic);
     let cam = 'ready'; if (this.cameraUsed()) { cam = await this.probe('camera'); this.setCheck('camera', cam); if (cam === 'ready') this.camStream && this.camStream.getTracks().forEach(t => t.stop()); this.camStream = null; }
@@ -1157,7 +1157,7 @@ class Component extends DCLogic {
       mic: { checking: 'Looking for your microphone…', ready: s.micTesting ? "Say something. We're listening…" : (L.mic || 'Microphone ready'), attention: 'No sound detected. Check your mic is connected and not muted.', permission: 'Allow microphone access so ' + PF + ' can hear you.', failed: 'No microphone found. Connect one and try again.' },
       camera: { checking: 'Looking for your camera…', ready: L.camera || 'Camera ready', permission: 'Allow camera access so ' + ORG + " can confirm it's you.", failed: 'No camera found. Connect one, or close apps using it.', attention: 'Your camera is in use by another app.' },
       speaker: { checking: 'Checking audio output…', ready: s.speakerPlaying ? 'Playing test sound…' : (L.speaker || 'Default speakers') },
-      network: { checking: 'Measuring connection…', ready: L.network || 'Stable', attention: 'Slow connection. Move closer to your router.', failed: "Can't reach Tara. Check your internet connection." },
+      network: { checking: 'Measuring connection…', ready: L.network || 'Stable', attention: 'Slow connection. Move closer to your router.', failed: "Can't connect. Check your internet connection." },
       perms: { checking: 'Checking browser access…', ready: this.cameraUsed() ? 'Microphone and camera allowed' : 'Microphone allowed', permission: 'Your browser needs permission to use your ' + (this.cameraUsed() ? 'microphone and camera.' : 'microphone.') }
     };
     const NAMES = { mic: 'Microphone', camera: 'Camera', speaker: 'Speaker', network: 'Internet connection', perms: 'Browser permissions' };
@@ -1178,11 +1178,11 @@ class Component extends DCLogic {
     const rows = s.rows; const lastAgent = [...rows].reverse().find(r => r.role === 'agent'); const lastUser = rows.length && rows[rows.length - 1].role === 'user' ? rows[rows.length - 1] : null;
     const muted = s.muted;
     const PH = {
-      ready: { l: 'Ready to begin', d: '#A3ABBD' }, speaking: { l: 'Tara is responding', d: '#7C5CFC' },
+      ready: { l: 'Ready to begin', d: '#A3ABBD' }, speaking: { l: PF + ' is responding', d: '#7C5CFC' },
       waiting: muted ? { l: "You're muted", d: '#F04438' } : { l: 'Your turn', d: '#3B6FF6' }, idle: { l: 'Waiting for you', d: '#3B6FF6' },
-      listening: muted ? { l: "You're muted", d: '#F04438' } : { l: 'Tara is listening', d: '#3B6FF6' },
-      processing: { l: chat ? 'Starting' : 'Connecting', d: '#7C5CFC' }, thinking: { l: 'Tara is thinking', d: '#7C5CFC' },
-      noHear: { l: "Tara didn't catch that", d: '#F79009' }, wrapup: { l: 'Conversation wrapped up', d: '#12B76A' }
+      listening: muted ? { l: "You're muted", d: '#F04438' } : { l: PF + ' is listening', d: '#3B6FF6' },
+      processing: { l: chat ? 'Starting' : 'Connecting', d: '#7C5CFC' }, thinking: { l: PF + ' is thinking', d: '#7C5CFC' },
+      noHear: { l: PF + " didn't catch that", d: '#F79009' }, wrapup: { l: 'Conversation wrapped up', d: '#12B76A' }
     };
     const pm = PH[s.phase] || PH.ready;
     const YOU = {
@@ -1191,7 +1191,7 @@ class Component extends DCLogic {
       idle: ['Take your time', PF + ' is waiting for your response.'],
       listening: muted ? ["You're muted", 'Unmute to continue.'] : ['Your response', 'Speak naturally. ' + PF + ' replies when you pause.'],
       processing: ['', 'Connecting you to ' + PF + '…'], thinking: ['Your response', PF + ' is considering your point.'],
-      noHear: ["Tara didn't catch that", 'Please try again, a little closer to your microphone.'], wrapup: ['', '']
+      noHear: [PF + " didn't catch that", 'Please try again, a little closer to your microphone.'], wrapup: ['', '']
     };
     const yu = YOU[s.phase] || YOU.ready;
     const youActive = s.phase === 'listening' && !muted;
@@ -1201,7 +1201,7 @@ class Component extends DCLogic {
     const pNum = s.phase === 'ready' ? 0 : s.phase === 'wrapup' ? 100 : Math.round(frac * 100);
     const leftMin = Math.max(1, Math.round(tgt - s.elapsed / 60));
 
-    const TA = { who: PF, sub: 'played by Tara', whoColor: '#6741E0' }, YO = { who: 'You', sub: '', whoColor: '#2456DB' };
+    const TA = { who: PF, sub: '', whoColor: '#6741E0' }, YO = { who: 'You', sub: '', whoColor: '#2456DB' };
     const entries = rows.map((r, i) => {
       const live = i === rows.length - 1 && (s.phase === 'speaking' || s.phase === 'listening');
       return { ...(r.role === 'agent' ? TA : YO), time: fmt(s.stamps[i]), text: r.text, hasRef: false, refLabel: '',
@@ -1216,13 +1216,13 @@ class Component extends DCLogic {
     const ratings = RL.map((label, i) => { const sel = s.rating === i + 1; return { n: i + 1, label, onClick: () => this.setState({ rating: i + 1 }), bg: sel ? '#1B3FB0' : 'var(--surface,#fff)', color: sel ? '#fff' : 'var(--ink2,#3B4252)', border: sel ? 'transparent' : 'rgba(var(--ln),.12)' }; });
     const FBQ = [
       { id: 'clear', q: 'How clear was the conversation?', o: ['Clear', 'Mostly', 'Unclear'] },
-      { id: 'natural', q: "Did Tara's responses feel natural?", o: ['Yes', 'Somewhat', 'No'] },
+      { id: 'natural', q: "Did the conversation feel natural?", o: ['Yes', 'Somewhat', 'No'] },
       { id: 'scenario', q: 'Was the scenario easy to understand?', o: ['Yes', 'Mostly', 'No'] },
       { id: 'tech', q: 'Any technical problems?', o: ['None', 'Minor', 'Major'] }
     ];
     const fbQuestions = FBQ.map(f => ({ q: f.q, opts: f.o.map(o => { const sel = s.fb[f.id] === o; return { label: o, onClick: () => this.setState(st => ({ fb: { ...st.fb, [f.id]: o } })), bg: sel ? 'var(--surface,#FFFFFF)' : 'transparent', color: sel ? 'var(--ink,#0D1017)' : 'var(--ink3,#545C6E)', shadow: sel ? '0 1px 3px rgba(13,16,23,.16)' : 'none' }; }) }));
 
-    const a = vp ? { description: '', skills: [], ...vp.agent } : { title: '', type_label: '', persona: { name: 'Tara', role: '' }, description: '', skills: [], voice: '', language: 'English' };
+    const a = vp ? { description: '', skills: [], ...vp.agent } : { title: '', type_label: '', persona: { name: 'Your conversation partner', role: '' }, description: '', skills: [], voice: '', language: 'English' };
     const fmtLabel = chat ? 'Typed conversation' : call.camera_used ? 'Video & voice conversation' : 'Voice conversation';
 
     return {
@@ -1235,7 +1235,7 @@ class Component extends DCLogic {
       description: a.description, youRole: 'Participant', youSub: v ? v.participant.name : '', youGoal: 'Speak as you would in the real situation. ' + PF + ' responds to what you say.',
       formatLabel: fmtLabel, readyLine: PF + ' is ready for about ' + tgt + ' minutes on ' + (a.title || 'this conversation') + '.',
       readyHint: chat ? 'Type naturally, as you would in a real conversation. ' + PF + ' responds to what you write, so there is no fixed script.' : (call.speaker === 'Participant opens' ? 'You speak first. ' : '') + 'Speak naturally, as you would in a real meeting. ' + PF + ' responds to what you say, so there is no fixed script.',
-      personaLine: P + (a.persona.role ? ' · ' + a.persona.role : '') + ' · played by Tara', wrapLine: PF + " has wrapped up. Submit when you're ready.",
+      personaLine: P + (a.persona.role ? ' · ' + a.persona.role : '') + '', wrapLine: PF + " has wrapped up. Submit when you're ready.",
       hasRefs: false, isChat: chat,
       showDetails: s.asideTab !== 'transcript', showTranscript: s.asideTab === 'transcript',
       pickDetails: () => this.setState({ asideTab: 'details' }), pickTranscript: () => this.setState({ asideTab: 'transcript' }),
@@ -1345,7 +1345,7 @@ class Component extends DCLogic {
       speedLabel: Component.SPEEDS[s.speed].label,
       cycleSpeed: () => {
         if (s.inCall) return this.toastMsg('Speed is set when the conversation starts. You chose ' + Component.SPEEDS[s.speed].label.toLowerCase() + '.');
-        const ks = Object.keys(Component.SPEEDS); const nx = ks[(ks.indexOf(s.speed) + 1) % ks.length]; this.setState({ speed: nx }); this.toastMsg('Tara will speak at ' + Component.SPEEDS[nx].label.toLowerCase() + ' speed');
+        const ks = Object.keys(Component.SPEEDS); const nx = ks[(ks.indexOf(s.speed) + 1) % ks.length]; this.setState({ speed: nx }); this.toastMsg(this.persona().replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '').split(/\s+/)[0] + ' will speak at ' + Component.SPEEDS[nx].label.toLowerCase() + ' speed');
       },
       transcriptOpen: s.transcriptOpen, toggleTranscript: () => this.setState({ transcriptOpen: !s.transcriptOpen }), transcriptBtnLabel: s.transcriptOpen ? 'Hide panel' : 'Details & transcript',
       showContext: (this.props.showContextPanel ?? true) && this.state.vw >= 1200,

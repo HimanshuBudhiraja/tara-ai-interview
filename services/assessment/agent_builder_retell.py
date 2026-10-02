@@ -203,7 +203,25 @@ def dynamic_variables(row: dict[str, Any], candidate_name: str = "not given",
         "resume_context": _s(resume_context) or "none",
     }
     assert set(out) == set(VARIABLES), "variable contract drifted"
+    # The participant only ever meets the persona. Instructions, questions and
+    # lines are written in the builder as "Tara does X"; in the call that would
+    # make the voice say "I'm Tara". So every "Tara" becomes the persona's first
+    # name. The participant's own name and the resume transcript are left alone.
+    first = persona_first(persona.get("name"))
+    for k in out:
+        if k not in ("candidate_name", "resume_context"):
+            out[k] = _TARA.sub(first, out[k])
     return out
+
+
+_TARA = re.compile(r"\bTara\b")
+_TITLES = {"dr", "mr", "mrs", "ms", "miss", "prof", "sir"}
+
+
+def persona_first(name: Any) -> str:
+    """The persona's first name ("Dr. Maya Rao" -> "Maya"); "the persona" if none."""
+    words = [w for w in _s(name).split() if w.rstrip(".").lower() not in _TITLES]
+    return words[0] if words else "the persona"
 
 
 #: Turn-taking tuned on real interview calls (the "it races / talks over me"

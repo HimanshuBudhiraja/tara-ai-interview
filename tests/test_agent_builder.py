@@ -657,3 +657,14 @@ def test_skills_added_from_the_master_get_anchors_and_questions(client, monkeypa
     assert neg["anchor"] == "Trades concessions for value."
     assert [q["tag"] for q in out["agent"]["questions"]].count("Negotiation") == 2
     assert out["added"] == 2 and out["reviewed"] is False
+
+
+def test_the_participant_never_hears_tara_only_the_persona():
+    row = _row()
+    row["agent"]["persona"]["name"] = "Dr. Maya Rao"
+    row["agent"]["opening_line"] = "Hi, I'm Tara. Thanks for joining."
+    row["agent"]["instructions"] = "Tara plays a skeptical buyer."
+    v = rx.dynamic_variables(row, candidate_name="Tara Singh")
+    assert "Tara" not in v["opening_line"] and "Maya" in v["opening_line"]
+    assert v["conversation_instructions"].startswith("Maya plays")
+    assert v["candidate_name"] == "Tara Singh"  # a participant may really be called Tara
