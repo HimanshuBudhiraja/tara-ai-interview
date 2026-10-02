@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Create a Role-Play</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Same tokens as /roleplay (packages/ui/tailwind-preset.js), copied because
+     this is a static page with no build step. Light only, as there.
+
+     Written for someone who is not technical: one idea per screen, big
+     targets, plain words, no configuration vocabulary. Everything the old
+     form exposed is still in the scenario; it is changed by asking in chat. */
+  :root {
+    --canvas: #FAFAFA; --surface: #FFFFFF;
+    --brand-25: #FFF8F5; --brand-50: #FEEEE7; --brand-100: #FDDCCF; --brand-500: #F1592A; --brand-600: #D9461A; --brand-700: #B23714;
+    --gray-50: #F9FAFB; --gray-100: #F2F4F7; --gray-200: #EAECF0; --gray-300: #D0D5DD;
+    --gray-400: #98A2B3; --gray-500: #667085; --gray-600: #475467; --gray-700: #344054; --gray-900: #101828;
+    --success-50: #ECFDF3; --success-700: #027A48; --warning-50: #FFFAEB; --warning-700: #B54708; --error-700: #B42318;
+    --shadow-xs: 0 1px 2px rgba(16,24,40,.04);
+    --shadow-sm: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
+    --shadow-lg: 0 12px 16px -4px rgba(16,24,40,.08), 0 4px 6px -2px rgba(16,24,40,.03);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--canvas); color: var(--gray-900);
+    font: 15px/23px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(241,89,42,.18); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px;
+    border-radius: 10px; border: 1px solid var(--gray-300); background: var(--surface);
+    font-weight: 600; font-size: 14px; box-shadow: var(--shadow-xs); white-space: nowrap; text-decoration: none; color: var(--gray-700);
+  }
+  .btn:hover { background: var(--gray-50); }
+  .btn.primary { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+  .btn.primary:hover { background: var(--brand-600); }
+  .btn.big { height: 52px; padding: 0 28px; font-size: 16px; border-radius: 12px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.ghost { border-color: transparent; box-shadow: none; background: transparent; color: var(--gray-600); font-weight: 500; }
+  .btn.ghost:hover { background: var(--gray-100); }
+
+  /* ---------- top bar with the 3-step path ---------- */
+  .top { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--gray-200); }
+  .logo { width: 32px; height: 32px; border-radius: 9px; background: var(--brand-500); color: #fff; display: grid; place-items: center; font-weight: 700; }
+  .top h1 { font-size: 16px; margin: 0; font-weight: 600; white-space: nowrap; }
+  .steps { flex: 1; display: flex; justify-content: center; gap: 8px; align-items: center; }
+  .step { display: flex; align-items: center; gap: 8px; color: var(--gray-400); font-size: 14px; font-weight: 500; }
+  .step .n { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--gray-300); display: grid; place-items: center; font-size: 13px; font-weight: 600; }
+  .step.on { color: var(--gray-900); } .step.on .n { border-color: var(--brand-500); background: var(--brand-500); color: #fff; }
+  .step.done { color: var(--gray-600); } .step.done .n { border-color: var(--brand-500); color: var(--brand-600); }
+  .steps .bar { width: 36px; height: 2px; background: var(--gray-200); }
+
+  /* ---------- step 1: describe ---------- */
+  .start { max-width: 820px; margin: 0 auto; padding: 56px 16px 64px; }
+  .start h2 { font-size: 32px; line-height: 40px; letter-spacing: -.02em; margin: 0 0 10px; text-align: center; font-weight: 700; }
+  .start .lead { color: var(--gray-500); text-align: center; margin: 0 0 28px; font-size: 16px; }
+  .composer { border: 1.5px solid var(--gray-300); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-sm); }
+  .composer:focus-within { border-color: var(--brand-500); box-shadow: 0 0 0 4px rgba(241,89,42,.10); }
+  .composer textarea { width: 100%; border: 0; resize: none; padding: 16px 18px 6px; font: inherit; font-size: 16px; line-height: 24px; background: transparent; outline: none; min-height: 84px; max-height: 220px; }
+  .composer .row { display: flex; align-items: center; justify-content: flex-end; padding: 8px 10px 10px; }
+  .or { text-align: center; color: var(--gray-400); font-size: 13px; margin: 28px 0 14px; text-transform: uppercase; letter-spacing: .06em; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .pick { text-align: left; background: var(--surface); border: 1.5px solid var(--gray-200); border-radius: 14px; padding: 16px; box-shadow: var(--shadow-xs); transition: all .15s; }
+  .pick:hover { border-color: var(--brand-500); background: var(--brand-25); transform: translateY(-1px); }
+  .pick .ic { font-size: 26px; line-height: 1; }
+  .pick .t { font-weight: 600; margin-top: 10px; }
+  .pick .s { color: var(--gray-500); font-size: 13.5px; line-height: 20px; margin-top: 2px; }
+  .mine { margin-top: 32px; }
+  .mine h4 { font-size: 13px; color: var(--gray-500); margin: 0 0 10px; font-weight: 600; }
+  .mine .list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mine button { border: 1px solid var(--gray-200); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-size: 13.5px; }
+  .mine button:hover { border-color: var(--gray-300); }
+  .inline-err { color: var(--error-700); margin-top: 12px; text-align: center; font-size: 14px; }
+
+  /* ---------- working: friendly progress ---------- */
+  .working { max-width: 520px; margin: 0 auto; padding: 96px 16px; text-align: center; }
+  .orb { width: 72px; height: 72px; margin: 0 auto 24px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #FDB59C, var(--brand-500)); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: .85; } }
+  .working h3 { margin: 0 0 18px; font-size: 20px; }
+  .ticks { list-style: none; padding: 0; margin: 0 auto; display: inline-block; text-align: left; }
+  .ticks li { color: var(--gray-400); margin: 8px 0; display: flex; gap: 10px; align-items: center; transition: color .3s; }
+  .ticks li::before { content: ""; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--gray-300); flex: none; }
+  .ticks li.on { color: var(--gray-900); } .ticks li.on::before { border-color: var(--brand-500); border-top-color: transparent; animation: spin .8s linear infinite; }
+  .ticks li.ok { color: var(--gray-600); } .ticks li.ok::before { background: var(--brand-500); border-color: var(--brand-500); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- step 2: review ---------- */
+  .review { display: grid; grid-template-columns: 1fr 360px; height: calc(100% - 64px); }
+  .main { overflow-y: auto; padding: 32px 32px 48px; }
+  .inner { max-width: 720px; margin: 0 auto; }
+  .hello { color: var(--gray-500); margin: 0 0 14px; font-size: 14px; }
+  .scard { background: var(--surface); border: 1px solid var(--gray-200); border-radius: 18px; box-shadow: var(--shadow-sm); overflow: hidden; }
+  .scard .head { padding: 22px 24px 18px; background: linear-gradient(180deg, var(--brand-25), var(--surface)); border-bottom: 1px solid var(--gray-100); }
+  .scard .kicker { color: var(--brand-600); font-size: 13px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
+  .scard input.title { width: 100%; border: 1px solid transparent; background: transparent; font: inherit; font-size: 24px; line-height: 32px; font-weight: 700; letter-spacing: -.015em; padding: 2px 6px; margin: 4px 0 4px -7px; border-radius: 8px; }
+  .scard input.title:hover { border-color: var(--gray-200); background: var(--surface); }
+  .scard input.title:focus { border-color: var(--brand-500); background: var(--surface); outline: none; }
+  .scard .sum { color: var(--gray-600); margin: 0; }
+  .persona { display: flex; gap: 16px; padding: 20px 24px; align-items: flex-start; }
+  .av { width: 56px; height: 56px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 20px; }
+  .persona .who { font-weight: 600; font-size: 16px; }
+  .persona .role { color: var(--gray-500); font-size: 14px; }
+  .mood { display: inline-block; margin-top: 6px; font-size: 12.5px; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
+  .mood.hot { background: #FEF3F2; color: var(--error-700); } .mood.mid { background: var(--warning-50); color: var(--warning-700); } .mood.calm { background: var(--success-50); color: var(--success-700); }
+  .bubble { margin-top: 12px; background: var(--gray-100); border-radius: 4px 16px 16px 16px; padding: 10px 14px; font-size: 15px; color: var(--gray-700); max-width: 520px; }
+  .bubble::before { content: "“"; } .bubble::after { content: "”"; }
+  .block { padding: 18px 24px; border-top: 1px solid var(--gray-100); }
+  .block h5 { margin: 0 0 12px; font-size: 13px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; counter-reset: s; }
+  .flow .s { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--gray-200); border-radius: 999px; padding: 6px 14px 6px 6px; font-size: 14px; font-weight: 500; }
+  .flow .s b { width: 22px; height: 22px; border-radius: 50%; background: var(--brand-50); color: var(--brand-700); font-size: 12px; display: grid; place-items: center; }
+  .flow .arrow { color: var(--gray-300); }
+  .goals { display: flex; flex-wrap: wrap; gap: 8px; }
+  .goal { background: var(--brand-50); color: var(--brand-700); border-radius: 999px; padding: 6px 14px; font-size: 14px; font-weight: 500; }
+  .flash { animation: flash 1.8s ease-out; }
+  @keyframes flash { 0% { box-shadow: inset 0 0 0 2px var(--brand-500); background: var(--brand-25); } 100% { box-shadow: none; } }
+
+  .choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  .choice h6 { margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--gray-700); }
+  .opts { display: flex; flex-direction: column; gap: 6px; }
+  .opt { text-align: left; border: 1.5px solid var(--gray-200); background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+  .opt:hover { border-color: var(--gray-300); }
+  .opt.on { border-color: var(--brand-500); background: var(--brand-25); }
+  .opt .l { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .opt .l::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--gray-300); flex: none; }
+  .opt.on .l::before { border: 4px solid var(--brand-500); }
+  .opt .d { color: var(--gray-500); font-size: 12.5px; line-height: 18px; margin: 2px 0 0 22px; }
+
+  .go { display: flex; gap: 12px; align-items: center; margin-top: 28px; flex-wrap: wrap; }
+  .go .fine { color: var(--gray-500); font-size: 13px; }
+  .dev { margin-top: 36px; text-align: center; }
+  .dev button { background: none; border: 0; color: var(--gray-400); font-size: 12.5px; text-decoration: underline; }
+  .warn { background: var(--warning-50); color: var(--warning-700); border-radius: 12px; padding: 10px 14px; font-size: 14px; margin-top: 16px; }
+
+  /* ---------- chat side ---------- */
+  .side { border-left: 1px solid var(--gray-200); background: var(--surface); display: flex; flex-direction: column; min-height: 0; }
+  .side .sh { padding: 18px 20px 6px; }
+  .side .sh b { font-size: 15px; } .side .sh p { margin: 2px 0 0; color: var(--gray-500); font-size: 13.5px; }
+  .msgs { flex: 1; overflow-y: auto; padding: 12px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .m { max-width: 90%; font-size: 14px; line-height: 21px; padding: 9px 13px; }
+  .m.user { align-self: flex-end; background: var(--gray-100); border-radius: 14px 14px 4px 14px; white-space: pre-wrap; }
+  .m.bot { align-self: flex-start; background: var(--brand-25); border: 1px solid var(--brand-50); border-radius: 14px 14px 14px 4px; }
+  .typing span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); margin-right: 3px; animation: blink 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s } .typing span:nth-child(3) { animation-delay: .4s }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25 } 40% { opacity: 1 } }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 10px; }
+  .quick button { border: 1px solid var(--gray-200); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; color: var(--gray-700); }
+  .quick button:hover { border-color: var(--brand-500); background: var(--brand-25); }
+  .side form { margin: 0 16px 16px; border: 1.5px solid var(--gray-300); border-radius: 12px; display: flex; align-items: flex-end; gap: 6px; padding: 6px; }
+  .side form:focus-within { border-color: var(--brand-500); }
+  .side textarea { flex: 1; border: 0; resize: none; font: inherit; font-size: 14px; padding: 6px 8px; outline: none; min-height: 36px; max-height: 120px; }
+
+  /* ---------- sign-in, developer drawer, toast ---------- */
+  .gate { position: fixed; inset: 64px 0 0; background: var(--canvas); display: grid; place-items: center; z-index: 10; padding: 16px; }
+  .gate form { width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--gray-200); border-radius: 16px; padding: 28px; box-shadow: var(--shadow-sm); }
+  .gate h3 { margin: 0 0 18px; font-size: 18px; }
+  .gate label { display: block; font-size: 14px; font-weight: 500; margin: 0 0 6px; }
+  .gate input { width: 100%; border: 1px solid var(--gray-300); border-radius: 10px; padding: 10px 12px; font: inherit; margin-bottom: 14px; }
+  .gate .err { color: var(--error-700); font-size: 13px; min-height: 18px; margin-bottom: 8px; }
+  .scrim { position: fixed; inset: 0; background: rgba(16,24,40,.35); z-index: 20; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(680px, 100%); background: var(--surface); z-index: 21; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
+  .drawer .dh { padding: 16px 20px; border-bottom: 1px solid var(--gray-200); display: flex; gap: 12px; align-items: flex-start; }
+  .drawer .dh h3 { margin: 0; font-size: 16px; } .drawer .dh p { margin: 2px 0 0; color: var(--gray-500); font-size: 13px; }
+  .drawer .db { flex: 1; overflow-y: auto; padding: 16px 20px 32px; font-size: 13px; }
+  .drawer pre { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 18px; white-space: pre-wrap; margin: 0; }
+  .ok-line { background: var(--success-50); color: var(--success-700); border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
+  .x { border: 0; background: transparent; width: 32px; height: 32px; border-radius: 8px; color: var(--gray-500); }
+  .x:hover { background: var(--gray-100); }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--gray-900); color: #fff; padding: 10px 18px; border-radius: 12px; font-size: 14px; z-index: 30; }
+
+  @media (max-width: 960px) {
+    .review { grid-template-columns: 1fr; height: auto; }
+    .side { border-left: 0; border-top: 1px solid var(--gray-200); min-height: 420px; }
+    .choices, .cards { grid-template-columns: 1fr; }
+    .steps .step span.lbl { display: none; }
+    .main { padding: 20px 16px 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo">T</div>
+  <h1>Role-Play</h1>
+  <div class="steps" id="steps"></div>
+  <button class="btn ghost" id="newBtn" hidden>Start over</button>
+</div>
+
+<!-- Step 1 -->
+<section class="start" id="stepDescribe">
+  <h2>What should people practise?</h2>
+  <p class="lead">Describe the conversation in your own words, or pick one below.</p>
+  <form class="composer" id="startForm">
+    <textarea id="startInput" rows="3" placeholder="For example: a customer was charged twice and is angry about it"></textarea>
+    <div class="row"><button class="btn primary" type="submit">Create role-play →</button></div>
+  </form>
+  <div class="inline-err" id="startErr" hidden></div>
+  <div class="or">or pick one</div>
+  <div class="cards" id="cards"></div>
+  <div class="mine" id="mine" hidden><h4>Your role-plays</h4><div class="list"></div></div>
+</section>
+
+<!-- Working -->
+<section class="working" id="stepWorking" hidden>
+  <div class="orb"></div>
+  <h3>Creating your role-play…</h3>
+  <ul class="ticks" id="ticks">
+    <li>Creating the character</li>
+    <li>Planning how the conversation goes</li>
+    <li>Choosing what to look for</li>
+  </ul>
+</section>
+
+<!-- Step 2 -->
+<section class="review" id="stepReview" hidden>
+  <div class="main"><div class="inner">
+    <p class="hello">Here's your role-play. Change anything by asking on the right.</p>
+    <div class="scard">
+      <div class="head" data-area="head">
+        <div class="kicker">✦ Role-play</div>
+        <input class="title" id="title" aria-label="Role-play name" />
+        <p class="sum" id="summary"></p>
+      </div>
+      <div class="persona" data-area="persona" id="persona"></div>
+      <div class="block" data-area="flow"><h5>How it goes</h5><div class="flow" id="flow"></div></div>
+      <div class="block" data-area="goals"><h5>What we'll look for</h5><div class="goals" id="goals"></div></div>
+    </div>
+
+    <div class="choices" id="choices"></div>
+    <div class="warn" id="warn" hidden></div>
+
+    <div class="go">
+      <button class="btn primary big" id="tryBtn">▶ Start role-play</button>
+      <button class="btn big" id="saveBtn">Save for later</button>
+      <span class="fine" id="savedNote"></span>
+    </div>
+    <div class="dev"><button id="devBtn">For developers: what the voice agent receives</button></div>
+  </div></div>
+
+  <aside class="side">
+    <div class="sh"><b>Want to change something?</b><p>Just say it, like you'd tell a colleague.</p></div>
+    <div class="msgs" id="msgs" aria-live="polite"></div>
+    <div class="quick" id="quick"></div>
+    <form id="chatForm">
+      <textarea id="chatInput" rows="1" placeholder="e.g. make the customer calmer"></textarea>
+      <button class="btn primary" type="submit" id="sendBtn">Send</button>
+    </form>
+  </aside>
+</section>
+
+<div class="gate" id="gate" hidden>
+  <form id="gateForm">
+    <h3>Sign in to continue</h3>
+    <label for="gEmail">Email</label><input type="text" id="gEmail" autocomplete="username">
+    <label for="gPass">Password</label><input type="password" id="gPass" autocomplete="current-password">
+    <div class="err" id="gErr"></div>
+    <button class="btn primary" style="width:100%" type="submit">Sign in</button>
+  </form>
+</div>
+
+<div id="drawerRoot" hidden>
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" role="dialog" aria-label="What the voice agent receives">
+    <div class="dh">
+      <div style="flex:1"><h3>What the voice agent receives</h3>
+        <p>One generic Retell agent runs every role-play. This is the create-web-call body for this one. The scoring key isn't in it.</p></div>
+      <button class="btn" id="copyBtn">Copy</button>
+      <button class="x" id="closeDrawer" aria-label="Close">✕</button>
+    </div>
+    <div class="db" id="dbody"></div>
+  </aside>
+</div>
+
+<script>
+const API = "/api/recruiter/roleplay-builder";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const state = { messages: [], scenario: null, problems: [], retell: null, busy: false, step: 1 };
+
+async function api(path, opts = {}) {
+  const r = await fetch(API + path, { headers: { "Content-Type": "application/json" }, credentials: "same-origin", ...opts });
+  const body = await r.json().catch(() => ({}));
+  if (r.status === 401) { $("#gate").hidden = false; $("#gEmail").focus(); throw new Error("Please sign in first."); }
+  if (!r.ok) {
+    const d = body.detail;
+    throw Object.assign(new Error(typeof d === "string" ? d : d?.problems ? d.problems[0] : "Something went wrong. Please try again."), { detail: d });
+  }
+  return body;
+}
+function toast(t) { const el = document.createElement("div"); el.className = "toast"; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 2600); }
+
+$("#gateForm").addEventListener("submit", async e => {
+  e.preventDefault(); $("#gErr").textContent = "";
+  const r = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin",
+    body: JSON.stringify({ email: $("#gEmail").value.trim(), password: $("#gPass").value }) });
+  if (!r.ok) { $("#gErr").textContent = "That email and password don't match."; return; }
+  $("#gPass").value = ""; $("#gate").hidden = true; boot();
+});
+
+/* ------------------------------------------------------------------ */
+/*  The path: Describe → Review → Practise                             */
+/* ------------------------------------------------------------------ */
+function go(step) {
+  state.step = step;
+  $("#stepDescribe").hidden = step !== 1;
+  $("#stepWorking").hidden = step !== 1.5;
+  $("#stepReview").hidden = step !== 2;
+  $("#newBtn").hidden = step !== 2;
+  const at = Math.floor(step);
+  $("#steps").innerHTML = [["1", "Describe"], ["2", "Review"], ["3", "Practise"]].map(([n, l], i) =>
+    (i ? '<span class="bar"></span>' : "") +
+    `<div class="step ${+n === at ? "on" : +n < at ? "done" : ""}"><span class="n">${+n < at ? "✓" : n}</span><span class="lbl">${l}</span></div>`).join("");
+}
+
+const STARTERS = [
+  ["🎧", "Angry customer", "Charged twice and wants to cancel", "A long-time customer was charged twice this month, got an overdraft fee from their bank, and is threatening to cancel. The support rep can refund the duplicate but not the bank fee without a supervisor."],
+  ["💼", "Price pushback", "A buyer says it's too expensive", "A CFO likes our product but says it's 30% over budget, is comparing us with a cheaper competitor, and needs a decision this quarter."],
+  ["👥", "Hard news to a team member", "They didn't get the promotion", "A new team lead has to tell a high performer they didn't get the promotion. The employee feels it's unfair and hints they might leave."],
+  ["🧩", "Job situation (hiring)", "A colleague dropped the ball", "A hiring role-play for a project coordinator: a colleague missed a hand-off and a client deadline is now at risk. The candidate has to deal with the colleague and the deadline."],
+  ["🤝", "Negotiation", "Supplier asked for a 15% cut", "The candidate is a vendor account manager. A procurement manager wants a 15% price cut on renewal. There is limited room and margin must be protected."],
+  ["🩺", "Worried family", "Explaining a delay kindly", "A nurse has to explain to a worried family member that a patient's discharge is delayed, without having all the answers yet."],
+];
+$("#cards").innerHTML = STARTERS.map(([ic, t, s], i) =>
+  `<button class="pick" data-i="${i}"><div class="ic">${ic}</div><div class="t">${esc(t)}</div><div class="s">${esc(s)}</div></button>`).join("");
+$("#cards").querySelectorAll(".pick").forEach(b => b.onclick = () => create(STARTERS[+b.dataset.i][3]));
+$("#startForm").addEventListener("submit", e => { e.preventDefault(); create($("#startInput").value.trim()); });
+$("#startInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); create($("#startInput").value.trim()); } });
+
+async function create(text) {
+  if (!text || state.busy) return;
+  state.busy = true; $("#startErr").hidden = true;
+  go(1.5); const stop = animateTicks();
+  state.messages = [{ role: "user", text }];
+  try {
+    const out = await api("/draft", { method: "POST", body: JSON.stringify({ messages: state.messages }) });
+    state.messages.push({ role: "bot", text: out.reply });
+    take(out); stop(); go(2); render(); renderChat();
+  } catch (e) {
+    stop(); go(1); $("#startInput").value = text; $("#startErr").textContent = e.message; $("#startErr").hidden = false;
+  } finally { state.busy = false; }
+}
+function animateTicks() {
+  const li = [...$("#ticks").children]; let i = 0;
+  li.forEach(x => x.className = ""); li[0].className = "on";
+  const t = setInterval(() => { if (i < li.length - 1) { li[i].className = "ok"; li[++i].className = "on"; } }, 6000);
+  return () => clearInterval(t);
+}
+function take(out) { state.scenario = out.scenario; state.problems = out.problems || []; state.retell = out.retell; }
+
+/* ------------------------------------------------------------------ */
+/*  Review: one card + three big choices                                */
+/* ------------------------------------------------------------------ */
+// Three plain choices, each setting several fields underneath — a person
+// picks "Tough", not an aggressiveness of 5 and a cooperation of 2.
+const TOUGH = {
+  easy:   { label: "Friendly",   d: "Patient and open. Good for a first try.", dials: [2, 4, 2] },
+  medium: { label: "Realistic",  d: "Pushes back like most people would.",      dials: [3, 3, 3] },
+  hard:   { label: "Tough",      d: "Impatient, hard to win over.",             dials: [5, 2, 4] },
+};
+const LENGTH = { 5: ["5 minutes", "A quick practice"], 8: ["8 minutes", "The usual length"], 12: ["12 minutes", "Room to go deeper"] };
+const PURPOSE = {
+  practice: ["Practice", "People see their feedback and can try again anytime."],
+  certification: ["Certification", "Pass or not yet, up to 3 tries."],
+  selection: ["Hiring", "One try. Candidates don't see a score."],
+};
+const PALETTE = ["#F1592A", "#7A5AF8", "#2E90FA", "#12B76A", "#EE46BC", "#F79009"];
+
+function render() {
+  const sc = state.scenario; const p = sc.persona;
+  $("#title").value = sc.title;
+  $("#summary").textContent = sc.summary || sc.situation?.current_situation || "";
+  const initials = (p.name || "?").split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+  const color = PALETTE[[...p.name].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETTE.length];
+  const mood = p.aggressiveness >= 4 ? ["hot", "Upset"] : p.aggressiveness <= 2 ? ["calm", "Calm"] : ["mid", "Guarded"];
+  $("#persona").innerHTML = `<div class="av" style="background:${color}">${esc(initials)}</div>
+    <div><div class="who">You'll talk to ${esc(p.name)}</div><div class="role">${esc(p.role)}</div>
+    <span class="mood ${mood[0]}">${mood[1]}</span>
+    <div class="bubble">${esc(p.opening_line)}</div></div>`;
+  $("#flow").innerHTML = sc.beats.map((b, i) =>
+    (i ? '<span class="arrow">→</span>' : "") + `<span class="s" title="${esc(b.intent)}"><b>${i + 1}</b>${esc(b.label || b.intent)}</span>`).join("");
+  $("#goals").innerHTML = sc.evaluation.competencies.map(c => `<span class="goal">${esc(c.label)}</span>`).join("");
+
+  const len = [5, 8, 12].reduce((a, b) => Math.abs(b - sc.max_duration_min) < Math.abs(a - sc.max_duration_min) ? b : a);
+  const group = (key, title, opts, cur) => `<div class="choice"><h6>${title}</h6><div class="opts">${Object.entries(opts).map(([k, v]) =>
+    `<button class="opt ${String(k) === String(cur) ? "on" : ""}" data-k="${key}" data-v="${k}"><div class="l">${esc(v.label || v[0])}</div><div class="d">${esc(v.d || v[1])}</div></button>`).join("")}</div></div>`;
+  $("#choices").innerHTML = group("tough", "How tough?", TOUGH, sc.difficulty) + group("length", "How long?", LENGTH, len) + group("purpose", "What's it for?", PURPOSE, sc.purpose);
+  $("#choices").querySelectorAll(".opt").forEach(b => b.onclick = () => choose(b.dataset.k, b.dataset.v));
+
+  const n = state.problems.length;
+  $("#warn").hidden = !n;
+  $("#warn").textContent = n ? "One thing needs fixing before you can start: " + state.problems[0] + " You can ask for it in the chat." : "";
+  $("#tryBtn").disabled = !!n;
+}
+
+async function choose(key, v) {
+  const sc = state.scenario;
+  if (key === "tough") { const [a, c, e] = TOUGH[v].dials; sc.difficulty = v; Object.assign(sc.persona, { aggressiveness: a, cooperation: c, escalation_tendency: e }); flash("persona"); }
+  if (key === "length") sc.max_duration_min = +v;
+  if (key === "purpose") sc.purpose = v;
+  render();
+  try { take(await api("/check", { method: "POST", body: JSON.stringify({ scenario: sc }) })); render(); } catch (e) { toast(e.message); }
+}
+function flash(area) { const el = document.querySelector(`[data-area="${area}"]`); if (!el) return; el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+$("#title").addEventListener("change", async e => {
+  state.scenario.title = e.target.value.trim() || state.scenario.title;
+  try { take(await api("/check", { method: "POST", body: JSON.stringify({ scenario: state.scenario }) })); } catch {}
+});
+
+/* ------------------------------------------------------------------ */
+/*  Chat: the only way to change the details                            */
+/* ------------------------------------------------------------------ */
+const QUICK = ["Make it harder", "Make it easier", "Change the character", "Add a surprise", "Make it shorter"];
+$("#quick").innerHTML = QUICK.map(q => `<button type="button">${q}</button>`).join("");
+$("#quick").querySelectorAll("button").forEach(b => b.onclick = () => revise(b.textContent));
+$("#chatForm").addEventListener("submit", e => { e.preventDefault(); revise($("#chatInput").value.trim()); });
+$("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); revise($("#chatInput").value.trim()); } });
+
+function renderChat(pending) {
+  // The first message is the description they started from; the reply to it
+  // stands in for "here's what I made", so both stay visible as context.
+  $("#msgs").innerHTML = state.messages.map(m => `<div class="m ${m.role === "user" ? "user" : "bot"}">${esc(m.text)}</div>`).join("")
+    + (pending ? `<div class="m bot typing"><span></span><span></span><span></span></div>` : "");
+  $("#msgs").scrollTop = 1e9;
+}
+async function revise(text) {
+  if (!text || state.busy) return;
+  state.busy = true; $("#sendBtn").disabled = true; $("#chatInput").value = "";
+  state.messages.push({ role: "user", text }); renderChat(true);
+  try {
+    const out = await api("/draft", { method: "POST", body: JSON.stringify({ messages: state.messages, scenario: state.scenario }) });
+    state.messages.push({ role: "bot", text: out.reply });
+    take(out); render();
+    const areas = new Set((out.changed || []).map(c => {
+      c = c.replace(/^scenario\./, "");
+      return c.startsWith("persona") ? "persona" : c.startsWith("beats") ? "flow" : c.startsWith("evaluation") ? "goals" : "head";
+    }));
+    areas.forEach(flash);
+  } catch (e) { state.messages.push({ role: "bot", text: "Sorry, that didn't work. " + e.message }); }
+  finally { state.busy = false; $("#sendBtn").disabled = false; renderChat(); $("#chatInput").focus(); }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Start / save                                                        */
+/* ------------------------------------------------------------------ */
+const body = () => JSON.stringify({ scenario: state.scenario, messages: state.messages });
+$("#saveBtn").onclick = async () => {
+  try { const out = await api("/save", { method: "POST", body: body() }); state.scenario.scenario_id = out.scenario.scenario_id;
+    history.replaceState(null, "", "?id=" + out.scenario.scenario_id); $("#savedNote").textContent = "Saved ✓"; }
+  catch (e) { toast(e.message); }
+};
+$("#tryBtn").onclick = async () => {
+  try {
+    const out = await api("/publish", { method: "POST", body: body() });
+    take(out); history.replaceState(null, "", "?id=" + out.scenario.scenario_id);
+    go(3); location.href = out.play_url;
+  } catch (e) { toast(e.message); }
+};
+$("#newBtn").onclick = () => { location.href = location.pathname; };
+
+/* ------------------------------------------------------------------ */
+/*  For developers                                                     */
+/* ------------------------------------------------------------------ */
+function cleanRetell() { const { leaked_cues, ...rest } = state.retell || {}; return rest; }
+$("#devBtn").onclick = () => {
+  const r = state.retell; const leaks = r?.leaked_cues || [];
+  $("#dbody").innerHTML = !r ? "<p>Not ready yet.</p>"
+    : (leaks.length ? `<div class="warn">These scoring lines appear in the payload: ${leaks.map(esc).join("; ")}</div>` : `<div class="ok-line">✓ No scoring-key text in this payload.</div>`)
+      + `<pre>${esc(JSON.stringify(cleanRetell(), null, 2))}</pre>`
+      + `<p style="color:var(--gray-500)">Generic agent prompt: <code>content/retell/generic_roleplay_prompt.md</code>. Begin message: <code>{{opening_line}}</code>.</p>`;
+  $("#drawerRoot").hidden = false;
+};
+$("#closeDrawer").onclick = $("#scrim").onclick = () => { $("#drawerRoot").hidden = true; };
+$("#copyBtn").onclick = () => navigator.clipboard.writeText(JSON.stringify(cleanRetell(), null, 2)).then(() => toast("Copied"), () => toast("Couldn't copy"));
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#drawerRoot").hidden = true; });
+
+/* ------------------------------------------------------------------ */
+async function boot() {
+  go(1);
+  const id = new URLSearchParams(location.search).get("id");
+  if (id) {
+    try { const out = await api("/scenarios/" + encodeURIComponent(id)); state.messages = out.messages || []; take(out); go(2); render(); renderChat(); return; }
+    catch (e) { toast(e.message); }
+  }
+  api("/scenarios").then(r => {
+    if (!r.scenarios.length) return;
+    $("#mine").hidden = false;
+    $("#mine .list").innerHTML = r.scenarios.slice(0, 8).map(s => `<button data-id="${esc(s.scenario_id)}">${esc(s.title)}</button>`).join("");
+    $("#mine").querySelectorAll("button").forEach(b => b.onclick = () => { location.search = "?id=" + b.dataset.id; });
+  }).catch(() => {});
+  $("#startInput").focus();
+}
+boot();
+</script>
+</body>
+</html>

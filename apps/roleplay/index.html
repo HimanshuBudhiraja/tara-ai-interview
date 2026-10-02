@@ -274,7 +274,11 @@ function showError(e) {
   view.prepend(p);
 }
 
-library().catch(showError);
+// `?scenario=` is how the Scenario Builder's "Test it" lands straight in the
+// scene it just published, rather than on a library the configurer then has to
+// search.
+const deepLink = new URLSearchParams(location.search).get("scenario");
+(deepLink ? start(deepLink) : library()).catch(showError);
 </script>
 </body>
 </html>

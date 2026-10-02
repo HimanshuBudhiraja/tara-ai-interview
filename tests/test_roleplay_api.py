@@ -47,7 +47,7 @@ def test_agents_lists_the_library_and_its_configurations(client):
     body = client.get("/api/roleplay/agents").json()
     assert body["poc"] is True
     by_type = {a["agent_type"]: a for a in body["agents"]}
-    assert set(by_type) == {"role_readiness", "sales", "customer_service"}
+    assert set(by_type) == {"role_readiness", "sales", "customer_service", "roleplay"}
     assert len(by_type["sales"]["scenarios"]) >= 3
 
 

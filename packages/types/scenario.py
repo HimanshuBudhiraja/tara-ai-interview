@@ -56,17 +56,19 @@ from packages.types.simulation import (
     SituationSpec,
 )
 
-#: The three products this engine serves.
+#: The products this engine serves.
 #:
 #: Named for what is being established, not for the department that buys it —
 #: the same CS scenario is used to hire an agent and to certify one, and only
-#: the policy around it differs.
-SURFACES = ("hiring", "sales", "cs")
+#: the policy around it differs. `learning` is everything the Scenario Builder
+#: makes that is not one of the three named surfaces: leadership, negotiation,
+#: any role-play an L&D team configures for its own people.
+SURFACES = ("hiring", "sales", "cs", "learning")
 
 #: Who the subject is. This is not cosmetic: a candidate has no employment
 #: relationship, which changes what may be stored, for how long, and what has
 #: to be disclosed before recording.
-SUBJECTS = {"hiring": "candidate", "sales": "employee", "cs": "employee"}
+SUBJECTS = {"hiring": "candidate", "sales": "employee", "cs": "employee", "learning": "employee"}
 
 #: What the subject may see about their own performance.
 #:
@@ -274,9 +276,12 @@ class BeatSpec:
     """
 
     id: str
+    #: Two to four words naming the moment ("Threatens to cancel"). Display
+    #: only — the configurer sees the scene as a row of these, not as prose.
+    label: str = ""
     #: What the counterparty does here, in the author's words. Given to the
     #: persona as an instruction for this turn. Never spoken verbatim.
-    intent: str
+    intent: str = ""
     #: Which skill this beat evidences. One, for the same reason a question has
     #: one primary skill: a beat counted against two skills satisfies two
     #: floors with one piece of evidence.

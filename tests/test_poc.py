@@ -290,7 +290,7 @@ def test_a_new_agent_type_needs_no_engine_change(bases):
 
 
 def test_the_library_covers_the_three_named_use_cases():
-    assert set(LIBRARY) == {"role_readiness", "sales", "customer_service"}
+    assert set(LIBRARY) == {"role_readiness", "sales", "customer_service", "roleplay"}
     for agent in LIBRARY.values():
         assert agent.validate() == []
 

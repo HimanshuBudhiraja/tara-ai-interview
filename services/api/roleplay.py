@@ -62,7 +62,36 @@ def _content() -> tuple[dict[str, ScenarioDefinition], dict[str, Any]]:
     if not _SCENARIOS:
         _SCENARIOS = scenarios.load_all()
         _KNOWLEDGE = knowledge.load_all()
+        _load_built()
     return _SCENARIOS, _KNOWLEDGE
+
+
+def _load_built() -> None:
+    """Published Scenario Builder versions, beside the authored ones.
+
+    A row that no longer validates is skipped rather than failing the whole
+    library: authored content is checked in CI, built content is not, and one
+    bad configuration must not take the other scenarios down with it.
+    """
+    from services.data import built_scenarios
+
+    for raw in built_scenarios.published():
+        try:
+            defn = ScenarioDefinition.from_dict({k: v for k, v in raw.items() if k != "purpose"})
+        except (TypeError, ValueError):
+            continue
+        if not defn.validate():
+            _SCENARIOS[defn.scenario_id] = defn
+
+
+def register(defn: ScenarioDefinition) -> None:
+    """Make a just-published version playable without a restart.
+
+    Replacing the entry changes what the NEXT session starts on. A session
+    already running holds its own definition, pinned by version.
+    """
+    _content()
+    _SCENARIOS[defn.scenario_id] = defn
 
 
 def _engine() -> RoleplayEngine:

@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Role-Play Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* The practice side of the role-play, after Yoodli's three steps: get
+     ready, have the conversation, see how it went. Same tokens as the
+     builder (packages/ui/tailwind-preset.js), copied — static page, no build.
+
+     Voice runs on the browser's own speech engine so the prototype needs no
+     vendor keys. It is the same seam the Retell web call drops into: this
+     page only ever sends text to /turn and speaks the text it gets back. */
+  :root {
+    --canvas: #FAFAFA; --surface: #FFFFFF;
+    --brand-25: #FFF8F5; --brand-50: #FEEEE7; --brand-100: #FDDCCF; --brand-300: #F9A88A; --brand-500: #F1592A; --brand-600: #D9461A; --brand-700: #B23714;
+    --gray-50: #F9FAFB; --gray-100: #F2F4F7; --gray-200: #EAECF0; --gray-300: #D0D5DD;
+    --gray-400: #98A2B3; --gray-500: #667085; --gray-600: #475467; --gray-700: #344054; --gray-800: #1D2939; --gray-900: #101828;
+    --success-50: #ECFDF3; --success-500: #12B76A; --success-700: #027A48;
+    --warning-50: #FFFAEB; --warning-500: #F79009; --warning-700: #B54708;
+    --error-50: #FEF3F2; --error-500: #F04438; --error-700: #B42318;
+    --shadow-xs: 0 1px 2px rgba(16,24,40,.04);
+    --shadow-sm: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
+    --shadow-lg: 0 12px 16px -4px rgba(16,24,40,.08), 0 4px 6px -2px rgba(16,24,40,.03);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--canvas); color: var(--gray-900); font: 15px/23px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(241,89,42,.18); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 12px;
+         border: 1px solid var(--gray-300); background: var(--surface); font-weight: 600; font-size: 15px; box-shadow: var(--shadow-xs); color: var(--gray-700); text-decoration: none; white-space: nowrap; }
+  .btn:hover { background: var(--gray-50); }
+  .btn.primary { background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+  .btn.primary:hover { background: var(--brand-600); }
+  .btn.big { height: 54px; padding: 0 32px; font-size: 16px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .top { height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--gray-200); }
+  .logo { width: 32px; height: 32px; border-radius: 9px; background: var(--brand-500); color: #fff; display: grid; place-items: center; font-weight: 700; }
+  .top h1 { font-size: 16px; margin: 0; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .top a { color: var(--gray-600); font-size: 14px; text-decoration: none; }
+  .top a:hover { color: var(--gray-900); }
+
+  .av { border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; flex: none; }
+
+  /* ---------- 1. get ready ---------- */
+  .ready { max-width: 980px; margin: 0 auto; padding: 40px 16px 56px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; }
+  .panel { background: var(--surface); border: 1px solid var(--gray-200); border-radius: 18px; box-shadow: var(--shadow-sm); }
+  .brief { padding: 28px; }
+  .kicker { color: var(--brand-600); font-size: 13px; font-weight: 600; }
+  .brief h2 { font-size: 26px; line-height: 34px; letter-spacing: -.015em; margin: 4px 0 18px; }
+  .who { display: flex; gap: 14px; align-items: center; padding: 14px; background: var(--gray-50); border-radius: 14px; }
+  .who .av { width: 52px; height: 52px; font-size: 19px; }
+  .who b { display: block; font-size: 16px; } .who span { color: var(--gray-500); font-size: 14px; }
+  .sec { margin-top: 22px; }
+  .sec h4 { margin: 0 0 6px; font-size: 13px; color: var(--gray-500); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .sec p { margin: 0; color: var(--gray-700); }
+  .sec ul { margin: 0; padding-left: 18px; color: var(--gray-700); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: var(--brand-50); color: var(--brand-700); border-radius: 999px; padding: 5px 12px; font-size: 13.5px; font-weight: 500; }
+  .setup { padding: 24px; display: flex; flex-direction: column; gap: 18px; align-self: start; }
+  .setup h3 { margin: 0; font-size: 17px; }
+  .mode { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mode button { border: 1.5px solid var(--gray-200); background: var(--surface); border-radius: 12px; padding: 12px; text-align: left; }
+  .mode button.on { border-color: var(--brand-500); background: var(--brand-25); }
+  .mode b { display: block; font-size: 14px; } .mode span { color: var(--gray-500); font-size: 12.5px; line-height: 17px; display: block; margin-top: 2px; }
+  .mic { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--gray-50); font-size: 14px; }
+  .meter { flex: 1; height: 8px; border-radius: 4px; background: var(--gray-200); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--success-500); transition: width .08s; }
+  .facts { display: flex; gap: 16px; color: var(--gray-500); font-size: 13.5px; }
+  .tips { margin: 0; padding-left: 18px; color: var(--gray-600); font-size: 13.5px; }
+  .err { color: var(--error-700); font-size: 14px; }
+
+  /* ---------- 2. the call ---------- */
+  .call { height: calc(100% - 64px); display: grid; grid-template-columns: 1fr 340px; }
+  .call.notx { grid-template-columns: 1fr; }
+  .stage { display: flex; flex-direction: column; min-height: 0; background: radial-gradient(ellipse at 50% 30%, #fff 0%, var(--canvas) 70%); }
+  .bar { display: flex; align-items: center; gap: 12px; padding: 14px 24px; }
+  .live { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--error-700); background: var(--error-50); padding: 3px 10px; border-radius: 999px; }
+  .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--error-500); animation: blink 1.4s infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
+  .timer { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--gray-700); }
+  .prog { flex: 1; display: flex; justify-content: center; gap: 6px; }
+  .prog i { width: 28px; height: 5px; border-radius: 3px; background: var(--gray-200); }
+  .prog i.on { background: var(--brand-500); }
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 16px; min-height: 0; }
+  .ring { position: relative; width: 168px; height: 168px; display: grid; place-items: center; }
+  .ring::before, .ring::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--brand-300); opacity: 0; }
+  .ring.talking::before { animation: wave 1.6s ease-out infinite; }
+  .ring.talking::after { animation: wave 1.6s ease-out .5s infinite; }
+  @keyframes wave { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.3); opacity: 0; } }
+  .ring .av { width: 140px; height: 140px; font-size: 46px; box-shadow: var(--shadow-lg); }
+  .pname { font-size: 20px; font-weight: 700; } .prole { color: var(--gray-500); margin-top: -10px; }
+  .status { font-size: 14px; color: var(--gray-500); min-height: 21px; }
+  .status.you { color: var(--success-700); font-weight: 600; }
+  .caption { max-width: 720px; text-align: center; font-size: 19px; line-height: 29px; color: var(--gray-800); min-height: 58px; padding: 0 12px; }
+  .yours { max-width: 640px; text-align: center; font-size: 15px; color: var(--gray-500); min-height: 23px; font-style: italic; }
+  .controls { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 18px 16px 26px; }
+  .round { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--gray-300); background: var(--surface); display: grid; place-items: center; box-shadow: var(--shadow-sm); }
+  .round:hover { background: var(--gray-50); }
+  .round svg { width: 22px; height: 22px; }
+  .round.micbtn { width: 72px; height: 72px; background: var(--brand-500); border-color: var(--brand-500); color: #fff; }
+  .round.micbtn.listening { background: var(--success-500); border-color: var(--success-500); box-shadow: 0 0 0 8px rgba(18,183,106,.18); }
+  .round.micbtn.off { background: var(--gray-400); border-color: var(--gray-400); }
+  .round.end { background: var(--error-500); border-color: var(--error-500); color: #fff; width: auto; padding: 0 20px; border-radius: 28px; font-weight: 600; gap: 8px; display: inline-flex; }
+  .typebox { display: flex; gap: 8px; width: min(720px, 100%); margin: 0 auto; padding: 0 16px 20px; }
+  .typebox textarea { flex: 1; border: 1.5px solid var(--gray-300); border-radius: 12px; padding: 10px 12px; font: inherit; resize: none; min-height: 48px; max-height: 140px; }
+  .typebox textarea:focus { border-color: var(--brand-500); outline: none; }
+  .tx { border-left: 1px solid var(--gray-200); background: var(--surface); display: flex; flex-direction: column; min-height: 0; }
+  .tx h4 { margin: 0; padding: 16px 18px 8px; font-size: 14px; }
+  .lines { flex: 1; overflow-y: auto; padding: 4px 18px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .line { font-size: 13.5px; line-height: 20px; }
+  .line b { display: block; font-size: 11.5px; letter-spacing: .03em; text-transform: uppercase; color: var(--gray-500); margin-bottom: 1px; }
+  .line.you b { color: var(--success-700); }
+
+  /* ---------- 3. results ---------- */
+  .results { max-width: 980px; margin: 0 auto; padding: 36px 16px 64px; }
+  .rhead { display: flex; gap: 24px; align-items: center; padding: 26px 28px; }
+  .score { position: relative; width: 120px; height: 120px; flex: none; }
+  .score svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score .n { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; font-weight: 700; }
+  .score .n small { display: block; font-size: 12px; color: var(--gray-500); font-weight: 500; margin-top: -18px; }
+  .rhead h2 { margin: 0 0 6px; font-size: 24px; line-height: 32px; }
+  .rhead p { margin: 0; color: var(--gray-600); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+  .stat { padding: 16px 18px; }
+  .stat .k { color: var(--gray-500); font-size: 13px; }
+  .stat .v { font-size: 24px; font-weight: 700; margin-top: 2px; }
+  .stat .h { font-size: 12.5px; margin-top: 2px; }
+  .good { color: var(--success-700); } .meh { color: var(--warning-700); } .bad { color: var(--error-700); }
+  h3.sub { font-size: 17px; margin: 28px 0 12px; }
+  .skills { display: grid; gap: 12px; }
+  .skill { padding: 18px 20px; }
+  .skill .row { display: flex; align-items: center; gap: 12px; }
+  .skill .row b { flex: 1; font-size: 15.5px; }
+  .pill { font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+  .pill.good { background: var(--success-50); } .pill.meh { background: var(--warning-50); } .pill.bad { background: var(--error-50); } .pill.na { background: var(--gray-100); color: var(--gray-600); }
+  .track { height: 8px; border-radius: 4px; background: var(--gray-100); margin: 12px 0 4px; overflow: hidden; }
+  .track i { display: block; height: 100%; border-radius: 4px; }
+  .fb { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .fb h6 { margin: 0 0 4px; font-size: 13px; }
+  .fb ul { margin: 0; padding-left: 18px; color: var(--gray-700); font-size: 14px; }
+  .fb .none { color: var(--gray-400); font-size: 14px; }
+  .flagline { margin-top: 10px; font-size: 14px; color: var(--error-700); background: var(--error-50); border-radius: 10px; padding: 8px 12px; }
+  details.transcript { margin-top: 28px; padding: 6px 20px; }
+  details.transcript summary { cursor: pointer; font-weight: 600; padding: 12px 0; }
+  details.transcript .lines { padding: 0 0 16px; }
+  .after { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+  .done { text-align: center; padding: 56px 28px; }
+  .done h2 { margin: 0 0 8px; }
+
+  @media (max-width: 900px) {
+    .ready { grid-template-columns: 1fr; }
+    .call { grid-template-columns: 1fr; } .tx { display: none; }
+    .stats { grid-template-columns: 1fr 1fr; } .fb { grid-template-columns: 1fr; }
+    .rhead { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo">T</div>
+  <h1 id="topTitle">Role-Play</h1>
+  <a href="/roleplay/builder" id="backLink">← Back to my role-plays</a>
+</div>
+
+<!-- 1. Get ready -->
+<section class="ready" id="readyView" hidden>
+  <div class="panel brief">
+    <div class="kicker">✦ Role-play</div>
+    <h2 id="rTitle"></h2>
+    <div class="who" id="rWho"></div>
+    <div class="sec"><h4>Your situation</h4><p id="rSituation"></p></div>
+    <div class="sec" id="rGoalSec"><h4>Your goal</h4><p id="rGoal"></p></div>
+    <div class="sec" id="rKnowSec"><h4>What you know</h4><ul id="rKnow"></ul></div>
+    <div class="sec"><h4>What we'll look for</h4><div class="chips" id="rSkills"></div></div>
+  </div>
+  <div class="panel setup">
+    <h3>Get ready</h3>
+    <div class="mode" id="mode">
+      <button data-m="voice" class="on"><b>🎙 Speak</b><span>Talk out loud, like a real call</span></button>
+      <button data-m="text"><b>⌨️ Type</b><span>Write your replies instead</span></button>
+    </div>
+    <div class="mic" id="micCheck"><span>🎙</span><div class="meter"><i id="meter"></i></div><span id="micMsg">Checking your mic…</span></div>
+    <div class="facts"><span id="rLen"></span><span id="rTough"></span></div>
+    <ul class="tips">
+      <li>Speak naturally. There's no script.</li>
+      <li>They'll talk first. Wait for them to finish.</li>
+      <li>Press End when you're done, or it ends on its own.</li>
+    </ul>
+    <div class="err" id="rErr" hidden></div>
+    <button class="btn primary big" id="startBtn">▶ Start the conversation</button>
+  </div>
+</section>
+
+<!-- 2. The call -->
+<section class="call" id="callView" hidden>
+  <div class="stage">
+    <div class="bar">
+      <span class="live">LIVE</span>
+      <span class="timer" id="timer">0:00</span>
+      <div class="prog" id="prog"></div>
+      <button class="btn" id="txBtn" style="height:36px;font-size:13px">Hide transcript</button>
+    </div>
+    <div class="center">
+      <div class="ring" id="ring"><div class="av" id="cAv"></div></div>
+      <div class="pname" id="cName"></div>
+      <div class="prole" id="cRole"></div>
+      <div class="status" id="status"></div>
+      <div class="caption" id="caption"></div>
+      <div class="yours" id="yours"></div>
+    </div>
+    <div class="typebox" id="typebox" hidden>
+      <textarea id="typed" rows="1" placeholder="Type what you'd say, then press Enter"></textarea>
+      <button class="btn primary" id="sendBtn">Send</button>
+    </div>
+    <div class="controls">
+      <button class="round" id="kbBtn" title="Switch between speaking and typing" aria-label="Switch input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+      </button>
+      <button class="round micbtn" id="micBtn" title="Tap to talk" aria-label="Microphone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+      </button>
+      <button class="round end" id="endBtn">End</button>
+    </div>
+  </div>
+  <aside class="tx" id="tx"><h4>Transcript</h4><div class="lines" id="lines"></div></aside>
+</section>
+
+<!-- 3. Results -->
+<section class="results" id="resultsView" hidden></section>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const PALETTE = ["#F1592A", "#7A5AF8", "#2E90FA", "#12B76A", "#EE46BC", "#F79009"];
+const scenarioId = new URLSearchParams(location.search).get("scenario");
+
+const S = {
+  defn: null, session: null, mode: "voice", transcript: [], progress: 0, ended: false,
+  started: 0, timerId: null, speaking: false, waiting: false,
+  // Delivery, measured on this side only: words, time spent talking, fillers.
+  you: { words: 0, ms: 0, fillers: 0, longest: 0, turns: 0 }, them: { words: 0 },
+};
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, credentials: "same-origin", ...opts });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof body.detail === "string" ? body.detail : "Something went wrong. Please try again.");
+  return body;
+}
+
+// A practice subject id per browser, so "try again" is a new attempt by the
+// same person rather than every visitor sharing one "demo" identity and
+// using up a one-shot scenario for each other.
+function subjectId() {
+  try {
+    let id = localStorage.getItem("rp_subject");
+    if (!id) { id = "p_" + Math.random().toString(36).slice(2, 10); localStorage.setItem("rp_subject", id); }
+    return id;
+  } catch { return "p_" + Math.random().toString(36).slice(2, 10); }
+}
+function avatar(el, name, size) {
+  const initials = (name || "?").split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
+  el.style.background = PALETTE[[...(name || "?")].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETTE.length];
+  el.textContent = initials;
+}
+function show(view) { ["readyView", "callView", "resultsView"].forEach(v => $("#" + v).hidden = v !== view); }
+
+/* ================================================================== */
+/*  1. Get ready                                                       */
+/* ================================================================== */
+async function ready() {
+  if (!scenarioId) { location.href = "/roleplay/builder"; return; }
+  const d = await api(`/api/roleplay/scenario/${encodeURIComponent(scenarioId)}`);
+  S.defn = d;
+  $("#topTitle").textContent = d.title;
+  $("#rTitle").textContent = d.title;
+  $("#rWho").innerHTML = `<div class="av" id="rAv"></div><div><b>You'll talk to ${esc(d.persona)}</b><span>${esc(d.persona_role)}</span></div>`;
+  avatar($("#rAv"), d.persona);
+  $("#rSituation").textContent = d.briefing || d.situation.current_situation;
+  $("#rGoal").textContent = d.candidate.objective; $("#rGoalSec").hidden = !d.candidate.objective;
+  $("#rKnow").innerHTML = (d.candidate.information_available || []).map(i => `<li>${esc(i)}</li>`).join("");
+  $("#rKnowSec").hidden = !(d.candidate.information_available || []).length;
+  $("#rSkills").innerHTML = d.competencies.map(c => `<span class="chip">${esc(c)}</span>`).join("");
+  $("#rLen").textContent = `⏱ About ${d.duration_min} minutes`;
+  $("#rTough").textContent = { easy: "🙂 Friendly", medium: "😐 Realistic", hard: "😤 Tough" }[d.difficulty] || "";
+  if (!SR) { setMode("text"); $("#mode button[data-m=voice]").disabled = true; $("#micMsg").textContent = "Speaking needs Chrome or Edge. You can type instead."; }
+  else micCheck();
+  show("readyView");
+}
+function setMode(m) {
+  S.mode = m;
+  $("#mode").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.m === m));
+  $("#micCheck").hidden = m !== "voice";
+}
+$("#mode").querySelectorAll("button").forEach(b => b.onclick = () => { setMode(b.dataset.m); if (b.dataset.m === "voice") micCheck(); });
+
+let micStream = null;
+async function micCheck() {
+  if (micStream) return;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new AudioContext(); const src = ctx.createMediaStreamSource(micStream);
+    const an = ctx.createAnalyser(); an.fftSize = 512; src.connect(an);
+    const buf = new Uint8Array(an.fftSize); let heard = false;
+    $("#micMsg").textContent = "Say something to test";
+    (function tick() {
+      if (!micStream) return;
+      an.getByteTimeDomainData(buf);
+      const peak = Math.max(...buf.map(v => Math.abs(v - 128))) / 128;
+      $("#meter").style.width = Math.min(100, peak * 220) + "%";
+      if (peak > .12 && !heard) { heard = true; $("#micMsg").textContent = "✓ Mic works"; }
+      requestAnimationFrame(tick);
+    })();
+  } catch {
+    $("#micMsg").textContent = "No mic access. You can type instead.";
+    setMode("text");
+  }
+}
+function stopMicCheck() { if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; } }
+
+$("#startBtn").onclick = async () => {
+  $("#startBtn").disabled = true; $("#rErr").hidden = true;
+  stopMicCheck();
+  try {
+    S.session = await api("/api/roleplay/session/start", { method: "POST",
+      body: JSON.stringify({ scenario_id: scenarioId, subject_id: subjectId(), subject_name: "" }) });
+    beginCall();
+  } catch (e) {
+    $("#rErr").textContent = /No attempts left/.test(e.message) ? "You've used all your tries for this one." : e.message;
+    $("#rErr").hidden = false; $("#startBtn").disabled = false;
+  }
+};
+
+/* ================================================================== */
+/*  2. The call                                                        */
+/* ================================================================== */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, finalText = "", silenceTimer = null, speakStart = 0;
+
+function beginCall() {
+  show("callView");
+  avatar($("#cAv"), S.defn.persona);
+  $("#cName").textContent = S.defn.persona; $("#cRole").textContent = S.defn.persona_role;
+  $("#prog").innerHTML = Array.from({ length: S.defn.beats }, () => "<i></i>").join("");
+  S.started = Date.now();
+  S.timerId = setInterval(() => {
+    const s = Math.floor((Date.now() - S.started) / 1000);
+    $("#timer").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  }, 500);
+  applyMode();
+  theySay(S.session.reply);
+}
+function applyMode() {
+  $("#typebox").hidden = S.mode !== "text";
+  $("#micBtn").hidden = S.mode !== "voice";
+  if (S.mode === "text") { stopListening(); setTimeout(() => $("#typed").focus(), 50); }
+}
+$("#kbBtn").onclick = () => { if (!SR && S.mode === "text") return; S.mode = S.mode === "voice" ? "text" : "voice"; applyMode(); if (S.mode === "voice" && !S.speaking && !S.waiting) listen(); };
+$("#txBtn").onclick = () => { const c = $("#callView").classList.toggle("notx"); $("#txBtn").textContent = c ? "Show transcript" : "Hide transcript"; };
+
+function addLine(who, text) {
+  S.transcript.push({ who, text });
+  const el = document.createElement("div"); el.className = "line" + (who === "you" ? " you" : "");
+  el.innerHTML = `<b>${who === "you" ? "You" : esc(S.defn.persona.split(" ")[0])}</b>${esc(text)}`;
+  $("#lines").appendChild(el); $("#lines").scrollTop = 1e9;
+}
+function setProgress(p) {
+  const n = Math.round((p || 0) * S.defn.beats);
+  $("#prog").querySelectorAll("i").forEach((el, i) => el.classList.toggle("on", i < n));
+}
+
+async function theySay(reply) {
+  addLine("them", reply.text);
+  S.them.words += reply.text.split(/\s+/).length;
+  setProgress(reply.progress);
+  $("#caption").textContent = reply.text; $("#yours").textContent = "";
+  $("#status").className = "status"; $("#status").textContent = `${S.defn.persona.split(" ")[0]} is speaking…`;
+  S.speaking = true; $("#ring").classList.add("talking");
+  await speak(reply.text);
+  S.speaking = false; $("#ring").classList.remove("talking");
+  if (reply.ends) return finish();
+  if (S.mode === "voice") listen(); else { $("#status").textContent = "Your turn. Type your reply."; $("#typed").focus(); }
+}
+
+function speak(text) {
+  return new Promise(resolve => {
+    // Typing mode still reads the line aloud: the character is a voice, and
+    // a caption alone turns the call into a chat. No speech engine: a pause.
+    if (!("speechSynthesis" in window)) return setTimeout(resolve, 600);
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = S.session?.speech_rate || 0.95; u.lang = "en-US";
+    const v = speechSynthesis.getVoices().find(v => /en(-|_)(US|GB|IN)/.test(v.lang) && /Natural|Google|Samantha|Daniel/.test(v.name))
+      || speechSynthesis.getVoices().find(v => v.lang.startsWith("en"));
+    if (v) u.voice = v;
+    const guard = setTimeout(resolve, Math.max(4000, text.length * 90));
+    u.onend = u.onerror = () => { clearTimeout(guard); resolve(); };
+    speechSynthesis.speak(u);
+  });
+}
+
+function listen() {
+  if (!SR || S.ended || S.speaking || S.waiting) return;
+  stopListening();
+  rec = new SR(); rec.lang = "en-US"; rec.continuous = true; rec.interimResults = true;
+  finalText = ""; speakStart = 0;
+  rec.onresult = e => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalText += t + " "; else interim += t;
+    }
+    if (!speakStart) speakStart = Date.now();
+    $("#yours").textContent = (finalText + interim).trim();
+    clearTimeout(silenceTimer);
+    // 1.8s of quiet after something final ends the turn — long enough not to
+    // cut people off mid-thought, short enough not to feel like a dead line.
+    if (finalText.trim()) silenceTimer = setTimeout(() => commit(finalText.trim()), 1800);
+  };
+  rec.onend = () => { if (rec && !S.speaking && !S.waiting && !S.ended && S.mode === "voice") { try { rec.start(); } catch {} } };
+  rec.onerror = ev => { if (ev.error === "not-allowed") { S.mode = "text"; applyMode(); $("#status").textContent = "No mic access. Type your reply."; } };
+  try { rec.start(); } catch {}
+  $("#micBtn").classList.add("listening");
+  $("#status").className = "status you"; $("#status").textContent = "Your turn. Speak now";
+}
+function stopListening() {
+  clearTimeout(silenceTimer);
+  if (rec) { const r = rec; rec = null; try { r.stop(); } catch {} }
+  $("#micBtn").classList.remove("listening");
+}
+$("#micBtn").onclick = () => {
+  if (rec) { const t = ($("#yours").textContent || "").trim(); if (t) commit(t); else stopListening(); }
+  else listen();
+};
+
+async function commit(text) {
+  if (!text || S.waiting || S.ended) return;
+  stopListening();
+  const dur = speakStart ? Date.now() - speakStart : 0;
+  const words = text.split(/\s+/).filter(Boolean).length;
+  S.you.words += words; S.you.ms += dur || words * 400; S.you.turns += 1; S.you.longest = Math.max(S.you.longest, words);
+  S.you.fillers += (text.toLowerCase().match(/\b(um+|uh+|erm|like|you know|basically|actually|kind of|sort of)\b/g) || []).length;
+  addLine("you", text); $("#yours").textContent = text;
+  S.waiting = true; $("#status").className = "status"; $("#status").textContent = "…";
+  try {
+    const out = await api(`/api/roleplay/session/${S.session.session_id}/turn`, { method: "POST", body: JSON.stringify({ said: text }) });
+    S.waiting = false;
+    await theySay(out.reply);
+  } catch (e) { S.waiting = false; $("#status").textContent = "Connection hiccup. Try saying that again."; if (S.mode === "voice") listen(); }
+}
+$("#sendBtn").onclick = () => { const t = $("#typed").value.trim(); if (t) { $("#typed").value = ""; commit(t); } };
+$("#typed").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#sendBtn").click(); } });
+$("#endBtn").onclick = () => finish();
+
+async function finish() {
+  if (S.ended) return;
+  S.ended = true; stopListening(); speechSynthesis?.cancel(); clearInterval(S.timerId);
+  $("#status").textContent = "Wrapping up…";
+  let res = null;
+  try { res = await api(`/api/roleplay/session/${S.session.session_id}/result`); } catch {}
+  results(res);
+}
+
+/* ================================================================== */
+/*  3. Results                                                         */
+/* ================================================================== */
+// A skill's score is the share of the moments they REACHED that they handled.
+// Moments the call never got to are left out, not counted as zero: running out
+// of time is missing evidence, not a failure — the same rule as the report.
+function level(handled, reached) {
+  if (!reached) return ["na", "Not reached", 0];
+  const r = handled / reached;
+  return r >= .75 ? ["good", "Strong", r] : r >= .4 ? ["meh", "Getting there", r] : ["bad", "Needs work", r];
+}
+function results(res) {
+  show("resultsView");
+  const mins = Math.max(1, Math.round((Date.now() - S.started) / 60000));
+  const talkPct = S.you.words + S.them.words ? Math.round(100 * S.you.words / (S.you.words + S.them.words)) : 0;
+  const wpm = S.you.ms ? Math.round(S.you.words / (S.you.ms / 60000)) : 0;
+  const statCls = (v, lo, hi) => v >= lo && v <= hi ? "good" : "meh";
+  const stats = `<div class="stats">
+    <div class="panel stat"><div class="k">Your share of talking</div><div class="v">${talkPct}%</div>
+      <div class="h ${statCls(talkPct, 35, 65)}">${talkPct < 35 ? "Try saying a bit more" : talkPct > 65 ? "Leave more room for them" : "Good balance"}</div></div>
+    <div class="panel stat"><div class="k">Speaking pace</div><div class="v">${S.mode === "voice" && wpm ? wpm + "<small style='font-size:13px;font-weight:500'> wpm</small>" : "–"}</div>
+      <div class="h ${statCls(wpm, 110, 170)}">${S.mode !== "voice" || !wpm ? "Spoken calls only" : wpm < 110 ? "A little slow" : wpm > 170 ? "A little fast" : "Easy to follow"}</div></div>
+    <div class="panel stat"><div class="k">Filler words</div><div class="v">${S.you.fillers}</div>
+      <div class="h ${S.you.fillers <= 3 ? "good" : "meh"}">${S.you.fillers <= 3 ? "Clean and clear" : "um, like, you know…"}</div></div>
+    <div class="panel stat"><div class="k">Longest answer</div><div class="v">${S.you.longest}<small style="font-size:13px;font-weight:500"> words</small></div>
+      <div class="h ${S.you.longest <= 120 ? "good" : "meh"}">${S.you.longest <= 120 ? "Kept it focused" : "Try shorter answers"}</div></div>
+  </div>`;
+  const transcript = `<details class="panel transcript"><summary>Full transcript</summary><div class="lines">${S.transcript.map(l =>
+    `<div class="line${l.who === "you" ? " you" : ""}"><b>${l.who === "you" ? "You" : esc(S.defn.persona.split(" ")[0])}</b>${esc(l.text)}</div>`).join("")}</div></details>`;
+  const again = `<div class="after"><button class="btn primary big" onclick="location.reload()">↻ Try again</button><a class="btn big" href="/roleplay/builder">Back to my role-plays</a></div>`;
+
+  if (!res || res.visibility === "hidden") {
+    $("#resultsView").innerHTML = `<div class="panel done"><h2>That's the end. Thank you.</h2><p style="color:var(--gray-600)">${esc(res?.message || "Your conversation has been recorded.")}</p></div>${transcript}`;
+    return;
+  }
+  if (res.visibility === "gated") {
+    const passed = res.competencies.every(c => c.met || !c.reached);
+    $("#resultsView").innerHTML = `<div class="panel rhead"><div><h2>${passed ? "✓ Passed" : "Not yet"}</h2>
+      <p>${passed ? "You handled what this certification looks for." : "A couple of areas need another go."} Attempt ${res.attempts_used} of ${res.attempts_allowed}.</p></div></div>
+      <h3 class="sub">By skill</h3><div class="skills">${res.competencies.map(c => {
+        const [cls, lab] = !c.reached ? ["na", "Not reached"] : c.met ? ["good", "Met"] : ["bad", "Not yet"];
+        return `<div class="panel skill"><div class="row"><b>${esc(c.label)}</b><span class="pill ${cls} ${cls}">${lab}</span></div></div>`; }).join("")}</div>
+      ${stats}${transcript}${passed ? "" : again}`;
+    return;
+  }
+
+  // Practice: everything.
+  const comps = res.competencies;
+  const reached = comps.reduce((a, c) => a + c.reached, 0), handled = comps.reduce((a, c) => a + c.handled, 0);
+  const pct = reached ? Math.round(100 * handled / reached) : 0;
+  const [ocls] = level(handled, reached);
+  const color = { good: "var(--success-500)", meh: "var(--warning-500)", bad: "var(--error-500)", na: "var(--gray-300)" };
+  const headline = pct >= 75 ? "Great conversation!" : pct >= 40 ? "Good effort. Here's how to level up." : "A tough one. Here's what to try next time.";
+  const best = comps.filter(c => c.reached).sort((a, b) => b.handled / b.reached - a.handled / a.reached)[0];
+  const C = 2 * Math.PI * 52;
+  $("#resultsView").innerHTML = `
+    <div class="panel rhead">
+      <div class="score"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--gray-100)" stroke-width="10"/>
+        <circle cx="60" cy="60" r="52" fill="none" stroke="${color[ocls]}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}"/></svg>
+        <div class="n">${reached ? pct : "–"}<small>${reached ? "out of 100" : ""}</small></div></div>
+      <div><h2>${reached ? headline : "Too short to score"}</h2>
+        <p>${reached ? `${mins} minute${mins > 1 ? "s" : ""} with ${esc(S.defn.persona.split(" ")[0])}.${best ? ` Your strongest area was <b>${esc(best.label)}</b>.` : ""}` : "The conversation ended before any of the key moments came up. Try again and keep going a little longer."}</p></div>
+    </div>
+    ${stats}
+    <h3 class="sub">How you did on each skill</h3>
+    <div class="skills">${comps.map(c => {
+      const [cls, lab, r] = level(c.handled, c.reached);
+      return `<div class="panel skill">
+        <div class="row"><b>${esc(c.label)}</b><span class="pill ${cls} ${cls === "na" ? "" : cls}">${lab}</span></div>
+        <div class="track"><i style="width:${Math.round(r * 100)}%;background:${color[cls]}"></i></div>
+        ${c.reached ? `<div class="fb">
+          <div><h6 class="good">✓ What you did well</h6>${c.covered.length ? `<ul>${c.covered.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="none">Nothing yet</div>`}</div>
+          <div><h6 class="meh">→ Try next time</h6>${c.missed.length ? `<ul>${c.missed.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="none">Nothing missed</div>`}</div>
+        </div>` : `<div class="none" style="margin-top:6px">The conversation didn't get to this part.</div>`}
+        ${c.red_flags.length ? `<div class="flagline">⚠ Watch out: ${c.red_flags.map(esc).join("; ")}</div>` : ""}
+      </div>`; }).join("")}</div>
+    ${transcript}${again}`;
+}
+
+ready().catch(e => { document.body.insertAdjacentHTML("beforeend", `<p class="err" style="text-align:center;margin-top:40px">${esc(e.message)}</p>`); });
+</script>
+</body>
+</html>

@@ -30,10 +30,13 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-#: The three agents the library ships with. The surfaces they serve are the
-#: three the product is positioned on; a fourth is added by writing a spec,
-#: never by touching the engine.
-AGENT_TYPES = ("role_readiness", "sales", "customer_service")
+#: The agents the library ships with. Three are specialised to the surfaces the
+#: product is positioned on; `roleplay` is the generic one the Scenario Builder
+#: configures for everything else — a manager's difficult conversation, a
+#: negotiation, a patient consultation. Its domain knowledge is about role-play
+#: itself rather than any one field, so a scenario can put it anywhere. A new
+#: agent is added by writing a spec, never by touching the engine.
+AGENT_TYPES = ("role_readiness", "sales", "customer_service", "roleplay")
 
 
 #: Rules no configuration can reach. Written once, applied to every agent, and
@@ -275,8 +278,43 @@ CUSTOMER_SERVICE = AgentSpec(
     default_surface="cs",
 )
 
+GENERIC_ROLEPLAY = AgentSpec(
+    agent_type="roleplay",
+    name="Generic Role-Play Agent",
+    identity=(
+        "You are playing one character in a live, spoken role-play: whoever the "
+        "scenario below says you are, in whatever setting it describes."
+    ),
+    purpose=(
+        "To put the person you are speaking to into a realistic conversation they "
+        "will have to handle at work, and behave the way the real counterparty "
+        "would — so that what they actually do can be observed afterwards."
+    ),
+    domain_knowledge=[
+        "Real people rarely say the thing that matters most first. They lead with "
+        "the surface issue; the real one comes out when someone asks.",
+        "People soften when they are genuinely heard and harden when they are "
+        "managed, rushed or given process before acknowledgement.",
+        "A character with a goal stays consistent. Keep returning to what you want.",
+        "Silence is information. Do not rescue the other person from it.",
+        "A good role-play is neither easy nor impossible. It is the conversation "
+        "as it would really go.",
+    ],
+    interaction=InteractionRules(
+        max_words_per_turn=40,
+        agent_opens=True,
+        on_subject_stalls="Wait, then say what your character would say to a silence — once.",
+    ),
+    evaluation=EvaluationFramework(
+        scale=4,
+        decision="whether this person can handle this conversation well on their own",
+        dimensions=["listening", "communication", "judgement", "handling pushback", "outcome"],
+    ),
+    default_surface="learning",
+)
+
 LIBRARY: dict[str, AgentSpec] = {
-    a.agent_type: a for a in (ROLE_READINESS, SALES, CUSTOMER_SERVICE)
+    a.agent_type: a for a in (ROLE_READINESS, SALES, CUSTOMER_SERVICE, GENERIC_ROLEPLAY)
 }
 
 
