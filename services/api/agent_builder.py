@@ -110,10 +110,9 @@ def clean_cfg(cfg: dict[str, Any], base: dict[str, Any] | None = None) -> dict[s
         # Hindi voice told to speak French would be a configuration nobody meant.
         "language": rx.voice(v).language,
         "consent": bool(cfg.get("consent", True)),
+        # Fields for the proctoring suite, which applies them; the builder only stores them.
         "proctoring": _one(cfg.get("proctoring"), rx.PROCTORING, "Off"),
-        # Proctoring needs the camera; otherwise it is the recruiter's choice.
-        "camera": "Required" if cfg.get("proctoring") in ("Basic", "Strict")
-                  else _one(cfg.get("camera"), rx.CAMERA, "Off"),
+        "camera": _one(cfg.get("camera"), rx.CAMERA, "Off"),
         **_purpose_cfg(cfg),
     }
 
@@ -732,8 +731,6 @@ def participant_sessions(agent_id: str, request: Request) -> dict[str, Any]:
          "status": r["status"], "version": r["version"], "early": bool(r.get("early")),
          "elapsed_sec": r.get("elapsed_sec", 0), "ended_at": r.get("ended_at"),
          "attempt": int(r.get("attempt") or 1),
-         "tab_leaves": sum(1 for e in r.get("proctoring_events") or [] if e.get("type") == "tab_hidden"),
-         "proctoring": (r.get("snapshot", {}).get("cfg") or {}).get("proctoring", "Off"),
          "evaluation": r.get("evaluation"), "evaluation_error": r.get("evaluation_error"),
          "result": r.get("result"), "result_error": r.get("result_error"),
          "feedback": r.get("feedback"), "transcript": r.get("transcript") or [],

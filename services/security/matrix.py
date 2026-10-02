@@ -228,7 +228,6 @@ DECLARED: dict[tuple[str, str], str] = {
     ("POST", "/api/participant/session/{session_id}/chat"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/participant/session/{session_id}/complete"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/participant/session/{session_id}/feedback"): CANDIDATE_TOKEN_SCOPED,
-    ("POST", "/api/participant/session/{session_id}/event"): CANDIDATE_TOKEN_SCOPED,
     ("GET", "/participant"): INTERNAL_ONLY,
     ("GET", "/participant/support.js"): INTERNAL_ONLY,
     ("GET", "/participant/assets/{name}"): INTERNAL_ONLY,

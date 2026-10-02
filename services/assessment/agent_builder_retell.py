@@ -57,10 +57,9 @@ SPEAKERS = ("Tara opens", "Participant opens")
 #: Voice only. Video and typed (Chat) conversations were removed on 2026-10-02.
 FORMATS = ("Voice only",)
 SOUNDS = ("None", "Phone ring", "Video join", "Doorbell")
-#: Proctoring and camera, set in Advanced. Nothing here is sent to the voice
-#: agent; the camera is shown only on the participant's own screen.
-#:   Basic:  camera on, and every time the participant leaves the tab is recorded.
-#:   Strict: Basic, plus the conversation pauses until they come back.
+#: Proctoring and camera, set in Advanced. Fields only: they are saved with the
+#: scenario and handed to the separate proctoring suite, which applies them.
+#: Nothing here changes the conversation or is sent to the voice agent.
 PROCTORING = ("Off", "Basic", "Strict")
 CAMERA = ("Off", "Optional", "Required")
 #: Builder test calls are real calls, kept short.

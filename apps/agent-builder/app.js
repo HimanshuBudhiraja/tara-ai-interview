@@ -351,7 +351,7 @@
     'L&D': 'A learner practising, with retries. Coaching and progress across attempts appear in Results for admins.'
   };
   function seg(label, key, opts) {
-    return h('div', { role: 'group', 'aria-label': label, class: 'seg' }, opts.map((o) => h('button', { type: 'button', 'aria-pressed': String(S.cfg[key] === o), text: o, onclick: () => { S.cfg[key] = o; if (key === 'proctoring' && o !== 'Off') S.cfg.camera = 'Required'; touch(); renderMain(); } })));
+    return h('div', { role: 'group', 'aria-label': label, class: 'seg' }, opts.map((o) => h('button', { type: 'button', 'aria-pressed': String(S.cfg[key] === o), text: o, onclick: () => { S.cfg[key] = o; touch(); renderMain(); } })));
   }
   function readiness() {
     const a = S.agent, f = S.fields;
@@ -554,12 +554,9 @@
             langs.map((l) => h('option', { value: l, text: l, selected: voiceOf(c.voice).language === l }))),
           h('small', { class: 'advhint', text: 'Changing the language picks a voice that speaks it, and the persona takes that voice\'s name. Fine-tune the voice in Persona.' })),
         h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Proctoring' }), seg('Proctoring', 'proctoring', OPT.proctoring || ['Off', 'Basic', 'Strict']),
-          h('small', { class: 'advhint', text: { Off: 'No proctoring.', Basic: 'Camera on, and every time the participant leaves the tab is recorded in Results.', Strict: 'Basic, and the conversation pauses until the participant comes back to the tab.' }[c.proctoring || 'Off'] })),
-        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Camera' }),
-          c.proctoring && c.proctoring !== 'Off'
-            ? h('p', { style: 'font-size:14px;margin:6px 0 0', text: 'Required: proctoring needs the camera.' })
-            : seg('Camera', 'camera', OPT.camera || ['Off', 'Optional', 'Required']),
-          h('small', { class: 'advhint', text: 'The camera is shown only on the participant\'s own screen. Video is never recorded or sent to the voice agent.' })),
+          h('small', { class: 'advhint', text: 'Saved with each published version for the proctoring suite, which applies it.' })),
+        h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Camera' }), seg('Camera', 'camera', OPT.camera || ['Off', 'Optional', 'Required']),
+          h('small', { class: 'advhint', text: 'Saved for the proctoring suite. Nothing is sent to the voice agent.' })),
         h('div', { class: 'togrow', style: 'grid-column:1 / -1' }, h('span', null, h('b', { text: 'Recording consent' }), h('small', { text: 'Ask participants to agree to recording before they start.' })),
           h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(c.consent), 'aria-label': 'Recording consent', onclick: () => { c.consent = !c.consent; touch(); renderMain(); } }, h('i')))) : null));
 
@@ -588,7 +585,7 @@
       const d = h('details', { class: 'resskill' },
         h('summary', null, h('span', { class: 'scp ' + (ev && ev.overall != null ? (ev.overall >= 70 ? 'hi' : ev.overall >= 50 ? 'mid' : 'lo') : 'na'), text: ev && ev.overall != null ? String(Math.round(ev.overall)) : '–' }),
           h('b', { text: (x.name || x.email || 'Participant') + (x.attempt > 1 ? ' · attempt ' + x.attempt : '') }),
-          h('span', { class: 'resw', text: status + (x.ended_at ? ' · ' + fmtDate(x.ended_at) : '') + (x.proctoring && x.proctoring !== 'Off' ? ' · left the tab ' + (x.tab_leaves || 0) + '×' : '') })));
+          h('span', { class: 'resw', text: status + (x.ended_at ? ' · ' + fmtDate(x.ended_at) : '') })));
       if (ev) d.append(resultView(ev));
       else if (x.evaluation_error) d.append(h('p', { class: 'resnote', text: 'Not evaluated: ' + (x.evaluation_error.problems || []).join('; ') + '.' }));
       sec.append(d);

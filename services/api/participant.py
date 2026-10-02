@@ -130,13 +130,14 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
         "call": {
             "target_minutes": target, "cap_minutes": cap, "ending": cfg.get("ending"),
             "format": fmt, "speaker": cfg.get("speaker"), "sound": cfg.get("sound") or "None",
-            "camera_required": cfg.get("camera") == "Required" or cfg.get("proctoring") in ("Basic", "Strict"),
-            "camera_used": cfg.get("camera") in ("Optional", "Required") or cfg.get("proctoring") in ("Basic", "Strict"),
-            "proctoring": cfg.get("proctoring") or "Off",
+            "camera_required": False,
+            "camera_used": False,
             "recording_consent": bool(cfg.get("consent", True)),
             "voice_configured": bool(config.RETELL_API_KEY and config.RETELL_AGENT_BUILDER_AGENT_ID),
         },
         "voice_sample_url": voice_sample(v.voice_id),
+        # For the proctoring suite to read and apply; this page does not act on it.
+        "proctoring": {"mode": cfg.get("proctoring") or "Off", "camera": cfg.get("camera") or "Off"},
         "org_label": HIRING_LABEL if purpose_of(row) == "Hiring" else ORG_LABEL,
         "hiring": purpose_of(row) == "Hiring",
         "purpose": purpose_of(row),
@@ -432,26 +433,6 @@ def complete(body: CompleteBody, background: BackgroundTasks,
         sessions.save(row)
         background.add_task(_score, row["session_id"])
     return view(row)
-
-
-class EventBody(BaseModel):
-    type: str = Field(pattern="^(tab_hidden|tab_visible)$")
-    at_sec: int = Field(default=0, ge=0, le=36000)
-
-
-@router.post("/session/{session_id}/event")
-def proctoring_event(body: EventBody, row: dict[str, Any] = Depends(participant_scope)) -> dict[str, Any]:
-    """Proctoring: when the participant leaves and returns to the conversation tab.
-
-    Recorded only when the published scenario has proctoring on, capped so a
-    page cannot fill the record, and shown to admins in Results."""
-    if (row["snapshot"].get("cfg") or {}).get("proctoring") not in ("Basic", "Strict") or row["status"] == "complete":
-        return {"ok": True, "recorded": False}
-    events = row.setdefault("proctoring_events", [])
-    if len(events) < 500:
-        events.append({"type": body.type, "at_sec": body.at_sec, "ts": time.time()})
-        sessions.save(row)
-    return {"ok": True, "recorded": True}
 
 
 class FeedbackBody(BaseModel):

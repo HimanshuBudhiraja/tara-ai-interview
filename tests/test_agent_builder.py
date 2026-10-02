@@ -500,8 +500,8 @@ def test_every_agent_is_voice_only(client):
     row["cfg"].update(format="Chat", proctoring="Strict", camera="Off")
     out = client.put(f"{BASE}/agents/{aid}", json={**{k: row[k] for k in ("fields", "agent", "cfg")}}).json()
     assert out["cfg"]["format"] == "Voice only"
-    # Proctoring is a choice now, and it needs the camera whatever the camera setting said.
-    assert out["cfg"]["proctoring"] == "Strict" and out["cfg"]["camera"] == "Required"
+    # Proctoring and camera are stored as chosen, for the proctoring suite.
+    assert out["cfg"]["proctoring"] == "Strict" and out["cfg"]["camera"] == "Off"
 
 def test_nothing_about_the_role_play_is_public_before_sign_in(client):
     _published_invite(client)
@@ -802,16 +802,12 @@ def test_a_session_is_evaluated_once_and_only_admins_see_it(client, monkeypatch)
     assert recruiter["evaluation"]["overall"] is not None
 
 
-def test_tab_leaves_are_recorded_only_when_proctoring_is_on(client):
-    aid, code = _publish_with(client, purpose="Hiring", proctoring="Basic")
-    p = TestClient(app)
-    v = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
-    assert v["call"]["proctoring"] == "Basic" and v["call"]["camera_required"] is True
-    sid = v["session_id"]
-    assert p.post(f"/api/participant/session/{sid}/event", json={"type": "tab_hidden", "at_sec": 40}).json()["recorded"]
-    assert p.post(f"/api/participant/session/{sid}/event", json={"type": "rm -rf"}).status_code == 422
-    row = client.get(f"{BASE}/agents/{aid}/sessions").json()["sessions"][0]
-    assert row["tab_leaves"] == 1 and row["proctoring"] == "Basic"
-    aid2, code2 = _publish_with(client, purpose="Hiring", proctoring="Off")
-    v2 = p.post("/api/participant/sign-in", json={"code": code2, "name": "Lee", "email": "l@x.test", "consent": True}).json()
-    assert not p.post(f"/api/participant/session/{v2['session_id']}/event", json={"type": "tab_hidden"}).json()["recorded"]
+def test_proctoring_is_fields_for_the_suite_and_nothing_else(client):
+    aid, code = _publish_with(client, purpose="Hiring", proctoring="Strict", camera="Required")
+    assert store.load(aid)["published"]["cfg"]["proctoring"] == "Strict"
+    v = TestClient(app).post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
+    # Handed to the suite with the session; the participant page and the voice call don't act on it.
+    assert v["proctoring"] == {"mode": "Strict", "camera": "Required"} and v["call"]["camera_required"] is False
+    row = store.load(aid)
+    body = rx.web_call_body(row["published"] | {"agent_id": aid}, "agent_x")
+    assert "Strict" not in json.dumps(body) and "proctor" not in json.dumps(body).lower()

@@ -174,8 +174,6 @@
             <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Conversation language</dt><dd style="margin:0; font-weight:600;">English</dd></div>
             <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Estimated duration</dt><dd style="margin:0; font-weight:600;">{{ durationShort }}</dd></div>
             <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Format</dt><dd style="margin:0; font-weight:600;">{{ formatLabel }}</dd></div>
-            <sc-if value="{{ showCamRow }}" hint-placeholder-val="{{ false }}"><div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Camera</dt><dd style="margin:0; font-weight:600; text-align:right;">{{ camLabel }}</dd></div></sc-if>
-            <sc-if value="{{ showProctorRow }}" hint-placeholder-val="{{ false }}"><div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; font-size:14px;"><dt style="color:var(--ink4,#767F93);">Proctoring</dt><dd style="margin:0; font-weight:600; text-align:right; max-width:60%;">{{ proctorLabel }}</dd></div></sc-if>
           </dl>
           <div style="margin:6px 22px 0; padding:16px; border-radius:12px; background:var(--subtle,#F8F9FB); border:1px solid rgba(var(--ln),.06);">
             <div style="font-size:14px; font-weight:700;">How fast should {{ personaFirst }} speak?</div>
@@ -873,20 +871,6 @@ class Component extends DCLogic {
   componentDidMount() {
     this.groups = {};
     this.applyTheme();
-    /* Proctoring (set by the scenario): leaving the tab during the conversation
-       is recorded for the admins; on Strict the microphone pauses until the
-       participant comes back. Nothing about this is shown as a score. */
-    this.onVis = () => {
-      const v = this.state.v, mode = v && v.call && v.call.proctoring;
-      if (!mode || mode === 'Off' || this.state.screen !== 'live' || !this.state.sid) return;
-      const hidden = document.visibilityState === 'hidden';
-      this.api(this.sess('/event'), 'POST', { type: hidden ? 'tab_hidden' : 'tab_visible', at_sec: this.state.elapsed || 0 }).catch(() => {});
-      if (mode === 'Strict' && this.client) {
-        try { hidden ? this.client.mute() : (!this.state.muted && this.client.unmute()); } catch (e) { /* ignore */ }
-        if (!hidden) this.toastMsg('Welcome back. Your microphone was paused while you were away from this tab.');
-      }
-    };
-    document.addEventListener('visibilitychange', this.onVis);
     this.onResize = () => {
       const vw = window.innerWidth; const was = this.state.vw; const next = { vw };
       if (vw < 1000 && (was === undefined || was >= 1000)) next.transcriptOpen = false;
@@ -1392,9 +1376,6 @@ class Component extends DCLogic {
       errPrimaryLabel: s.recovering ? (ek === 'busy' ? 'Checking availability…' : 'Reconnecting…') : (e ? e.primary : ''),
       errPrimary: () => e && !s.recovering && this.errAction(e.pa), errSecondary: () => e && this.errAction(e.sa), hasSecondary: !!(e && e.secondary),
 
-      showCamRow: !!(vp && vp.call.camera_used), camLabel: vp && vp.call.camera_required ? 'Required, shown only to you' : 'Optional, shown only to you',
-      showProctorRow: !!(vp && vp.call.proctoring && vp.call.proctoring !== 'Off'),
-      proctorLabel: vp && vp.call.proctoring === 'Strict' ? 'On: stay on this tab. Your microphone pauses if you leave it.' : 'On: leaving this tab is recorded.',
       // Results are for admins only. A learner may practise again while the attempt policy allows.
       canRetry: !!(vp && s.screen === 'complete' && (vp.attempts === 'Unlimited' || +vp.attempts > (vp.attempt || 1))),
       practiseAgain: () => this.practiseAgain(),
