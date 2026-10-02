@@ -195,7 +195,7 @@ def dynamic_variables(row: dict[str, Any], candidate_name: str = "not given",
         "difficulty": _s(cfg.get("tone")) or "Realistic",
         "follow_up_depth": _s(cfg.get("depth")) or "Probing",
         "adaptive_followups": "on" if cfg.get("followups", True) else "off",
-        "conversation_instructions": _s(agent.get("instructions")),
+        "conversation_instructions": _s(agent.get("instructions")) + exhibits_text(agent.get("exhibits") or []),
         "question_bank": "\n".join(
             f"{i}. {_s(q.get('text'))}" for i, q in enumerate(agent.get("questions") or [], 1)
             if _s(q.get("text"))
@@ -235,6 +235,26 @@ def no_interview(text: str) -> str:
         word = "conversation" + m.group(2)
         return word.capitalize() if m.group(1)[0].isupper() else word
     return _INTERVIEW.sub(sub, _AN_INTERVIEW.sub(r"\1\2", text))
+
+
+def exhibits_text(exhibits: list[dict[str, Any]]) -> str:
+    """What the persona knows about the exhibits on the participant's screen."""
+    if not exhibits:
+        return ""
+    lines = []
+    for i, e in enumerate(exhibits, 1):
+        line = f"Exhibit {i}, {e.get('title', '')}"
+        c = e.get("chart")
+        if c and c.get("labels"):
+            unit = (" " + c["unit"]) if c.get("unit") else ""
+            pts = ", ".join(f"{lab}: {val:g}{unit}" for lab, val in zip(c["labels"], c["values"]))
+            line += f" ({c.get('type', 'bar')} chart: {pts})"
+        if e.get("description"):
+            line += f". {e['description']}"
+        lines.append(line)
+    return ("\n\nExhibits the participant can see on their screen. When you want them to look at one, say its name, "
+            "for example \"take a look at Exhibit 1\", and it opens for them. Talk about it only using what is written here:\n"
+            + "\n".join("- " + x for x in lines))
 
 
 def persona_first(name: Any) -> str:

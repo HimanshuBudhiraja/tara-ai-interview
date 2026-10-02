@@ -365,6 +365,7 @@
       { id: 'persona', label: 'Persona', group: 'AGENT SETUP', done: !!a.persona.name.trim() },
       { id: 'rubric', label: 'Skills', group: 'AGENT SETUP', done: rubOk, review: !rubOk },
       { id: 'questions', label: 'Potential AI Questions', group: 'OPTIONAL', opt: true, done: a.questions.length > 0 },
+      { id: 'exhibits', label: 'Exhibits', group: 'OPTIONAL', opt: true, done: (a.exhibits || []).length > 0 },
       { id: 'settings', label: 'Conversation settings', group: 'OPTIONAL', opt: true },
       { id: 'advanced', label: 'Advanced', group: 'OPTIONAL', opt: true },
       { id: 'results', label: 'Results' + (S.sessions && S.sessions.length ? ' (' + S.sessions.length + ')' : ''), group: 'AFTER PUBLISHING', opt: true, done: !!(S.sessions && S.sessions.some((x) => x.evaluation)) }
@@ -533,6 +534,7 @@
         h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(c.followups), 'aria-label': 'Adaptive follow-ups', onclick: () => { c.followups = !c.followups; touch(); renderMain(); } }, h('i'))),
       h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add question', onclick: () => { a.questions.push({ text: 'New question', tag: '' }); S.editQ = a.questions.length - 1; touch(); renderMain(); const t = $('main3').querySelector('.qbody textarea'); if (t) { t.focus(); t.select(); } } })));
 
+    m.append(exhibitsSection(a));
     const srow = (title, hint, key, opts) => h('div', { class: 'srow' }, h('span', { class: 'tt' }, h('b', { text: title }), h('small', { text: hint })), seg(title, key, opts));
     const L = lengthParts();
     m.append(h('section', { id: 'settings', class: 'card', style: 'gap:22px', 'aria-labelledby': 'set-h' },
@@ -566,6 +568,96 @@
 
     window.scrollTo(0, keepY);
   }
+  /* Exhibit charts as SVG text (bar, line or pie), one drawing shared by the builder
+   * preview and the participant's screen. Labels are escaped; numbers are numbers. */
+  function chartSVG(c) {
+    const esc = (t) => String(t).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const L = (c && c.labels) || [], V = ((c && c.values) || []).map((v) => +v || 0), unit = c && c.unit ? ' ' + c.unit : '';
+    if (!L.length) return '';
+    const W = 560, H = 260, pal = ['#7F56D9', '#2E90FA', '#12B76A', '#F79009', '#F04438', '#9E77ED', '#06AED4', '#EE46BC', '#667085', '#15B79E', '#FB6514', '#6172F3'];
+    const fmt = (v) => (Math.round(v * 100) / 100).toLocaleString() + unit;
+    if (c.type === 'pie') {
+      const tot = V.reduce((a, b) => a + Math.max(0, b), 0) || 1; let a0 = -Math.PI / 2; const cx = 130, cy = 130, r = 105;
+      const slices = V.map((v, i) => { const a1 = a0 + Math.max(0, v) / tot * Math.PI * 2, big = a1 - a0 > Math.PI ? 1 : 0;
+        const p = V.length === 1 ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${pal[i % 12]}"/>` :
+          `<path d="M${cx},${cy} L${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} A${r},${r} 0 ${big} 1 ${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} Z" fill="${pal[i % 12]}" stroke="#fff" stroke-width="2"/>`;
+        a0 = a1; return p; }).join('');
+      const legend = L.map((l, i) => `<g transform="translate(280,${24 + i * 20})"><rect width="12" height="12" rx="2" fill="${pal[i % 12]}"/><text x="18" y="10.5" font-size="12.5" fill="currentColor">${esc(l)}: ${esc(fmt(V[i]))} (${Math.round(Math.max(0, V[i]) / tot * 100)}%)</text></g>`).join('');
+      return `<svg viewBox="0 0 ${W} ${Math.max(H, 40 + L.length * 20)}" role="img" style="width:100%;height:auto;font-family:inherit">${slices}${legend}</svg>`;
+    }
+    const pad = { l: 52, r: 16, t: 18, b: 44 }, pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+    const max = Math.max(0, ...V), min = Math.min(0, ...V), span = (max - min) || 1;
+    const y = (v) => pad.t + ph - (v - min) / span * ph, step = pw / L.length;
+    const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => min + span * f);
+    let g = ticks.map((t) => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="currentColor" stroke-opacity=".12"/><text x="${pad.l - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="currentColor" fill-opacity=".6">${esc(fmt(t))}</text>`).join('');
+    g += L.map((l, i) => `<text x="${pad.l + step * i + step / 2}" y="${H - pad.b + 18}" text-anchor="middle" font-size="11.5" fill="currentColor" fill-opacity=".75">${esc(l.length > 14 ? l.slice(0, 13) + '…' : l)}</text>`).join('');
+    if (c.type === 'line') {
+      const pts = V.map((v, i) => `${pad.l + step * i + step / 2},${y(v)}`);
+      g += `<polyline points="${pts.join(' ')}" fill="none" stroke="#7F56D9" stroke-width="2.5"/>` + V.map((v, i) => `<circle cx="${pad.l + step * i + step / 2}" cy="${y(v)}" r="4" fill="#7F56D9"/><text x="${pad.l + step * i + step / 2}" y="${y(v) - 9}" text-anchor="middle" font-size="11" fill="currentColor">${esc(fmt(v))}</text>`).join('');
+    } else {
+      const bw = Math.min(56, step * 0.6);
+      g += V.map((v, i) => { const x = pad.l + step * i + (step - bw) / 2, top = Math.min(y(v), y(0)), hgt = Math.abs(y(v) - y(0));
+        return `<rect x="${x}" y="${top}" width="${bw}" height="${Math.max(1, hgt)}" rx="4" fill="${pal[i % 12]}"/><text x="${x + bw / 2}" y="${top - 6}" text-anchor="middle" font-size="11" fill="currentColor">${esc(fmt(v))}</text>`; }).join('');
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" style="width:100%;height:auto;font-family:inherit">${g}</svg>`;
+  }
+
+  /* ---------- Exhibits: charts and images the participant sees during the conversation ---------- */
+  function exhibitsSection(a) {
+    a.exhibits = a.exhibits || [];
+    const add = (kind) => { if (a.exhibits.length >= 6) { toast('Up to 6 exhibits.'); return; }
+      a.exhibits.push(kind === 'chart' ? { kind, title: 'Exhibit ' + (a.exhibits.length + 1), description: '', chart: { type: 'bar', labels: ['Q1', 'Q2', 'Q3'], values: [0, 0, 0], unit: '' } }
+        : { kind, title: 'Exhibit ' + (a.exhibits.length + 1), description: '', file: '' }); touch(); renderMain(); };
+    const sec = h('section', { id: 'exhibits', class: 'card', 'aria-labelledby': 'exh-h' },
+      h('div', { class: 'ch2' }, h('div', { class: 'tt' }, h('h2', { id: 'exh-h', text: 'Exhibits' }),
+        h('p', { class: 'sub', text: 'Charts or images the participant sees during the conversation. The persona refers to them by name ("take a look at Exhibit 1") and they open on the participant\'s screen. The persona only knows what you write in "What the persona knows".' }))));
+    a.exhibits.forEach((e, i) => {
+      const up = (k, v) => { e[k] = v; touch(); };
+      const preview = h('div', { class: 'exprev' });
+      const paint = () => { preview.textContent = ''; if (e.kind === 'chart') preview.innerHTML = chartSVG(e.chart) || '<p class="resnote">Add at least one row.</p>';
+        else if (e.file) preview.append(h('img', { src: API + '/agents/' + encodeURIComponent(S.agentId) + '/exhibit-images/' + e.file, alt: e.title }));
+        else preview.append(h('p', { class: 'resnote', text: 'No image yet.' })); };
+      const body = h('div', { class: 'exbody' });
+      if (e.kind === 'chart') {
+        const c = e.chart;
+        const rows = h('div', { class: 'exrows' });
+        const paintRows = () => { rows.textContent = ''; c.labels.forEach((lab, r) => rows.append(h('div', { class: 'exrow' },
+          h('input', { class: 'inp', type: 'text', value: lab, maxlength: '30', 'aria-label': 'Label ' + (r + 1), oninput: (ev) => { c.labels[r] = ev.target.value; touch(); paint(); } }),
+          h('input', { class: 'inp', type: 'number', step: 'any', value: String(c.values[r]), 'aria-label': 'Value ' + (r + 1), oninput: (ev) => { c.values[r] = +ev.target.value || 0; touch(); paint(); } }),
+          h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Remove row ' + (r + 1), html: ICON.x, onclick: () => { c.labels.splice(r, 1); c.values.splice(r, 1); touch(); paintRows(); paint(); } })))); };
+        paintRows();
+        body.append(
+          h('div', { class: 'exgrid' },
+            h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Chart type' }), h('div', { role: 'group', 'aria-label': 'Chart type', class: 'seg' }, [['bar', 'Bar'], ['line', 'Line'], ['pie', 'Pie']].map(([v, l]) =>
+              h('button', { type: 'button', 'aria-pressed': String(c.type === v), text: l, onclick: (ev) => { c.type = v; touch(); ev.currentTarget.parentElement.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === ev.currentTarget))); paint(); } })))),
+            h('div', { class: 'fld' }, h('label', { text: 'Unit (optional)' }), h('input', { class: 'inp', type: 'text', value: c.unit, maxlength: '12', placeholder: 'e.g. $k, %, hrs', oninput: (ev) => { c.unit = ev.target.value; touch(); paint(); } }))),
+          h('div', { class: 'fld' }, h('span', { class: 'lbl', text: 'Data (label and value)' }), rows,
+            h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add row', onclick: () => { if (c.labels.length >= 12) { toast('Up to 12 rows.'); return; } c.labels.push(''); c.values.push(0); touch(); paintRows(); paint(); } })));
+      } else {
+        const file = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp', hidden: true, onchange: async (ev) => {
+          const f = ev.target.files[0]; if (!f) return;
+          if (f.size > 5 * 1024 * 1024) { toast('Use an image up to 5 MB.'); return; }
+          const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+          try { await saveNow(); const out = await api('/agents/' + encodeURIComponent(S.agentId) + '/exhibit-images', { method: 'POST', body: { data_base64: data } }); e.file = out.file; dirty = true; await saveNow(); paint(); toast('Image uploaded.'); }
+          catch (x) { toast(x.message); }
+        } });
+        body.append(file, h('button', { class: 'obtn ghost', type: 'button', text: e.file ? 'Replace image' : 'Upload image (PNG, JPEG or WebP, up to 5 MB)', onclick: () => file.click() }));
+      }
+      paint();
+      sec.append(h('div', { class: 'exitem' },
+        h('div', { class: 'exhead' }, h('b', { text: 'Exhibit ' + (i + 1) + ' · ' + (e.kind === 'chart' ? 'Chart' : 'Image') }),
+          h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Remove exhibit ' + (i + 1), html: ICON.x, onclick: () => { a.exhibits.splice(i, 1); touch(); renderMain(); } })),
+        h('div', { class: 'exgrid' },
+          h('div', { class: 'fld' }, h('label', { text: 'Title (the participant sees it)' }), h('input', { class: 'inp', type: 'text', value: e.title, maxlength: '80', oninput: (ev) => { up('title', ev.target.value); } })),
+          h('div', { class: 'fld' }, h('label', { text: 'What the persona knows' }), h('textarea', { class: 'ed', rows: '3', maxlength: '600', value: e.description, placeholder: 'What this shows and what matters in it. The persona only talks about it using this (and the chart data).', oninput: (ev) => { up('description', ev.target.value); } }))),
+        body, preview));
+    });
+    sec.append(h('div', { class: 'rbtns' },
+      h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add chart', disabled: a.exhibits.length >= 6, onclick: () => add('chart') }),
+      h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add image', disabled: a.exhibits.length >= 6, onclick: () => add('image') })));
+    return sec;
+  }
+
   /* ---------- Published = locked: usable (test, invite, results), never edited ---------- */
   function lockEditor(m) {
     m.querySelectorAll('input, textarea, select, button').forEach((el) => {

@@ -120,6 +120,11 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
             "persona": {"name": a["persona"]["name"], "role": a["persona"]["role"]},
             "description": _persona_only(a, a["description"]),
             "skills": [r["name"] for r in a["rubric"]],
+            # What the participant can be shown during the conversation. Images are served
+            # through this session only; nothing else about the scoring is included.
+            "exhibits": [{"n": i + 1, "kind": e["kind"], "title": rx.no_interview(e["title"]),
+                          "chart": e.get("chart"), "image": f"/api/participant/session/{row['session_id']}/exhibit-images/{e['file']}" if e.get("file") else ""}
+                         for i, e in enumerate(a.get("exhibits") or [])],
             "voice": v.label.split(" —")[0], "language": v.language,
         },
         "call": {
@@ -433,6 +438,16 @@ def complete(body: CompleteBody, background: BackgroundTasks,
         sessions.save(row)
         background.add_task(_score, row["session_id"])
     return view(row)
+
+
+@router.get("/session/{session_id}/exhibit-images/{name}")
+def participant_exhibit_image(name: str, row: dict[str, Any] = Depends(participant_scope)):
+    """An exhibit image, only to the participant whose role-play uses it."""
+    from services.api.agent_builder import _exhibit_files, exhibit_response
+
+    if name not in _exhibit_files(row["snapshot"]["agent"]):
+        raise HTTPException(404, "No such image.")
+    return exhibit_response(name)
 
 
 class FeedbackBody(BaseModel):

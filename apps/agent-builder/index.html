@@ -854,6 +854,17 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 .rts{position:absolute;right:12px;bottom:10px;border:0;background:transparent;color:var(--sel-ink,#1570EF);font:inherit;font-size:12px;cursor:pointer;padding:0}
 .rts:hover{text-decoration:underline}
 @media print{.raudio{display:none}.rts{color:var(--muted-2)}}
+
+/* ===== exhibits ===== */
+.exitem{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.exhead{display:flex;justify-content:space-between;align-items:center}
+.exgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:760px){.exgrid{grid-template-columns:1fr}}
+.exgrid textarea.ed{width:100%;box-sizing:border-box}
+.exrows{display:flex;flex-direction:column;gap:6px;margin:6px 0}
+.exrow{display:grid;grid-template-columns:1fr 120px 32px;gap:8px;align-items:center}
+.exprev{border:1px dashed var(--line);border-radius:10px;padding:10px;color:var(--ink-2);background:#fff}
+.exprev img{max-width:100%;max-height:320px;display:block;margin:0 auto;border-radius:6px}
 </style>
 </head>
 <body>
@@ -1040,6 +1051,6 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 <aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003y"></script>
+<script src="/agent-builder/app.js?v=20261003z"></script>
 </body>
 </html>

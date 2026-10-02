@@ -227,6 +227,8 @@ DECLARED: dict[tuple[str, str], str] = {
     ("PUT", "/api/recruiter/agent-builder/agents/{agent_id}/attempts/{attempt_id}/review"): RECRUITER_AUTHENTICATED,
     ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/attempts/{attempt_id}/evaluate"): RECRUITER_AUTHENTICATED,
     ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/attempts/{attempt_id}/audio"): RECRUITER_AUTHENTICATED,
+    ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/exhibit-images"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/exhibit-images/{name}"): RECRUITER_AUTHENTICATED,
     ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/sessions"): RECRUITER_AUTHENTICATED,
     # ---- Participant (a published agent, taken by someone with an access code)
     # Public because it MINTS the session grant from an access code; every
@@ -239,6 +241,7 @@ DECLARED: dict[tuple[str, str], str] = {
     ("POST", "/api/participant/session/{session_id}/chat"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/participant/session/{session_id}/complete"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/participant/session/{session_id}/feedback"): CANDIDATE_TOKEN_SCOPED,
+    ("GET", "/api/participant/session/{session_id}/exhibit-images/{name}"): CANDIDATE_TOKEN_SCOPED,
     ("GET", "/participant"): INTERNAL_ONLY,
     ("GET", "/participant/support.js"): INTERNAL_ONLY,
     ("GET", "/participant/assets/{name}"): INTERNAL_ONLY,

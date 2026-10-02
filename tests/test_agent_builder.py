@@ -918,3 +918,46 @@ def test_the_word_interview_never_reaches_anyone():
                              "instructions": "Run the interview.", "opening_line": "Welcome to the interview.",
                              "closing_line": "Thanks.", "questions": [{"text": "Why this interview?", "tag": "x"}]})
     assert "nterview" not in json.dumps(agent)
+
+
+# --------------------------------------------------------------------------- #
+#  Exhibits: charts and images the participant sees during the conversation
+# --------------------------------------------------------------------------- #
+PNG = (b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+       b"\x00\x00\x00\rIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82")
+
+
+def test_exhibits_reach_the_persona_and_the_participant_only(client):
+    import base64
+
+    row = _draft(client)["done"]
+    aid = row["agent_id"]
+    bad = client.post(f"{BASE}/agents/{aid}/exhibit-images", json={"data_base64": base64.b64encode(b"<svg onload=x>hi</svg>").decode()})
+    assert bad.status_code == 422                                              # checked by its bytes
+    up = client.post(f"{BASE}/agents/{aid}/exhibit-images", json={"data_base64": "data:image/png;base64," + base64.b64encode(PNG).decode()})
+    assert up.status_code == 200, up.text
+    f = up.json()["file"]
+    agent = copy.deepcopy(row["agent"])
+    agent["exhibits"] = [
+        {"kind": "chart", "title": "Quarterly revenue", "description": "Q3 dipped after a price change.",
+         "chart": {"type": "bar", "labels": ["Q1", "Q2", "Q3"], "values": [120, 140, "95"], "unit": "k"}},
+        {"kind": "image", "title": "Pricing sheet", "description": "List prices for the three plans.", "file": f},
+        {"kind": "image", "title": "Bad", "file": "../../etc/passwd"},             # dropped: not an uploaded file
+    ]
+    out = client.put(f"{BASE}/agents/{aid}", json={"fields": row["fields"], "agent": agent, "cfg": row["cfg"], "reviewed": True}).json()
+    assert [e["title"] for e in out["agent"]["exhibits"]] == ["Quarterly revenue", "Pricing sheet"]
+    assert out["agent"]["exhibits"][0]["chart"]["values"] == [120.0, 140.0, 95.0]
+    v = rx.dynamic_variables(store.load(aid))["conversation_instructions"]
+    assert "Exhibit 1, Quarterly revenue (bar chart: Q1: 120 k, Q2: 140 k, Q3: 95 k)" in v and "Exhibit 2, Pricing sheet" in v
+    assert client.get(f"{BASE}/agents/{aid}/exhibit-images/{f}").status_code == 200
+    assert client.get(f"{BASE}/agents/{aid}/exhibit-images/{'0' * 24}.png").status_code == 404
+    assert client.post(f"{BASE}/agents/{aid}/publish").status_code == 200
+    inv = client.post(f"{BASE}/agents/{aid}/invites", json={"name": "P"}).json()["code"]
+    p = TestClient(app)
+    s = p.post("/api/participant/sign-in", json={"code": inv, "name": "P", "email": "p@x.test", "consent": True}).json()
+    ex = s["agent"]["exhibits"]
+    assert ex[0]["n"] == 1 and ex[0]["chart"]["type"] == "bar" and ex[1]["image"].endswith(f)
+    img = p.get(ex[1]["image"])
+    assert img.status_code == 200 and img.headers["content-type"] == "image/png" and img.content == PNG
+    assert TestClient(app).get(ex[1]["image"]).status_code == 404                # another browser: no session, no image
+    assert "description" not in json.dumps(ex)                                  # what the persona knows stays with the persona

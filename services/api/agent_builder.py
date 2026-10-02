@@ -176,9 +176,45 @@ def _clean_agent(agent: dict[str, Any]) -> dict[str, Any]:
         "questions": [{"text": _s(q.get("text"))[:600], "tag": _s(q.get("tag"))[:120]}
                       for q in (agent.get("questions") or [])[:30] if _s(q.get("text"))],
         "rubric": rubric[:10],
+        "exhibits": clean_exhibits(agent.get("exhibits")),
         "depth": _one(agent.get("depth"), rx.DEPTHS, "Probing"),
         "voice": agent.get("voice") if agent.get("voice") in rx.VOICE_KEYS else rx.DEFAULT_VOICE,
     }
+
+
+CHART_TYPES = ("bar", "line", "pie")
+_FILE_ID = re.compile(r"^[a-f0-9]{24}\.(png|jpg|webp)$")
+
+
+def clean_exhibits(raw: Any) -> list[dict[str, Any]]:
+    """Up to six exhibits the participant sees during the conversation: a chart
+    from a small table, or an uploaded image, each with what the persona knows about it."""
+    out = []
+    for e in (raw if isinstance(raw, list) else [])[:6]:
+        if not isinstance(e, dict):
+            continue
+        kind = "image" if e.get("kind") == "image" else "chart"
+        item = {"kind": kind, "title": _s(e.get("title"))[:80] or f"Exhibit {len(out) + 1}",
+                "description": _s(e.get("description"))[:600]}
+        if kind == "chart":
+            c = e.get("chart") if isinstance(e.get("chart"), dict) else {}
+            labels = [_s(x)[:30] for x in (c.get("labels") or [])][:12]
+            vals = []
+            for v in (c.get("values") or [])[:len(labels)]:
+                try:
+                    vals.append(round(float(v), 4))
+                except (TypeError, ValueError):
+                    vals.append(0.0)
+            vals += [0.0] * (len(labels) - len(vals))
+            item["chart"] = {"type": c.get("type") if c.get("type") in CHART_TYPES else "bar",
+                             "labels": labels, "values": vals, "unit": _s(c.get("unit"))[:12]}
+        else:
+            f = _s(e.get("file"))
+            if not _FILE_ID.match(f):
+                continue
+            item["file"] = f
+        out.append(item)
+    return out
 
 
 def clean_fields(fields: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
@@ -1125,6 +1161,62 @@ async def attempt_audio(agent_id: str, attempt_id: str, request: Request) -> dic
                     out.append({"part": n, "url": c["recording_url"],
                                 "duration_sec": round(((c.get("end_timestamp") or 0) - (c.get("start_timestamp") or 0)) / 1000)})
     return {"recordings": out}
+
+
+def exhibit_dir():
+    d = config.DATA_DIR / "exhibits"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+_MAGIC = ((b"\x89PNG\r\n\x1a\n", "png"), (b"\xff\xd8\xff", "jpg"), (b"RIFF", "webp"))
+
+
+class ExhibitImageBody(BaseModel):
+    data_base64: str = Field(min_length=10, max_length=7_000_000)   # ~5 MB of image
+
+
+@router.post("/agents/{agent_id}/exhibit-images")
+def upload_exhibit_image(agent_id: str, body: ExhibitImageBody, request: Request) -> dict[str, Any]:
+    """An image for an exhibit: PNG, JPEG or WebP, up to 5 MB, checked by its bytes, not its name."""
+    import base64
+    import secrets as _secrets
+
+    _editable(agent_id, request)
+    try:
+        raw = base64.b64decode(body.data_base64.split(",", 1)[-1], validate=True)
+    except ValueError as exc:
+        raise HTTPException(422, "That file couldn't be read.") from exc
+    ext = next((e for m, e in _MAGIC if raw.startswith(m) and (e != "webp" or raw[8:12] == b"WEBP")), None)
+    if ext is None or len(raw) > 5 * 1024 * 1024:
+        raise HTTPException(422, "Use a PNG, JPEG or WebP image up to 5 MB.")
+    name = f"{_secrets.token_hex(12)}.{ext}"
+    (exhibit_dir() / name).write_bytes(raw)
+    return {"file": name}
+
+
+def _exhibit_files(snapshot_agent: dict[str, Any]) -> set[str]:
+    return {e.get("file") for e in snapshot_agent.get("exhibits") or [] if e.get("file")}
+
+
+def exhibit_response(name: str):
+    from fastapi.responses import FileResponse
+
+    path = exhibit_dir() / name
+    if not _FILE_ID.match(name) or not path.exists():
+        raise HTTPException(404, "No such image.")
+    media = {"png": "image/png", "jpg": "image/jpeg", "webp": "image/webp"}[name.rsplit(".", 1)[1]]
+    return FileResponse(path, media_type=media, headers={"Cache-Control": "private, max-age=3600",
+                                                         "X-Content-Type-Options": "nosniff"})
+
+
+@router.get("/agents/{agent_id}/exhibit-images/{name}")
+def get_exhibit_image(agent_id: str, name: str, request: Request):
+    """Only an image this agent (its draft or published version) actually uses."""
+    row = _row(agent_id, request)
+    if name not in _exhibit_files(row["agent"]) | _exhibit_files((row.get("published") or {}).get("agent") or {}):
+        raise HTTPException(404, "No such image.")
+    return exhibit_response(name)
 
 
 class ReviewBody(BaseModel):
