@@ -695,3 +695,11 @@ def test_the_config_never_keeps_tara_whoever_wrote_the_line(client):
     out = r.json()["agent"]
     assert out["instructions"] == "Maya conducts a friendly interview."
     assert out["questions"][0]["text"] == "Maya asks about pricing."
+
+
+def test_long_skill_names_are_not_a_leak_only_anchors_are():
+    row = _row()
+    row["agent"]["rubric"][0]["name"] = "Cross-Functional Collaboration"
+    row["agent"]["questions"][0]["tag"] = "Cross-Functional Collaboration"
+    row["fields"]["skills"] = "Cross-Functional Collaboration, design critique"
+    assert rx.leaked_cues(rx.web_call_body(row, "agent_x"), row) == []

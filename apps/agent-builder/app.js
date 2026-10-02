@@ -625,7 +625,7 @@
       S.row = row; renderSide(); toast('Published as version ' + row.published_version + '. The candidate link is in the sidebar.');
     } catch (e) {
       const d = e.detail || {};
-      toast(d.missing ? 'Finish ' + d.missing.join(', ').toLowerCase() + ' first.' : d.leaked ? 'The instructions or questions repeat a skill description. Reword them first.' : e.message);
+      toast(d.missing ? 'Finish ' + d.missing.join(', ').toLowerCase() + ' first.' : d.leaked ? 'Reword this first: the instructions or questions repeat the "what a 5 looks like" text of a skill, which the voice agent must not see: "' + String(d.leaked[0]).slice(0, 90) + (String(d.leaked[0]).length > 90 ? '…' : '') + '"' : e.message);
     }
   });
   // One access code per participant, for the published version. The link opens the participant flow.

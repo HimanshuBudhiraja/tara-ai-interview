@@ -294,15 +294,18 @@ def web_call_body(row: dict[str, Any], agent_id: str, webhook_url: str = "", *,
 
 
 def assessment_content(row: dict[str, Any]) -> list[str]:
-    """Every string that belongs to the scorer and nobody else."""
+    """Every string that belongs to the scorer and nobody else.
+
+    That is each skill's anchor ("what a 5 looks like"). Skill NAMES are not
+    secret: they are sent on purpose as {{skills_focus}}, so the voice agent
+    knows what the conversation should bring out, and question tags are the
+    same names. Treating long names as secret refused every agent whose skill
+    happened to be called "Cross-Functional Collaboration".
+    """
     agent = row.get("agent") or {}
-    out: list[str] = []
-    for r in agent.get("rubric") or []:
-        out += [_s(r.get("name")), _s(r.get("anchor"))]
-    out += [_s(q.get("tag")) for q in agent.get("questions") or []]
-    # Short strings are skipped: "Communication" is a rubric name and also an
-    # ordinary word a persona's instructions may use honestly. A check that
-    # fires on coincidence gets switched off.
+    out = [_s(r.get("anchor")) for r in agent.get("rubric") or []]
+    # Short strings are skipped: a one-line anchor fragment can coincide with
+    # ordinary words. A check that fires on coincidence gets switched off.
     return sorted({s for s in out if len(s) > 24})
 
 
