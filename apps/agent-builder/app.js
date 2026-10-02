@@ -149,6 +149,34 @@
   $('brief').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !$('create').disabled) { e.preventDefault(); build(); } });
   $('create').addEventListener('click', build);
   $('navTpl').addEventListener('click', (e) => { e.preventDefault(); $('templates').scrollIntoView({ behavior: 'smooth' }); });
+  $('navMine').addEventListener('click', (e) => { e.preventDefault(); $('mine').scrollIntoView({ behavior: 'smooth' }); });
+  $('railAgent').addEventListener('click', (e) => { e.preventDefault(); go(1); loadMine(); });
+
+  /* ---------- your role-plays: every agent created, to open or showcase ---------- */
+  async function openAgent(id) {
+    try {
+      const row = await api('/agents/' + encodeURIComponent(id));
+      S.brief = row.brief || ''; $('brief').value = S.brief; S.mode = row.mode === 'assessment' ? 'assessment' : 'roleplay';
+      renderS1(); loadRow(row); go(3);
+      history.replaceState(null, '', '?agent=' + encodeURIComponent(id));
+    } catch (e) { toast('That agent couldn\'t be opened.'); }
+  }
+  async function loadMine() {
+    let list = [];
+    try { list = (await api('/agents')).agents || []; } catch (e) { return; }
+    $('mine').hidden = !list.length; $('navMine').hidden = !list.length;
+    const g = $('minecards'); g.textContent = '';
+    list.forEach((a) => {
+      const pub = a.published_version > 0;
+      g.append(h('button', { class: 'tc', type: 'button', 'aria-label': 'Open ' + a.title, onclick: () => openAgent(a.agent_id) },
+        h('span', { class: 'tr' }, h('span', { class: 'cat ' + (pub ? 'pub' : 'draft'), text: pub ? 'Published · v' + a.published_version : 'Draft' }), h('span', { class: 'kind', text: a.type_label })),
+        h('span', { class: 'tt', text: a.title }),
+        h('span', { class: 'td', text: a.description }),
+        h('span', { class: 'tf' }, h('span', null,
+          h('span', null, h('span', { class: 'spark', html: ICON.clock }), (a.minutes || '–') + ' min'),
+          h('span', null, h('span', { class: 'spark', html: ICON.mic }), a.persona || 'Voice')), h('span', { class: 'use', text: 'Open →' }))));
+    });
+  }
 
   /* =============== SCREEN 2 =============== */
   const STEPS = [
@@ -522,32 +550,29 @@
       toast((copied ? 'Link copied. ' : '') + 'Access code ' + r.code + ' · ' + r.link);
     } catch (e) { toast(e.message); }
   });
-  $('testBtn').addEventListener('click', () => { resetTest(true); $('testp').scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => $('tin').focus({ preventScroll: true }), 300); });
+  $('testBtn').addEventListener('click', () => { resetTest(true); $('testp').scrollIntoView({ behavior: 'smooth', block: 'start' }); if (OPT.voice_configured) startVoice(); });
 
-  /* ---------- test: one transcript, typed or spoken ----------
-   * The log is the transcript. Typing rehearses on the server (the same global
-   * prompt Retell runs); the mic places a real Retell call on the one agent and
-   * streams that call's transcript into the same log. Scoring reads whatever the
-   * log holds, so a typed test and a spoken one are scored the same way. */
+  /* ---------- test: a real voice call, shown as its transcript ----------
+   * The test is spoken: the button places a real Retell call on the one agent,
+   * and the log only shows that call's timed transcript. Scoring reads the
+   * transcript once the call has ended. */
   function resetTest(render) {
     endVoice();
     S.tBusy = false; S.score = null; S.scoreBusy = false;
     S.voice = { state: 'idle', callId: '', client: null, err: '' };
-    S.test = S.agent && S.cfg && S.cfg.speaker !== 'Participant opens' ? [{ from: 'tara', text: S.agent.opening_line }] : [];
+    S.test = [];
     if (render !== false) renderTest();
   }
   const turns = () => S.test.filter((m) => m.from !== 'err').map((m) => ({ role: m.from === 'tara' ? 'agent' : 'user', text: m.text }));
   const inCall = () => ['connecting', 'live', 'speaking'].includes(S.voice.state);
   function syncSend() {
-    $('tsend').disabled = S.tBusy || inCall() || !$('tin').value.trim() || !S.agent || !OPT.model_configured;
-    $('tin').disabled = inCall();
     $('scoreBtn').disabled = S.scoreBusy || S.tBusy || inCall() || !OPT.model_configured || S.test.filter((m) => m.from === 'user').length < 2;
     const mic = $('tMic');
-    mic.hidden = !OPT.voice_configured;
+    const label = inCall() ? 'End call' : S.voice.state === 'ended' ? 'Start another voice test' : 'Start voice test';
     mic.classList.toggle('on', inCall());
-    mic.setAttribute('aria-label', inCall() ? 'End voice call' : 'Start voice call');
-    mic.title = inCall() ? 'End voice call' : 'Start voice call';
-    mic.disabled = S.tBusy;
+    mic.setAttribute('aria-label', label);
+    $('tMicLabel').textContent = label;
+    mic.disabled = !OPT.voice_configured || !S.agent || S.voice.state === 'connecting';
   }
   function renderScore() {
     const box = $('scorebox');
@@ -567,7 +592,7 @@
     const name = S.agent ? S.agent.persona.name : 'Tara';
     const text = {
       connecting: 'Connecting the call…', live: 'Live call · speak normally', speaking: 'Live call · ' + name + ' is speaking',
-      ended: 'Call ended · score it below, or tap the mic for another', failed: v.err
+      ended: 'Call ended · score it below, or start another', failed: v.err
     }[v.state] || '';
     st.textContent = text;
     st.className = 'tstat' + (v.state === 'live' || v.state === 'speaking' ? ' live' : v.state === 'failed' ? ' bad' : '');
@@ -575,7 +600,9 @@
   function renderTest() {
     const log = $('tlog'); log.textContent = '';
     if (!S.test.length && !S.tBusy && !inCall()) {
-      log.append(h('p', { class: 'empty', text: OPT.voice_configured ? 'Type a reply or tap the mic to talk. You speak first in this setup.' : 'Type a reply to start. You speak first in this setup.' }));
+      log.append(h('p', { class: 'empty', text: OPT.voice_configured
+        ? 'Start a voice test to talk to ' + (S.agent ? S.agent.persona.name : 'Tara') + ' as a participant would. The transcript appears here as you speak.'
+        : 'Voice testing is off until RETELL_API_KEY and RETELL_AGENT_BUILDER_AGENT_ID are set.' }));
     }
     const mmss = (x) => String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0');
     const who = S.agent ? S.agent.persona.name : 'Tara';
@@ -589,17 +616,6 @@
     log.scrollTop = log.scrollHeight;
     renderStatus(); renderScore(); syncSend();
   }
-  async function sendTest(text) {
-    text = (text || '').trim(); if (!text || S.tBusy || inCall() || !S.agent) return;
-    S.test.push({ from: 'user', text }); S.tBusy = true; S.score = null;
-    $('tin').value = ''; renderTest();
-    try {
-      await saveNow();
-      const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/test-chat', { method: 'POST', body: { messages: turns() } });
-      S.test.push({ from: 'tara', text: r.reply });
-    } catch (e) { S.test.push({ from: 'err', text: e.message }); }
-    S.tBusy = false; renderTest(); $('tin').focus({ preventScroll: true });
-  }
   async function scoreTest() {
     if (S.scoreBusy) return;
     S.scoreBusy = true; renderTest();
@@ -608,9 +624,6 @@
     } catch (e) { S.score = { err: e.message }; }
     S.scoreBusy = false; renderTest();
   }
-  $('tin').addEventListener('input', syncSend);
-  $('tin').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing && !$('tsend').disabled) { e.preventDefault(); sendTest($('tin').value); } });
-  $('tsend').addEventListener('click', () => sendTest($('tin').value));
   $('tRestart').addEventListener('click', () => resetTest(true));
   $('scoreBtn').addEventListener('click', scoreTest);
 
@@ -665,10 +678,11 @@
     try {
       OPT = await api('/options');
       const msgs = [];
-      if (!OPT.model_configured) msgs.push('No model is configured, so drafts come from a template and Ask Tara, chat tests and scoring are off.');
+      if (!OPT.model_configured) msgs.push('No model is configured, so drafts come from a template and Ask Tara, scoring are off.');
       if (!OPT.voice_configured) msgs.push('Voice testing is off until RETELL_API_KEY and RETELL_AGENT_BUILDER_AGENT_ID are set.');
       note(msgs.join(' '));
     } catch (e) { return; }
+    loadMine();
     const id = new URLSearchParams(location.search).get('agent');
     if (id) {
       try { const row = await api('/agents/' + encodeURIComponent(id)); S.brief = row.brief || ''; $('brief').value = S.brief; S.mode = row.mode === 'assessment' ? 'assessment' : 'roleplay'; renderS1(); loadRow(row); go(3); }

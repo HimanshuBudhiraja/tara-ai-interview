@@ -210,9 +210,13 @@ def dynamic_variables(row: dict[str, Any], candidate_name: str = "not given",
 #: fixes). Sent on every call, so they hold whatever the agent in Retell is set to.
 TURN_TAKING = {
     "responsiveness": 0.4,
-    "interruption_sensitivity": 0.4,
+    # 0.7: the participant can cut in and Tara yields, as a person would;
+    # background noise and short sounds still don't stop her mid-sentence.
+    "interruption_sensitivity": 0.7,
     "enable_backchannel": True,
-    "backchannel_frequency": 0.7,
+    # 0.2: an occasional "mm-hmm" on longer answers. 0.7 put one over almost
+    # every sentence, which participants heard as being talked over.
+    "backchannel_frequency": 0.2,
     "backchannel_words": ["mm-hmm", "I see", "right"],
 }
 

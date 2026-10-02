@@ -268,9 +268,13 @@ def list_agents(request: Request) -> dict[str, Any]:
     org = _org(request)
     return {"agents": [
         {"agent_id": r["agent_id"], "title": r["agent"]["title"], "type_label": r["agent"]["type_label"],
+         "persona": ((r["agent"].get("persona") or {}).get("name") or ""),
+         "description": r["agent"].get("description") or "",
+         "minutes": rx.DEPTH_MINUTES.get((r.get("cfg") or {}).get("depth") or "", 0),
          "published_version": int((r.get("published") or {}).get("version") or 0),
          "updated_at": r.get("updated_at", 0)}
-        for r in store.list_all() if r.get("org_id") == org
+        for r in sorted(store.list_all(), key=lambda r: r.get("updated_at", 0), reverse=True)
+        if r.get("org_id") == org
     ]}
 
 

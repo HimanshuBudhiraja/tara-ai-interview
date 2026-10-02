@@ -23,6 +23,8 @@ already said.
 """
 from __future__ import annotations
 
+import re
+
 import secrets
 import time
 from typing import Any
@@ -43,7 +45,20 @@ router = APIRouter(prefix="/api/participant", tags=["participant"])
 
 COOKIE = "tara_participant"
 RETELL = "https://api.retellai.com"
-ORG_LABEL = "the hiring team"
+#: Who reviews the conversation, in the participant's words. "The hiring team"
+#: only when the scenario is about hiring; any other role-play or assessment
+#: is reviewed by whoever invited the participant.
+HIRING_LABEL = "the hiring team"
+ORG_LABEL = "the team that invited you"
+_HIRING = re.compile(r"\b(interview\w*|hiring|hire|recruit\w*|candidate\w*|screening|job applica\w*)\b", re.I)
+
+
+def is_hiring(snap: dict[str, Any]) -> bool:
+    """Whether the scenario is about hiring someone, read from what it says."""
+    a, f = snap.get("agent") or {}, snap.get("fields") or {}
+    text = " ".join(str(x) for x in (a.get("title"), a.get("type_label"), a.get("description"),
+                                      f.get("role"), snap.get("brief")) if x)
+    return bool(_HIRING.search(text))
 
 
 # --------------------------------------------------------------------------- #
@@ -113,7 +128,8 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
             "voice_configured": bool(config.RETELL_API_KEY and config.RETELL_AGENT_BUILDER_AGENT_ID),
         },
         "voice_sample_url": voice_sample(v.voice_id),
-        "org_label": ORG_LABEL,
+        "org_label": HIRING_LABEL if is_hiring(snap) else ORG_LABEL,
+        "hiring": is_hiring(snap),
         "calls": len(row.get("calls") or []),
         "submitted_at": row.get("ended_at"),
         "booking": booking_view(row),

@@ -28,9 +28,9 @@ API = "https://api.retellai.com"
 #: Section A of the prompt file, as Retell field → expected value.
 AGENT_SETTINGS = {
     "responsiveness": 0.4,
-    "interruption_sensitivity": 0.4,
+    "interruption_sensitivity": rx.TURN_TAKING["interruption_sensitivity"],
     "enable_backchannel": True,
-    "backchannel_frequency": 0.7,
+    "backchannel_frequency": rx.TURN_TAKING["backchannel_frequency"],
     "backchannel_words": ["mm-hmm", "I see", "right"],
     "reminder_trigger_ms": 15000,
     "reminder_max_count": 1,

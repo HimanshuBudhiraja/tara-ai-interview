@@ -262,13 +262,9 @@
               <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Submitted</dt><dd style="margin:0; font-weight:600;">{{ submittedAt }}</dd></div>
               <div style="display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14px;"><dt style="color:var(--ink4,#767F93);">Reference</dt><dd style="margin:0; font-family:'JetBrains Mono',monospace; font-size:13px;">{{ refCode }}</dd></div>
             </dl>
-            <h2 style="font-size:15px; font-weight:700; margin:32px 0 12px;">Skills this conversation explored</h2>
-            <div style="display:flex; flex-wrap:wrap; gap:8px;">
-              <sc-for list="{{ skills }}" as="sk" hint-placeholder-count="5"><span style="display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:var(--ink2,#3B4252); background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.08); border-radius:8px; height:30px; padding:0 10px;"><span style="width:7px; height:7px; border-radius:50%; background:{{ sk.color }};"></span>{{ sk.name }}</span></sc-for>
-            </div>
             <h2 style="font-size:15px; font-weight:700; margin:32px 0 4px;">What happens next</h2>
             <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--blueInk,#2456DB); padding-top:2px;">01</span><div><strong style="color:var(--ink,#0D1017);">{{ orgName }} reviews your conversation</strong> with {{ personaFirst }}.</div></div>
-            <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--blueInk,#2456DB); padding-top:2px;">02</span><div><strong style="color:var(--ink,#0D1017);">You'll hear from them by email</strong> at {{ email }}.</div></div>
+            <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; border-bottom:1px solid rgba(var(--ln),.06); font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--blueInk,#2456DB); padding-top:2px;">02</span><div><strong style="color:var(--ink,#0D1017);">{{ nextEmail }}</strong> at {{ email }}.</div></div>
             <div style="display:grid; grid-template-columns:28px minmax(0,1fr); gap:8px; padding:12px 0; font-size:14.5px; line-height:1.55; color:var(--ink2,#3B4252);"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--greenInk,#05603A); padding-top:2px;">—</span><div><strong style="color:var(--ink,#0D1017);">Nothing else is needed from you.</strong> It's safe to close this window.</div></div>
           </div>
         </section>
@@ -352,9 +348,11 @@
         </div>
 
         <div style="flex:1 0 auto; width:100%; max-width:820px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:clamp(4px,1.5vh,24px) 0 clamp(8px,2vh,20px);">
-          <div style="width:{{ orbSize }}; max-width:50%; flex:none; transition:width 400ms cubic-bezier(.2,0,0,1);">{{ orb }}</div>
-          <div role="status" aria-live="polite" style="display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink2,#3B4252); padding:6px 14px; border-radius:999px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.1); margin-top:6px;">
-            <span style="width:7px; height:7px; border-radius:50%; background:{{ statusDot }}; animation:taraPulse 1.4s ease-in-out infinite;"></span>{{ statusLabel }}
+          <div style="position:relative; width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:clamp(44px,7vh,72px) 16px clamp(28px,5vh,52px); border-radius:20px; border:1px solid rgba(var(--ln),.12); background:radial-gradient(55% 60% at 50% 50%, rgba(124,92,252,.14), transparent 70%), var(--subtle,#F8F9FB); box-shadow:inset 0 1px 0 rgba(255,255,255,.04);">
+            <div role="status" aria-live="polite" style="position:absolute; top:14px; left:14px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink2,#3B4252); padding:6px 14px; border-radius:999px; background:var(--surface,#FFFFFF); border:1px solid rgba(var(--ln),.1);">
+              <span style="width:7px; height:7px; border-radius:50%; background:{{ statusDot }}; animation:taraPulse 1.4s ease-in-out infinite;"></span>{{ statusLabel }}
+            </div>
+            <div style="width:{{ orbSize }}; max-width:70%; flex:none; transition:width 400ms cubic-bezier(.2,0,0,1);">{{ orb }}</div>
           </div>
 
           <sc-if value="{{ isReady }}">
@@ -865,7 +863,7 @@ class Component extends DCLogic {
   }
   sess(path) { return '/session/' + encodeURIComponent(this.state.sid) + (path || ''); }
   persona() { const v = this.state.v; return v ? v.agent.persona.name : 'Tara'; }
-  org() { const v = this.state.v; return v ? v.org_label : 'the hiring team'; }
+  org() { const v = this.state.v; return v ? v.org_label : 'the team that invited you'; }
   isChat() { const v = this.state.v; return !!(v && v.call.format === 'Chat'); }
   cameraUsed() { const v = this.state.v; return !!(v && v.call.camera_used); }
 
@@ -1232,7 +1230,7 @@ class Component extends DCLogic {
       refCode: s.code || (v && v.session_id) || '', agentTitle: a.title, scenarioLine: a.type_label, personaFull: P + (a.persona.role ? ', ' + a.persona.role : ''),
       personaFirst: PF, personaName: P, personaRole: a.persona.role, personaDesc: PF + ' plays this role for the whole conversation and responds to what you say, so there is no fixed script.',
       language: a.language || 'English', durationLong: durLong, durationShort: durShort, simType: a.type_label + ' · ' + (chat ? 'Chat' : call.camera_used ? 'Video' : 'Voice'),
-      orgName: orgCap, orgLower: ORG, forRole: vp ? 'for ' + (vp.agent.type_label || 'this role') : '',
+      orgName: orgCap, orgLower: ORG, nextEmail: vp && vp.hiring ? "You'll hear from them by email" : 'Any feedback or next steps will come by email', forRole: vp ? 'for ' + (vp.agent.type_label || 'this role') : '',
       consentText: call.recording_consent ? 'I agree that my ' + (call.camera_used ? 'voice and video' : 'voice') + ' may be recorded for this role-play and shared only with ' + ORG + '.' : 'I agree to take part in this role-play. My responses are shared only with ' + ORG + '.',
       description: a.description, youRole: 'Participant', youSub: v ? v.participant.name : '', youGoal: 'Speak as you would in the real situation. ' + PF + ' responds to what you say.',
       formatLabel: fmtLabel, readyLine: PF + ' is ready for about ' + tgt + ' minutes on ' + (a.title || 'this conversation') + '.',
@@ -1323,8 +1321,8 @@ class Component extends DCLogic {
         else this.setState({ screen: 'live', phase: 'ready', elapsed: 0, rows: [], stamps: [], camLive: false });
       },
 
-      orb: React.createElement(Component.Orb, { key: 'orb', phase: s.phase === 'idle' ? 'waiting' : s.phase === 'wrapup' ? 'ready' : s.phase, muted, size: 200 }),
-      orbSize: 'clamp(96px,20vh,176px)', taraFont: 'clamp(20px,min(3vw,4.2vh),34px)', eyebrowGap: 'clamp(14px,3vh,28px)',
+      orb: React.createElement(Component.Orb, { key: 'orb', phase: s.phase === 'idle' ? 'waiting' : s.phase === 'wrapup' ? 'ready' : s.phase, muted, size: 300 }),
+      orbSize: 'clamp(150px,30vh,280px)', taraFont: 'clamp(20px,min(3vw,4.2vh),34px)', eyebrowGap: 'clamp(14px,3vh,28px)',
       showStageHint: !!yu[1] && !lastUser,
       stageLabel: s.phase === 'ready' ? 'Not started' : Component.STAGES[stage], progressPct: pNum + '%', progressNum: pNum,
       stageTicks: Component.STAGES.map((x, i) => ({ left: (i / (Component.STAGES.length - 1)) * 100 + '%', bg: s.phase !== 'ready' && i <= stage ? 'var(--surface,#FFFFFF)' : 'rgba(var(--ln),.16)' })),

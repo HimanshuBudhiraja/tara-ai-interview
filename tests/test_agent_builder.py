@@ -520,8 +520,8 @@ def test_publishing_makes_one_shared_candidate_link_everyone_can_use(client):
 
 def test_every_call_carries_the_tuned_turn_taking():
     agent = rx.web_call_body(_row(), "agent_x")["agent_override"]["agent"]
-    assert agent["responsiveness"] == 0.4 and agent["interruption_sensitivity"] == 0.4
-    assert agent["backchannel_frequency"] == 0.7 and agent["enable_backchannel"] is True
+    assert agent["responsiveness"] == 0.4 and agent["interruption_sensitivity"] == 0.7
+    assert agent["backchannel_frequency"] == 0.2 and agent["enable_backchannel"] is True
 
 
 def test_publishing_applies_the_current_rules_to_an_older_agent(client):
