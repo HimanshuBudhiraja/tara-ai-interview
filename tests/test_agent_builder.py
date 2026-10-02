@@ -747,13 +747,12 @@ def _publish_with(client, **cfg) -> tuple[str, str]:
     return aid, inv.json()["code"]
 
 
-def test_purpose_sets_the_attempt_and_feedback_defaults(client):
-    row = _draft(client)["done"]   # "a technical interview": a first guess of Hiring
-    assert row["cfg"]["purpose"] == "Hiring" and row["cfg"]["attempts"] == "1" and "feedback" not in row["cfg"]
+def test_there_is_no_purpose_field_and_attempts_default_to_one(client):
+    row = _draft(client)["done"]   # even "a technical interview" brief: no purpose is guessed or stored
+    assert "purpose" not in row["cfg"] and row["cfg"]["attempts"] == "1"
     out = client.put(f"{BASE}/agents/{row['agent_id']}", json={"fields": row["fields"], "agent": row["agent"],
-                     "cfg": {**row["cfg"], "purpose": "L&D", "attempts": None}}).json()
-    assert out["cfg"]["attempts"] == "Unlimited"
-
+                     "cfg": {**row["cfg"], "purpose": "L&D", "attempts": "Unlimited"}}).json()
+    assert "purpose" not in out["cfg"] and out["cfg"]["attempts"] == "Unlimited"
 
 def test_a_learner_can_practise_again_but_never_sees_a_result(client, monkeypatch):
     from services.api import participant as part
@@ -761,7 +760,7 @@ def test_a_learner_can_practise_again_but_never_sees_a_result(client, monkeypatc
     aid, code = _publish_with(client, purpose="L&D", attempts="Unlimited")
     p = TestClient(app)
     s1 = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
-    assert s1["attempt"] == 1 and s1["purpose"] == "L&D"
+    assert s1["attempt"] == 1 and s1["purpose"] == "General"
     done = p.post(f"/api/participant/session/{s1['session_id']}/complete", json={"early": False, "elapsed_sec": 300}).json()
     assert "result" not in done and "result_status" not in done      # admins only, even for learners
     s2 = p.post("/api/participant/sign-in", json={"code": code, "name": "Lee", "email": "l@x.test", "consent": True}).json()
@@ -794,7 +793,7 @@ def test_a_session_is_evaluated_once_and_only_admins_see_it(client, monkeypatch)
     monkeypatch.setattr(ab, "_complete", llm)
     part.evaluate_session(row)
     part.evaluate_session(row)                                # a retried webhook / second completion
-    assert row["evaluation"]["purpose"] == "Hiring" and len(llm.calls) == 3
+    assert row["evaluation"]["purpose"] == "General" and len(llm.calls) == 3
     agent_sessions.save(row)
     v = p.get(f"/api/participant/session/{sid}").json()
     assert "result" not in v and "evaluation" not in json.dumps(v)
@@ -857,19 +856,19 @@ def test_the_report_grid_and_an_admin_review(client, monkeypatch):
     agent_sessions.save(s)
     client.post(f"{BASE}/agents/{aid}/invites", json={"name": "Not Yet", "email": "later@x.test"})
     rep = client.get(f"{BASE}/agents/{aid}/report").json()
-    assert rep["agent"]["purpose"] == "Hiring" and rep["decisions"] == ["Advance", "Hold", "Reject"]
+    assert rep["agent"]["purpose"] == "General" and rep["decisions"] == ["Recommended", "Needs review", "Not recommended"]
     row = next(x for x in rep["rows"] if x["session_id"] == sid)
     assert row["name"] == "Asha" and row["status"] == "Completed" and row["evaluation"] == "Evaluated" and row["duration_sec"] == 310
     # The invitation that was never used is in the grid as Pending.
     assert any(x["status"] == "Pending" for x in rep["rows"])
     assert row["skills"][first] is not None and rep["stats"]["evaluated"] == 1 and rep["stats"]["average"] == row["overall"]
     assert client.put(f"{BASE}/agents/{aid}/attempts/{sid}/review", json={"decision": "Maybe"}).status_code == 422
-    r = client.put(f"{BASE}/agents/{aid}/attempts/{sid}/review", json={"decision": "Advance", "notes": "Strong discovery."}).json()
-    assert r["decision"] == "Advance" and r["by"]
+    r = client.put(f"{BASE}/agents/{aid}/attempts/{sid}/review", json={"decision": "Recommended", "notes": "Strong discovery."}).json()
+    assert r["decision"] == "Recommended" and r["by"]
     again = client.get(f"{BASE}/agents/{aid}/report").json()
     mine = next(x for x in again["rows"] if x["session_id"] == sid)
-    assert mine["review"]["notes"] == "Strong discovery." and again["stats"]["decisions"]["Advance"] == 1
-    assert mine["recommendation"] == "Advance" and mine["recommendation_source"] == "admin" and mine["recommendation_level"] == "positive"
+    assert mine["review"]["notes"] == "Strong discovery." and again["stats"]["decisions"]["Recommended"] == 1
+    assert mine["recommendation"] == "Recommended" and mine["recommendation_source"] == "admin" and mine["recommendation_level"] == "positive"
     # Org-wide reports, and Excel downloads that respect the filters.
     allr = client.get(f"{BASE}/reports").json()
     assert any(x["session_id"] == sid and x["agent_title"] for x in allr["rows"]) and allr["agents"]
@@ -878,12 +877,12 @@ def test_the_report_grid_and_an_admin_review(client, monkeypatch):
     import io
     from openpyxl import load_workbook
     ws = load_workbook(io.BytesIO(x.content)).active
-    assert ws.max_row == 2 and ws["A2"].value == "Asha" and ws["K2"].value == "Advance"
+    assert ws.max_row == 2 and ws["A2"].value == "Asha" and ws["K2"].value == "Recommended"
     assert client.get(f"{BASE}/reports.xlsx").status_code == 200
     detail = client.get(f"{BASE}/agents/{aid}/attempts/{sid}/report").json()
     assert detail["evaluation"]["overall"] == row["overall"] and detail["transcript"]
     # The AI's recommendation is kept beside the admin's decision, never replaced.
-    assert detail["evaluation"]["recommendation"] and detail["review"]["decision"] == "Advance"
+    assert detail["evaluation"]["recommendation"] and detail["review"]["decision"] == "Recommended"
     # Another agent's attempt is not reachable through this agent.
     other = client.post(f"{BASE}/agents/{aid}/duplicate").json()["agent_id"]
     assert client.get(f"{BASE}/agents/{other}/attempts/{sid}/report").status_code == 404

@@ -32,7 +32,11 @@ import re
 from typing import Any, Callable
 
 ENGINE_VERSION = "sim_eval_v1"
-PURPOSES = ("Hiring", "HR", "L&D")
+#: "General" is what the product uses: Purpose was removed from the builder
+#: (2026-10-03) until there is enough data to define it. The others stay
+#: available to the engine but nothing in the product selects them.
+GENERAL = "General"
+PURPOSES = (GENERAL, "Hiring", "HR", "L&D")
 DEFAULT_CRITERIA = ("Accuracy", "Depth", "Clarity", "Problem solving", "Communication")
 NOT_ASSESSED = "NOT_ASSESSED"
 ASSESSED = "ASSESSED"
@@ -60,6 +64,7 @@ class EvaluationError(Exception):
 #: Results are for admins only, whatever the purpose: the participant never sees
 #: a score, a rating or coaching. They appear in the builder's Results.
 PURPOSE_DEFAULTS: dict[str, dict[str, str]] = {
+    GENERAL: {"attempts": "1"},
     "Hiring": {"attempts": "1"},
     "HR": {"attempts": "1"},
     "L&D": {"attempts": "Unlimited"},
@@ -80,7 +85,7 @@ def infer_purpose(*texts: str) -> str:
 
 def purpose_of(cfg: dict[str, Any]) -> str:
     p = (cfg or {}).get("purpose")
-    return p if p in PURPOSES else "L&D"
+    return p if p in PURPOSES else GENERAL
 
 
 def criteria_of(cfg: dict[str, Any]) -> list[str]:
@@ -220,6 +225,8 @@ def _narrative(complete: Complete, purpose: str, snapshot: dict[str, Any],
     if not evidence:
         return {}
     shape = {
+        GENERAL: '{"summary": "three neutral sentences for the reviewer", "strengths": [{"text": "", "evidence_ids": ["E1"]}], '
+                 '"improve": [{"text": "", "evidence_ids": []}], "next_steps": [{"text": "", "evidence_ids": []}]}',
         "L&D": '{"did_well": [{"text": "", "evidence_ids": ["E1"]}], "improve": [{"text": "", "evidence_ids": []}], '
                '"try_next": [{"text": "", "evidence_ids": []}]}',
         "HR": '{"themes": [{"text": "", "evidence_ids": []}], "observations": [{"text": "", "evidence_ids": []}], '
@@ -228,6 +235,8 @@ def _narrative(complete: Complete, purpose: str, snapshot: dict[str, Any],
                   '"development_areas": [{"text": "", "evidence_ids": []}]}',
     }[purpose]
     ask = {
+        GENERAL: "Write for the people reviewing this attempt: a short neutral summary, specific strengths and specific areas "
+                 "to improve (what the participant did, not generic advice), and concrete next steps.",
         "L&D": "Write coaching for the learner, addressed as 'you'. 'did_well' and 'improve' are specific observations of what "
                "they did; 'try_next' is concrete behaviour for next time (e.g. 'Ask one more discovery question before you offer "
                "an option'). Never generic advice like 'communicate better'.",
@@ -278,6 +287,10 @@ def recommend(overall: float | None, coverage: float, purpose: str) -> str:
         if overall >= 70:
             return "Proceed to next round"
         return "Needs further evaluation" if overall >= 50 else "Not suitable for this role"
+    if purpose == GENERAL:
+        if overall is None or coverage < 0.5:
+            return "Needs review: not enough of the skills were assessed"
+        return "Recommended" if overall >= 70 else "Needs review" if overall >= 50 else "Not recommended"
     if purpose == "HR":
         return "Review the observations and follow-ups"
     if overall is None:

@@ -763,6 +763,38 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 .rte-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted-2)}
 .rte-chips .chip{border:1px solid var(--lav-2);background:var(--soft-2);color:var(--accent-ink);border-radius:999px;padding:3px 9px;font:inherit;font-size:12px;cursor:pointer}
 .invfoot{display:flex;justify-content:flex-end;gap:12px;padding:14px 26px 22px;border-top:1px solid var(--line)}
+
+/* ===== help guide ===== */
+.helpdlg{width:min(720px,calc(100vw - 32px))}
+.helpbody{gap:14px}
+.helpsec h3{margin:0 0 6px;font-size:15px;font-weight:600;color:var(--ink)}
+.helpsec ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.55;color:var(--ink-2)}
+.helpnote{font-size:13.5px;color:var(--muted-2)}
+#helpSupport{text-decoration:none;display:inline-flex;align-items:center}
+
+/* ===== ONE highlight colour (user decision 2026-10-03): selected, active and hover
+   states are all the same blue. Purple stays for the brand and primary buttons. ===== */
+:root{--sel-ink:#1570EF;--sel-bg:#EFF8FF;--sel-line:#84CAFF;--hov-bg:#F5FAFF}
+.pnav a{transition:background-color .12s,color .12s}
+.pnav a:hover{background:var(--hov-bg);color:var(--sel-ink)}
+.pnav a.on,.pnav a.on:hover{background:var(--sel-bg);color:var(--sel-ink)}
+.imrail a.on{background:var(--sel-bg);color:var(--sel-ink)}
+.imrail a.on::before{background:var(--sel-ink)}
+.imrail a.on svg,.imrail .beta{color:var(--sel-ink)}
+.subnav a:hover{background:var(--hov-bg);color:var(--sel-ink)}
+.subnav a.on,.subnav a.on:hover{background:var(--sel-bg);color:var(--sel-ink)}
+.navi:hover{background:var(--hov-bg);color:var(--sel-ink)}
+.modes button:hover,.seg button:hover,.ttabs button:hover{background:var(--hov-bg);color:var(--sel-ink)}
+.invtabs button:hover{color:var(--sel-ink)}
+.invtabs button[aria-selected="true"]{color:var(--sel-ink);border-bottom-color:var(--sel-ink)}
+.repgrid tbody tr:hover{background:var(--hov-bg)}
+.iconbtn:hover{background:var(--hov-bg);color:var(--sel-ink)}
+.smchip:hover:not(:disabled){background:var(--hov-bg);color:var(--sel-ink)}
+.tc:hover{border-color:var(--sel-line)}
+.rte-b:hover{color:var(--sel-ink)}
+.yn input{accent-color:var(--sel-ink)}
+.sw[aria-checked="true"]{background:var(--sel-ink)}
+.sw[aria-checked="true"]:hover{background:#175CD3}
 </style>
 </head>
 <body>
@@ -791,15 +823,10 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
   <div class="invfoot" id="invFoot"></div>
 </dialog>
 <dialog id="helpDlg" class="smdlg helpdlg" aria-labelledby="helpTitle">
-  <div class="smhd"><div><h2 id="helpTitle">How it works</h2><p>Build a voice role-play or assessment, test it, publish it, invite people, and read the results.</p></div>
+  <div class="smhd"><div><h2 id="helpTitle">How it works</h2><p>Build a voice role-play, test it, publish it, invite people, and read the reports.</p></div>
     <button class="xbtn" type="button" id="helpClose" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-  <ol class="helplist">
-    <li><b>Describe it.</b> Write what the conversation is for, or start from a template. Tara drafts the persona, instructions, questions and skills.</li>
-    <li><b>Set it up.</b> Choose the Purpose (Hiring, HR or Learning &amp; Development), review the skills and their weights, and adjust the persona, voice and length.</li>
-    <li><b>Test it.</b> Test agent starts a real voice call (up to 5 minutes) on the live voice agent; the transcript appears as you talk, and you can score it.</li>
-    <li><b>Publish and invite.</b> Publish freezes a version. Invite people by email with their own access code, or switch on the open link.</li>
-    <li><b>Read the results.</b> Results shows every attempt with scores backed by quotes from what the participant said. Participants never see results.</li>
-  </ol>
+  <div class="smlist helpbody"><section class="helpsec"><h3>1. Create a role-play</h3><ul><li>Describe the conversation in plain words on the first screen (who the persona is, the situation, what to assess, roughly how long), or start from a template.</li><li>Choose <b>Role-play</b> or <b>Assessment</b>, then <b>Create with Tara</b>. A draft takes about 20 seconds.</li></ul></section><section class="helpsec"><h3>2. Review the setup</h3><ul><li><b>Scenario details</b>: the type, the role or situation, and what to assess.</li><li><b>Description</b>: what participants read before they start. Keep it short and encouraging.</li><li><b>Instructions</b>: how the persona runs the conversation. Participants never see this.</li><li><b>Persona</b>: name, title, voice and tone. Changing the voice changes the persona's name everywhere it's used. <b>Follow-up depth</b> also sets the length (Light ≈ 10, Probing ≈ 20, Deep dive ≈ 30 minutes).</li><li><b>Skills</b>: what the conversation is scored on. Add skills from the Skill Master, set what a 5 looks like for each, and make the weights total 100%. Then select <b>Mark as reviewed</b>.</li></ul></section><section class="helpsec"><h3>3. Questions and settings</h3><ul><li><b>Potential AI Questions</b> are a plan, not a script: the persona picks and adapts them. Use <b>Generate more</b> for ideas.</li><li><b>Conversation settings</b>: how it ends and how many attempts one person gets.</li><li><b>Advanced</b>: language, proctoring defaults and recording consent.</li></ul></section><section class="helpsec"><h3>4. Test it</h3><ul><li><b>Test agent</b> starts a real voice call with the persona (up to 5 minutes). Allow the microphone, and use Chrome for the best result.</li><li>The transcript appears as you talk. Afterwards, <b>Score this test</b> shows how an attempt like yours would be evaluated.</li></ul></section><section class="helpsec"><h3>5. Publish</h3><ul><li><b>Publish</b> freezes this version for participants. A published role-play is locked so results always match what people took.</li><li>To change it later, use <b>Duplicate to edit</b>, then publish the copy.</li></ul></section><section class="helpsec"><h3>6. Invite participants</h3><ul><li><b>Email Invitation</b>: enter up to 10 addresses. Each person gets their own link and access code. You can edit the invitation text and use placeholders such as {PARTICIPANT_NAME}.</li><li><b>Open Link Invitation</b>: one link anyone can use. It's off until you switch it on, and switching it off stops it working at once.</li><li>Participants choose a time, check their microphone and start. Calls are limited to the times they booked, so the voice lines are never overloaded.</li></ul></section><section class="helpsec"><h3>7. Read the reports</h3><ul><li><b>Reports</b> lists every attempt with its status, score and recommendation. Use search and filters, or <b>Download Excel</b>.</li><li>Open a report for the score on each skill, quotes from what the participant actually said, and skills marked Not assessed when the conversation didn't reach them.</li><li>Add your own <b>recommendation</b> and <b>evaluation notes</b>. The AI's recommendation stays alongside yours. Participants never see results.</li></ul></section><section class="helpsec"><h3>Good to know</h3><ul><li>The persona never says it is an AI and never mentions scores or skills to the participant.</li><li>Scores are only given where there is evidence. A skill with no evidence is Not assessed, not 0.</li><li>Everything you type is saved automatically while the role-play is a draft.</li></ul></section></div>
+  <div class="smft"><span class="helpnote">Still stuck? Our support team can help.</span><a class="cwt" id="helpSupport" href="#" target="_blank" rel="noopener" hidden>Chat with iMocha support</a></div>
 </dialog>
 <dialog id="smDlg" class="smdlg" aria-labelledby="smH">
   <div class="smhd"><div><h2 id="smH">Skill Master</h2><p>Pick the skills this conversation should bring out. Weights are balanced to 100% and Tara drafts what a 5 looks like, plus questions, for each one.</p></div>
@@ -819,7 +846,7 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
   <header class="hdr" style="gap:24px">
     <div class="hl">
       <button class="brand" type="button" data-go="1"><span class="bmark" data-icon="spark18"></span><span class="bname"><b>Tara</b><small>by iMocha</small></span></button>
-      <nav class="pnav" aria-label="Primary"><a class="on" href="#" data-home>Agents</a><a href="#mine" id="navMine" hidden>Your role-plays</a><a href="#templates" id="navTpl">Templates</a></nav>
+      <nav class="pnav" aria-label="Primary"><a class="on" href="#" data-home id="navAgents">Agents</a><a href="#mine" id="navMine" hidden>Your role-plays</a><a href="#templates" id="navTpl">Templates</a></nav>
     </div>
     <div class="hr">
       <button class="ibtn" type="button" aria-label="Help" title="How it works" data-help><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 17h.01"/></svg></button>
@@ -906,6 +933,7 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
       <span class="saved" id="saved"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E8A5F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Saved just now</span></span>
     </div>
     <div class="hr" style="gap:10px">
+      <button class="ibtn" type="button" aria-label="Help" title="How it works" data-help><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 17h.01"/></svg></button>
       <button class="tbtn ghost" type="button" id="testBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg>Test agent</button>
       <button class="tbtn ghost" type="button" id="repBtn" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</button>
       <button class="tbtn ghost" type="button" id="invBtn" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Invite participant</button>
@@ -953,6 +981,6 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 <aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003s"></script>
+<script src="/agent-builder/app.js?v=20261003v"></script>
 </body>
 </html>

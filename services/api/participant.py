@@ -55,12 +55,7 @@ def purpose_of(row: dict[str, Any]) -> str:
     """The session's purpose: as configured when it was published, else a guess from its text."""
     from services.evaluation import simulation as sim
 
-    snap = row.get("snapshot") or row
-    p = (snap.get("cfg") or {}).get("purpose")
-    if p in sim.PURPOSES:
-        return p
-    a, f = snap.get("agent") or {}, snap.get("fields") or {}
-    return sim.infer_purpose(a.get("title", ""), a.get("type_label", ""), a.get("description", ""), f.get("role", ""))
+    return sim.GENERAL  # Purpose was removed from the builder; every role-play is General
 
 
 # --------------------------------------------------------------------------- #
@@ -140,6 +135,7 @@ def view(row: dict[str, Any]) -> dict[str, Any]:
         "proctoring": row.get("proctoring") or {"image_proctoring": bool(cfg.get("image_proctoring")),
                                                 "safe_browser": bool(cfg.get("safe_browser"))},
         "org_label": HIRING_LABEL if purpose_of(row) == "Hiring" else ORG_LABEL,
+        "support_url": config.SUPPORT_URL,
         "hiring": purpose_of(row) == "Hiring",
         "purpose": purpose_of(row),
         "attempt": int(row.get("attempt") or 1),

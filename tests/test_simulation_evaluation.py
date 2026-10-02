@@ -92,7 +92,7 @@ def test_an_uncited_narrative_claim_is_removed():
     assert r["narrative"]["did_well"] and r["narrative"]["improve"] == []
 
 
-@pytest.mark.parametrize("purpose,starts", [("Hiring", "Proceed to next round"), ("HR", "Review"), ("L&D", "Proficient")])
+@pytest.mark.parametrize("purpose,starts", [("General", "Recommended"), ("Hiring", "Proceed to next round"), ("HR", "Review"), ("L&D", "Proficient")])
 def test_purpose_sets_the_outcome_wording(purpose, starts):
     r = sim.evaluate(snapshot(purpose), TRANSCRIPT, complete=FakeLLM(EVIDENCE, JUDGED))
     assert r["recommendation"].startswith(starts) and r["purpose"] == purpose

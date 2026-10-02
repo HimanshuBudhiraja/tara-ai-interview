@@ -275,6 +275,8 @@ LOG_LEVEL = _first("TARA_LOG_LEVEL", default="INFO").upper()
 PUBLIC_URL = _first("TARA_PUBLIC_URL", default="").rstrip("/")
 #: Signs invitation emails ({COMPANY_NAME} in the template).
 COMPANY_NAME = _first("TARA_COMPANY_NAME", default="iMocha")
+#: iMocha's support chatbot. When set, Help on both sides offers "Chat with iMocha support".
+SUPPORT_URL = _first("TARA_SUPPORT_URL", default="")
 RECRUITER_URL = _first("TARA_RECRUITER_URL", default="").rstrip("/")
 
 

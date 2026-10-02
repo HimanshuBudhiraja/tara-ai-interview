@@ -149,8 +149,16 @@
   $('brief').addEventListener('input', (e) => { S.brief = e.target.value; syncCreate(); });
   $('brief').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !$('create').disabled) { e.preventDefault(); build(); } });
   $('create').addEventListener('click', build);
-  $('navTpl').addEventListener('click', (e) => { e.preventDefault(); $('templates').scrollIntoView({ behavior: 'smooth' }); });
-  $('navMine').addEventListener('click', (e) => { e.preventDefault(); $('mine').scrollIntoView({ behavior: 'smooth' }); });
+  /* The top tabs: the one you click is highlighted (and follows the scroll). */
+  function markNav(id) { ['navAgents', 'navMine', 'navTpl'].forEach((k) => $(k).classList.toggle('on', k === id)); }
+  $('navTpl').addEventListener('click', (e) => { e.preventDefault(); markNav('navTpl'); $('templates').scrollIntoView({ behavior: 'smooth' }); });
+  $('navMine').addEventListener('click', (e) => { e.preventDefault(); markNav('navMine'); $('mine').scrollIntoView({ behavior: 'smooth' }); });
+  $('navAgents').addEventListener('click', () => markNav('navAgents'));
+  window.addEventListener('scroll', () => {
+    if (S.view !== 1 && S.view != null) return;
+    const y = window.scrollY + 140, mine = $('mine'), tpl = $('templates');
+    markNav(tpl.offsetTop && y >= tpl.offsetTop ? 'navTpl' : !mine.hidden && y >= mine.offsetTop ? 'navMine' : 'navAgents');
+  }, { passive: true });
   $('railAgent').addEventListener('click', (e) => { e.preventDefault(); go(1); loadMine(); });
 
   /* ---------- Skill Master: pick skills from the library, or add a custom one ---------- */
@@ -343,14 +351,6 @@
     try { history.replaceState(null, '', '?agent=' + encodeURIComponent(row.agent_id)); } catch (e) { /* ignore */ }
     resetTest(false);
   }
-  /* Purpose: who the result is for, and the attempt and feedback policy that follow. */
-  const PURPOSES = [['Hiring', 'Hiring'], ['HR', 'HR'], ['L&D', 'Learning & Development']];
-  const PURPOSE_DEFAULTS = { Hiring: { attempts: '1' }, HR: { attempts: '1' }, 'L&D': { attempts: 'Unlimited' } };
-  const PURPOSE_HINT = {
-    Hiring: 'A participant applying for a role, one attempt at a booked time. The result, with a recommendation, appears in Results for admins.',
-    HR: 'An employee or manager conversation. Results show themes, observations and follow-ups for admins, not a verdict.',
-    'L&D': 'A learner practising, with retries. Coaching and progress across attempts appear in Results for admins.'
-  };
   function seg(label, key, opts) {
     return h('div', { role: 'group', 'aria-label': label, class: 'seg' }, opts.map((o) => h('button', { type: 'button', 'aria-pressed': String(S.cfg[key] === o), text: o, onclick: () => { S.cfg[key] = o; touch(); renderMain(); } })));
   }
@@ -458,10 +458,7 @@
         h('div', { class: 'fld' }, h('label', { for: 'f-role', text: 'Role or situation' }), h('input', { id: 'f-role', class: 'inp', type: 'text', value: S.fields.role || '', oninput: bind(S.fields, 'role') })),
         h('div', { class: 'fld', style: 'grid-column:1 / -1' }, h('label', { for: 'f-skills', text: 'What to assess' }), h('input', { id: 'f-skills', class: 'inp', type: 'text', value: S.fields.skills || '', oninput: bind(S.fields, 'skills') }))
       ),
-      h('div', { class: 'segwrap', style: 'margin-top:4px' }, h('span', { class: 'lbl', text: 'Purpose' }),
-        h('div', { role: 'group', 'aria-label': 'Purpose', class: 'seg' }, PURPOSES.map(([id, label]) => h('button', { type: 'button', 'aria-pressed': String(S.cfg.purpose === id), text: label,
-          onclick: () => { S.cfg.purpose = id; Object.assign(S.cfg, PURPOSE_DEFAULTS[id]); touch(); renderMain(); } }))),
-        h('small', { style: 'font-size:13px;color:var(--muted-2)', text: PURPOSE_HINT[S.cfg.purpose] || '' }))));
+      ));
 
     m.append(h('section', { id: 'desc', class: 'card', style: 'gap:14px', 'aria-labelledby': 'desc-h' },
       h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'desc-h', text: 'Participant-facing description' }), h('p', { class: 'sub', text: 'Shown to participants before they start. Keep it short and encouraging.' })),
@@ -541,7 +538,7 @@
     m.append(h('section', { id: 'settings', class: 'card', style: 'gap:22px', 'aria-labelledby': 'set-h' },
       h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'set-h', text: 'Conversation settings' }), h('p', { class: 'sub', text: 'How the conversation ends and how often one person may take it. The persona always opens.' })),
       srow('Ending', 'How the conversation wraps up.', 'ending', ['Tara decides', 'Hard time limit', 'No end time']),
-      srow('Attempts', 'How many times one person may take it. Set by Purpose; change it here.', 'attempts', ['1', '3', 'Unlimited']),
+      srow('Attempts', 'How many times one person may take it.', 'attempts', ['1', '3', 'Unlimited']),
       h('div', { class: 'srow', style: 'border-bottom:none;padding-bottom:0' },
         h('span', { class: 'tt' }, h('b', { text: 'Conversation length' }), h('small', { text: 'Set by Follow-up depth in Persona (' + c.depth + '). Change it there.' })),
         h('span', { style: 'display:flex;flex-direction:column;gap:4px' },
@@ -634,7 +631,7 @@
     const avg = done.length ? Math.round(done.reduce((t, x) => t + x.overall, 0) / done.length) : null;
     main.append(h('div', { class: 'rephead' }, h('h1', { id: 'repH', text: all ? 'Role-play Reports' : 'Reports' }),
       h('p', { text: all ? 'Every conversation across your published role-plays. Open a report for the evidence, your notes and your recommendation.'
-        : (D.agent.purpose === 'Hiring' ? 'Job role: ' : 'Role-play: ') + (D.agent.role || D.agent.title) + ' · ' + D.agent.title + (avg != null ? ' · average score ' + avg : '') })));
+        : 'Role: ' + (D.agent.role || D.agent.title) + ' · ' + D.agent.title + (avg != null ? ' · average score ' + avg : '') })));
     main.append(h('hr', { class: 'repdivide' }));
     const search = h('input', { type: 'search', placeholder: 'Search by participant', value: R.q, 'aria-label': 'Search by participant', oninput: (e) => { R.q = e.target.value; R.page = 0; renderTable(); } });
     const fbtn = h('button', { class: 'iconbtn', type: 'button', title: 'Filters', 'aria-label': 'Filters', 'aria-expanded': String(!!R.filtersOpen), html: SVGI.filter, onclick: () => { R.filtersOpen = !R.filtersOpen; renderReport(); } });
@@ -1009,7 +1006,11 @@
   $('invClose').addEventListener('click', () => $('invDlg').close());
 
   /* ---------- Help ---------- */
-  document.querySelectorAll('[data-help]').forEach((b) => b.addEventListener('click', () => $('helpDlg').showModal()));
+  document.querySelectorAll('[data-help]').forEach((b) => b.addEventListener('click', () => {
+    const sup = $('helpSupport');
+    const has = !!(OPT && OPT.support_url); if (has) sup.href = OPT.support_url; sup.hidden = !has; sup.parentElement.hidden = !has;
+    $('helpDlg').showModal();
+  }));
   $('helpClose').addEventListener('click', () => $('helpDlg').close());
   document.querySelectorAll('[data-home]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); go(1); window.scrollTo(0, 0); }));
 
@@ -1053,7 +1054,7 @@
     const mmss = (x) => x == null ? '' : String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(Math.round(x % 60)).padStart(2, '0');
     const wrap = h('div', { class: 'resv' });
     wrap.append(h('div', { class: 'reshead' },
-      h('div', null, h('span', { class: 'eyebrow', text: (opts.compact ? 'TEST RESULT · ' : '') + (r.purpose || '').toUpperCase() }),
+      h('div', null, h('span', { class: 'eyebrow', text: opts.compact ? 'TEST RESULT' : 'RESULT' }),
         h('div', { class: 'resbig' }, h('b', { text: r.overall == null ? '—' : String(Math.round(r.overall)) }), h('span', { text: r.overall == null ? 'not rated' : '/ 100 · ' + r.band }))),
       h('p', { class: 'resrec', text: r.recommendation })));
     if (r.weight_coverage != null && r.weight_coverage < 1) wrap.append(h('p', { class: 'resnote', text: Math.round(r.weight_coverage * 100) + '% of the skill weight was assessed. Skills the conversation didn\'t reach are marked Not assessed, not scored 0.' }));
@@ -1074,7 +1075,7 @@
       wrap.append(row);
     });
     const N = r.narrative || {};
-    const LISTS = [['did_well', 'What went well'], ['improve', 'What to improve'], ['try_next', 'Try next time'], ['strengths', 'Strengths'], ['development_areas', 'Development areas'], ['themes', 'Themes'], ['observations', 'Observations'], ['follow_ups', 'Follow-ups']];
+    const LISTS = [['did_well', 'What went well'], ['strengths', 'Strengths'], ['improve', 'Areas to improve'], ['try_next', 'Try next time'], ['next_steps', 'Next steps'], ['development_areas', 'Development areas'], ['themes', 'Themes'], ['observations', 'Observations'], ['follow_ups', 'Follow-ups']];
     if (N.summary) wrap.append(h('p', { class: 'resnote', text: N.summary }));
     LISTS.forEach(([k, label]) => { if ((N[k] || []).length) wrap.append(h('div', { class: 'reslist' }, h('b', { text: label }), h('ul', null, N[k].map((it) => h('li', { text: it.text }))))); });
     if (r.versions) wrap.append(h('p', { class: 'resver', text: 'Scenario ' + r.versions.scenario + ' · rubric ' + r.versions.rubric + (r.versions.flow ? ' · flow ' + r.versions.flow : '') + ' · ' + r.versions.evaluation }));

@@ -86,11 +86,6 @@ def _row(agent_id: str, request: Request) -> dict[str, Any]:
     # exist, so an id cannot be probed for.
     if row is None or row.get("org_id") != _org(request):
         raise HTTPException(404, "No such agent.")
-    if "purpose" not in (row.get("cfg") or {}):
-        # Agents made before Purpose existed: a first guess, saved on the next edit.
-        a = row["agent"]
-        row["cfg"] = clean_cfg({**row["cfg"], "purpose": sim.infer_purpose(
-            row.get("brief", ""), a.get("title", ""), a.get("type_label", ""), row["fields"].get("role", ""))})
     return row
 
 
@@ -133,13 +128,8 @@ def clean_cfg(cfg: dict[str, Any], base: dict[str, Any] | None = None) -> dict[s
 
 
 def _purpose_cfg(cfg: dict[str, Any]) -> dict[str, Any]:
-    """Purpose, and the attempt and feedback policy that follow from it."""
-    purpose = cfg.get("purpose") if cfg.get("purpose") in sim.PURPOSES else "L&D"
-    d = sim.PURPOSE_DEFAULTS[purpose]
-    return {
-        "purpose": purpose,
-        "attempts": cfg.get("attempts") if cfg.get("attempts") in sim.ATTEMPTS else d["attempts"],
-    }
+    """The attempt policy. (Purpose was removed from the builder; every role-play is General.)"""
+    return {"attempts": cfg.get("attempts") if cfg.get("attempts") in sim.ATTEMPTS else "1"}
 
 
 def persona_only(agent: dict[str, Any]) -> dict[str, Any]:
@@ -264,8 +254,7 @@ def _proctoring(row: dict[str, Any], image: bool | None = None, safe: bool | Non
 
 def _new_row(p: dict[str, Any], c: dict[str, Any], brief: str, mode: str, org: str) -> dict[str, Any]:
     agent = clean_agent({**p["agent"], **c})
-    cfg = clean_cfg({"tone": p["fields"]["difficulty"], "depth": agent["depth"], "voice": agent["voice"],
-                     "purpose": sim.infer_purpose(brief, agent["title"], agent["type_label"], p["fields"].get("role", ""))})
+    cfg = clean_cfg({"tone": p["fields"]["difficulty"], "depth": agent["depth"], "voice": agent["voice"]})
     return {
         "agent_id": store.new_id(agent["title"]),
         "org_id": org,
@@ -295,6 +284,7 @@ def options() -> dict[str, Any]:
         "languages": sorted({v.language for v in rx.VOICES}),
         "test_call_minutes": rx.TEST_CALL_MINUTES,
         "email_configured": email.configured(), "email_from": email.sender(),
+        "support_url": config.SUPPORT_URL,
         "model_configured": get_gateway().live,
         "voice_configured": bool(config.RETELL_API_KEY and config.RETELL_AGENT_BUILDER_AGENT_ID),
     }
@@ -667,7 +657,7 @@ def invitation_email(row: dict[str, Any], name: str, code: str, link: str, note:
     a, cfg = row["published"]["agent"], row["published"]["cfg"]
     target, _ = rx.lengths(cfg)
     first = (name.split() or ["there"])[0]
-    kind = "AI conversation" if cfg.get("purpose") == "Hiring" else "practice conversation" if cfg.get("purpose") == "L&D" else "conversation"
+    kind = "conversation"
     subject = f"Your invitation: {no_interview(a['title'])}"
     text = (
         f"Hi {first},\n\n"
@@ -763,7 +753,7 @@ def invitation(agent_id: str, request: Request) -> dict[str, Any]:
     if out["enabled"]:
         out["link"] = _base(request) + out["path"]
     return {"title": no_interview(row["published"]["agent"]["title"]), "purpose": purpose,
-            "label": "AI Conversation" if purpose == "Hiring" else "Role-play",
+            "label": "AI Conversation",
             "template": row.get("invite_template") or tmpl.default_template(purpose),
             "placeholders": ["{" + p + "}" for p in tmpl.PLACEHOLDERS],
             "defaults": _proctoring(row), "open_link": out, "max_emails": 10,
@@ -873,6 +863,7 @@ def participant_sessions(agent_id: str, request: Request) -> dict[str, Any]:
 #: The admin's own recommendation, by purpose. The AI's recommendation sits next
 #: to it and is never overwritten: the decision is a person's.
 DECISIONS = {
+    sim.GENERAL: ("Recommended", "Needs review", "Not recommended"),
     "Hiring": ("Advance", "Hold", "Reject"),
     "HR": ("No action", "Follow up", "Escalate"),
     "L&D": ("Ready", "Needs practice", "Coaching recommended"),
@@ -880,12 +871,13 @@ DECISIONS = {
 
 
 def _purpose(row: dict[str, Any]) -> str:
-    """As published; for a version published before Purpose existed, the agent's (inferred) purpose."""
-    return ((row.get("published") or {}).get("cfg") or {}).get("purpose") or row["cfg"].get("purpose") or "L&D"
+    """Every role-play is General: Purpose was removed until there's data to define it."""
+    return sim.GENERAL
 
 
 #: Icon level for a recommendation: positive (check), caution (!), negative (x).
 _LEVEL = {
+    "Recommended": "positive", "Needs review": "caution", "Not recommended": "negative",
     "Advance": "positive", "Hold": "caution", "Reject": "negative",
     "No action": "positive", "Follow up": "caution", "Escalate": "negative",
     "Ready": "positive", "Needs practice": "caution", "Coaching recommended": "negative",
@@ -900,9 +892,9 @@ def _proctoring_label(p: dict[str, Any] | None) -> str:
 
 def _ai_level(rec: str) -> str:
     r = (rec or "").lower()
-    if r.startswith(("proceed", "advanced", "proficient")):
+    if r.startswith(("recommended", "proceed", "advanced", "proficient")):
         return "positive"
-    if r.startswith(("not suitable", "foundational")):
+    if r.startswith(("not recommended", "not suitable", "foundational")):
         return "negative"
     return "caution" if r else ""
 
