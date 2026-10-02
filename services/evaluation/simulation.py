@@ -31,7 +31,21 @@ import json
 import re
 from typing import Any, Callable
 
-ENGINE_VERSION = "sim_eval_v1"
+ENGINE_VERSION = "sim_eval_v2"
+#: The scoring model of iMocha's Tara evaluation document: five criteria, each a
+#: whole number 0-5, summed to a Total Skill Score out of 25 and mapped to a
+#: Skill Level 1-5. Coverage follows the one-pager: Discussed (scored on the
+#: answer), Mentioned (minimal credit), Not Discussed (a coverage gap, not a
+#: weakness).
+MAX_TOTAL = 25
+MENTIONED_CAP = 5
+LEVELS = {5: "Expert", 4: "Advanced", 3: "Intermediate", 2: "Beginner", 1: "Novice"}
+DISCUSSED, MENTIONED, NOT_DISCUSSED = "discussed", "mentioned", "not_discussed"
+
+
+def level_of(total: int) -> int:
+    """Total Skill Score (/25) to Skill Level 1-5 (the document's sample: 23->5, 18->4, 14/13->3, 9->2, 4->1)."""
+    return 5 if total >= 21 else 4 if total >= 17 else 3 if total >= 12 else 2 if total >= 7 else 1
 #: "General" is what the product uses: Purpose was removed from the builder
 #: (2026-10-03) until there is enough data to define it. The others stay
 #: available to the engine but nothing in the product selects them.
@@ -204,11 +218,14 @@ def _judge(complete: Complete, skills: list[dict[str, Any]], criteria: list[str]
         blocks.append(f"Skill: {s['name']}\nStrong performance looks like: {s.get('anchor') or ''}\nEvidence:\n"
                       + "\n".join(f"  {e['id']} [{e['polarity']}, {e['criterion']}] \"{e['quote']}\" ({e['why']})" for e in items))
     user = (
-        "Score each skill below from its verified evidence ONLY. For each criterion give 0-5 "
-        "(0 = no sign of it, 1 = poor, 2 = below expectations, 3 = meets expectations, 4 = strong, 5 = exceptional), "
-        "or null when the evidence says nothing about that criterion. Do not reward length. Cite the evidence ids you used.\n"
+        "Score each skill below from its verified evidence ONLY, calibrated to what the role expects. For EVERY criterion give a "
+        "whole number 0-5 (0 = no sign of it, 1 = poor, 2 = below expectations, 3 = meets expectations, 4 = strong, 5 = exceptional). "
+        "Do not reward length. Say whether the skill was 'discussed' (directly assessed with a substantive answer) or only "
+        "'mentioned' (came up in passing, not substantively assessed). Write the AI Evaluation Note: 2-3 sentences on what the "
+        "participant actually said and what was missing, grounded in the evidence. Cite the evidence ids you used.\n"
         "Criteria: " + ", ".join(criteria) + "\n\n" + "\n\n".join(blocks)
-        + '\n\nReturn {"skills": [{"name": "", "criteria": {"' + criteria[0] + '": 3}, "rationale": "two sentences", "evidence_ids": ["E1"]}]}'
+        + '\n\nReturn {"skills": [{"name": "", "status": "discussed|mentioned", "criteria": {"' + criteria[0] + '": 3}, '
+          '"rationale": "the AI Evaluation Note", "evidence_ids": ["E1"]}]}'
     )
     out = complete(_SYSTEM, user, 3000, "agent_scorer")
     got: dict[str, dict[str, Any]] = {}
@@ -235,8 +252,10 @@ def _narrative(complete: Complete, purpose: str, snapshot: dict[str, Any],
                   '"development_areas": [{"text": "", "evidence_ids": []}]}',
     }[purpose]
     ask = {
-        GENERAL: "Write for the people reviewing this attempt: a short neutral summary, specific strengths and specific areas "
-                 "to improve (what the participant did, not generic advice), and concrete next steps.",
+        GENERAL: "Write for the people reviewing this attempt. 'summary' explains the recommendation in 2-3 sentences, citing "
+                 "specific things the participant said or didn't cover. Give 2-3 'strengths' and 2-3 'improve' items, each a "
+                 "specific observation drawn only from this conversation (what they did, not generic advice), and 1-2 concrete "
+                 "'next_steps'.",
         "L&D": "Write coaching for the learner, addressed as 'you'. 'did_well' and 'improve' are specific observations of what "
                "they did; 'try_next' is concrete behaviour for next time (e.g. 'Ask one more discovery question before you offer "
                "an option'). Never generic advice like 'communicate better'.",
@@ -298,16 +317,23 @@ def recommend(overall: float | None, coverage: float, purpose: str) -> str:
     return f"{band(overall, purpose)}: see the coaching below and practise again"
 
 
-def _skill_score(crit_scores: dict[str, Any], criteria: list[str]) -> tuple[int | None, dict[str, int | None]]:
-    vals: dict[str, int | None] = {}
+def _skill_score(crit_scores: dict[str, Any], criteria: list[str], status: str = DISCUSSED) -> dict[str, Any]:
+    """Five whole-number criteria (a missing one counts 0) summed to /25; Mentioned is capped."""
+    vals: dict[str, int] = {}
     for c in criteria:
         v = crit_scores.get(c) if isinstance(crit_scores, dict) else None
         try:
-            vals[c] = None if v is None else max(0, min(5, int(round(float(v)))))
+            vals[c] = 0 if v is None else max(0, min(5, int(round(float(v)))))
         except (TypeError, ValueError):
-            vals[c] = None
-    used = [v for v in vals.values() if v is not None]
-    return (round(sum(used) / len(used) * 20) if used else None), vals
+            vals[c] = 0
+    max_total = 5 * len(criteria)
+    total = sum(vals.values())
+    if status == MENTIONED:
+        total = min(total, round(MENTIONED_CAP * max_total / MAX_TOTAL))
+    scaled = round(total * MAX_TOTAL / max_total) if max_total else 0      # always reported out of 25
+    lv = level_of(scaled)
+    return {"criteria": vals, "total": scaled, "max_total": MAX_TOTAL, "level": lv, "level_label": LEVELS[lv],
+            "score": round(scaled * 100 / MAX_TOTAL)}
 
 
 def version_tag(snapshot: dict[str, Any], flow: dict[str, Any] | None = None) -> dict[str, str]:
@@ -349,17 +375,18 @@ def evaluate(snapshot: dict[str, Any], transcript: list[dict[str, Any]], *, comp
     rows = []
     for s in skills:
         j = judged.get(s["name"]) if s in enough else None
-        score, crit = _skill_score((j or {}).get("criteria") or {}, criteria) if j else (None, {})
         ev_ids = [e["id"] for e in evidence if e["skill"] == s["name"]]
-        rows.append({
-            "name": s["name"], "weight": round(s["weight"], 2),
-            "status": ASSESSED if score is not None else NOT_ASSESSED,
-            "score": score, "criteria": crit if score is not None else {},
-            "rationale": str((j or {}).get("rationale") or "").strip()[:600] if score is not None else "",
-            "evidence_ids": ev_ids if score is not None else [],
-            "reason": "" if score is not None else ("not enough evidence in the conversation" if s not in enough
-                                                     else "the evidence did not bear on any criterion"),
-        })
+        if j:
+            disc = MENTIONED if str(j.get("status") or "").lower().startswith("mention") else DISCUSSED
+            sc = _skill_score(j.get("criteria") or {}, criteria, disc)
+            rows.append({"name": s["name"], "weight": round(s["weight"], 2), "status": ASSESSED, "discussion": disc,
+                         **sc, "rationale": str(j.get("rationale") or "").strip()[:800], "evidence_ids": ev_ids, "reason": ""})
+        else:
+            # Not Discussed: shown as 0/25, but a coverage gap, not a weakness, so it carries no score
+            # into the overall and gets no level.
+            rows.append({"name": s["name"], "weight": round(s["weight"], 2), "status": NOT_ASSESSED, "discussion": NOT_DISCUSSED,
+                         "score": None, "criteria": {}, "total": 0, "max_total": MAX_TOTAL, "level": None, "level_label": "",
+                         "rationale": "", "evidence_ids": [], "reason": "not discussed in the conversation"})
     assessed = [r for r in rows if r["status"] == ASSESSED]
     w = sum(r["weight"] for r in assessed)
     overall = round(sum(r["score"] * r["weight"] for r in assessed) / w, 1) if w else None
@@ -405,6 +432,11 @@ def integrity(result: dict[str, Any], transcript: list[dict[str, Any]]) -> list[
             continue
         if not (0 <= (r.get("score") if r.get("score") is not None else -1) <= 100):
             problems.append(f"{r['name']} score out of range")
+        crit = r.get("criteria") or {}
+        cap = MENTIONED_CAP if r.get("discussion") == MENTIONED else MAX_TOTAL
+        if crit and (r.get("total") != min(cap, round(sum(crit.values()) * MAX_TOTAL / (5 * len(crit))))
+                     or r.get("level") != level_of(r.get("total", 0)) or r.get("score") != round(r.get("total", 0) * 100 / MAX_TOTAL)):
+            problems.append(f"{r['name']}: total, level and score don't agree with the criteria")
         own = [i for i in r.get("evidence_ids") or [] if i in ev and ev[i]["skill"] == r["name"]]
         if len(own) < result.get("min_evidence", 1):
             problems.append(f"{r['name']} is scored without enough verified evidence")

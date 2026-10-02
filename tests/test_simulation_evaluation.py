@@ -70,11 +70,15 @@ def test_weights_are_honoured_and_unassessed_skills_are_not_zero():
     llm = FakeLLM(EVIDENCE, JUDGED)
     r = sim.evaluate(snapshot(), TRANSCRIPT, complete=llm)
     by = {s["name"]: s for s in r["skills"]}
-    assert by["Negotiation"]["score"] == 88 and by["Discovery"]["score"] == 65
+    # Five whole-number criteria summed to /25 (a criterion with no evidence counts 0), mapped to a level.
+    assert by["Negotiation"]["total"] == 22 and by["Negotiation"]["level"] == 5 and by["Negotiation"]["level_label"] == "Expert"
+    assert by["Discovery"]["total"] == 13 and by["Discovery"]["level"] == 3 and by["Discovery"]["level_label"] == "Intermediate"
+    assert by["Negotiation"]["score"] == 88 and by["Discovery"]["score"] == 52
+    assert by["Closing"]["discussion"] == sim.NOT_DISCUSSED and by["Closing"]["total"] == 0 and by["Closing"]["level"] is None
     # Closing never came up: no evidence, so NOT_ASSESSED, even though the judge was eager.
     assert by["Closing"]["status"] == sim.NOT_ASSESSED and by["Closing"]["score"] is None
-    # Weighted over what was assessed: (88*40 + 65*30) / 70
-    assert r["overall"] == round((88 * 40 + 65 * 30) / 70, 1)
+    # Weighted over what was assessed: (88*40 + 52*30) / 70
+    assert r["overall"] == round((88 * 40 + 52 * 30) / 70, 1)
     assert r["weight_coverage"] == 0.7
     assert r["skills_not_assessed"] == ["Closing"]
 
@@ -140,3 +144,19 @@ def test_the_extractor_never_sees_the_scoring_scale():
     llm = FakeLLM(EVIDENCE, JUDGED)
     sim.evaluate(snapshot(), TRANSCRIPT, complete=llm)
     assert "0-5" not in llm.calls[0] and "Do not score" in llm.calls[0]
+
+
+@pytest.mark.parametrize("total,level", [(25, 5), (23, 5), (21, 5), (18, 4), (17, 4), (14, 3), (12, 3), (9, 2), (7, 2), (4, 1), (0, 1)])
+def test_total_skill_score_maps_to_the_documented_levels(total, level):
+    assert sim.level_of(total) == level
+
+
+def test_a_mentioned_skill_gets_only_minimal_credit():
+    judged = [dict(JUDGED[0], status="mentioned"), JUDGED[1]]
+    r = sim.evaluate(snapshot(), TRANSCRIPT, complete=FakeLLM(EVIDENCE, judged))
+    neg = next(x for x in r["skills"] if x["name"] == "Negotiation")
+    assert neg["discussion"] == sim.MENTIONED and neg["total"] == sim.MENTIONED_CAP and neg["level"] == 1
+    assert sim.integrity(r, TRANSCRIPT) == []
+    bad = copy.deepcopy(r)
+    next(x for x in bad["skills"] if x["name"] == "Negotiation")["total"] = 22
+    assert any("don't agree" in p for p in sim.integrity(bad, TRANSCRIPT))

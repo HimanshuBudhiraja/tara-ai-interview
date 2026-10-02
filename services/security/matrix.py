@@ -226,6 +226,7 @@ DECLARED: dict[tuple[str, str], str] = {
     ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/attempts/{attempt_id}/report"): RECRUITER_AUTHENTICATED,
     ("PUT", "/api/recruiter/agent-builder/agents/{agent_id}/attempts/{attempt_id}/review"): RECRUITER_AUTHENTICATED,
     ("POST", "/api/recruiter/agent-builder/agents/{agent_id}/attempts/{attempt_id}/evaluate"): RECRUITER_AUTHENTICATED,
+    ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/attempts/{attempt_id}/audio"): RECRUITER_AUTHENTICATED,
     ("GET", "/api/recruiter/agent-builder/agents/{agent_id}/sessions"): RECRUITER_AUTHENTICATED,
     # ---- Participant (a published agent, taken by someone with an access code)
     # Public because it MINTS the session grant from an access code; every

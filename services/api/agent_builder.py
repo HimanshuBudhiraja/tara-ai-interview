@@ -1045,6 +1045,17 @@ def all_reports_xlsx(request: Request, q: str = "", status: str = "", rec: str =
     return _xlsx(_filtered(data["rows"], q, status, rec, agent), [], "Role-play reports")
 
 
+_REGIONS = {"US": "United States", "GB": "United Kingdom", "IN": "India", "AU": "Australia", "CA": "Canada",
+            "FR": "France", "DE": "Germany", "ES": "Spain", "MX": "Mexico", "AE": "United Arab Emirates"}
+
+
+def _language_label(cfg: dict[str, Any]) -> str:
+    """'English (United States)' from the voice's locale."""
+    v = rx.voice(cfg.get("voice") or "")
+    region = (v.locale.split("-") + [""])[1].upper()
+    return f"{v.language} ({_REGIONS[region]})" if region in _REGIONS else v.language
+
+
 def _session_of(agent_id: str, session_id: str, request: Request) -> tuple[dict[str, Any], dict[str, Any]]:
     from services.data import agent_sessions
 
@@ -1061,7 +1072,12 @@ def _session_of(agent_id: str, session_id: str, request: Request) -> tuple[dict[
 def session_report(agent_id: str, attempt_id: str, request: Request) -> dict[str, Any]:
     row, s = _session_of(agent_id, attempt_id, request)
     a = (row.get("published") or {}).get("agent") or row["agent"]
+    cfg = (s.get("snapshot") or {}).get("cfg") or (row.get("published") or {}).get("cfg") or row["cfg"]
+    inv = next((i for i in row.get("invites") or [] if i.get("code") == s.get("invite_code")), {})
     return {"session_id": attempt_id, "agent_id": agent_id, "agent_title": no_interview(a["title"]),
+            "language": _language_label(cfg),
+            "invitation_type": "Open Link Invite" if inv.get("shared") else "Email Invite" if inv else "",
+            "date": s.get("ended_at") or s.get("created_at"), "duration_sec": int(s.get("elapsed_sec") or 0),
             "persona": (a.get("persona") or {}).get("name", ""), "purpose": _purpose(row),
             "decisions": DECISIONS.get(_purpose(row), DECISIONS["L&D"]), "name": s.get("name", ""), "email": s.get("email", ""),
             "attempt": int(s.get("attempt") or 1), "status": s["status"], "evaluation": s.get("evaluation"),
@@ -1087,6 +1103,28 @@ async def evaluate_now(agent_id: str, attempt_id: str, request: Request) -> dict
     if not s.get("evaluation"):
         raise HTTPException(422, "Couldn't evaluate: " + "; ".join((s.get("evaluation_error") or {}).get("problems") or ["unknown"]))
     return {"ok": True}
+
+
+@router.get("/agents/{agent_id}/attempts/{attempt_id}/audio")
+async def attempt_audio(agent_id: str, attempt_id: str, request: Request) -> dict[str, Any]:
+    """The recording of each call in this attempt (a reconnect is a second call),
+    fetched fresh from the voice service so links never go stale in a report."""
+    import httpx
+
+    _, s = _session_of(agent_id, attempt_id, request)
+    out = []
+    if config.RETELL_API_KEY:
+        async with httpx.AsyncClient(timeout=20) as http:
+            for n, cid in enumerate(s.get("calls") or [], 1):
+                try:
+                    r = await http.get(f"{RETELL}/v2/get-call/{cid}", headers={"Authorization": f"Bearer {config.RETELL_API_KEY}"})
+                except Exception:  # noqa: BLE001 — one missing recording shouldn't hide the others
+                    continue
+                if r.status_code < 400 and (r.json().get("recording_url") or ""):
+                    c = r.json()
+                    out.append({"part": n, "url": c["recording_url"],
+                                "duration_sec": round(((c.get("end_timestamp") or 0) - (c.get("start_timestamp") or 0)) / 1000)})
+    return {"recordings": out}
 
 
 class ReviewBody(BaseModel):

@@ -716,7 +716,7 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 .dlbanner.bad{border-color:#FDA29B;background:#FFFBFA;color:#B42318}
 .dlbanner.busy{border-color:#B2DDFF;background:#F5FAFF;color:#175CD3}
 .drawerback{position:fixed;inset:0;background:rgba(12,17,29,.35);z-index:70}
-.repdrawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);z-index:71;border-radius:0;border:0;border-left:1px solid var(--line);max-height:none;padding:20px 22px 40px;box-sizing:border-box;background:var(--white);overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.repdrawer{position:fixed;top:0;right:0;bottom:0;width:min(780px,100vw);z-index:71;border-radius:0;border:0;border-left:1px solid var(--line);max-height:none;padding:20px 22px 40px;box-sizing:border-box;background:var(--white);overflow-y:auto;display:flex;flex-direction:column;gap:12px}
 
 /* ===== Send Invitation (Figma layout, purple) ===== */
 .invdlg{width:min(640px,calc(100vw - 32px))}
@@ -795,6 +795,65 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 .yn input{accent-color:var(--sel-ink)}
 .sw[aria-checked="true"]{background:var(--sel-ink)}
 .sw[aria-checked="true"]:hover{background:#175CD3}
+
+/* ===== AI Conversation Report (panel + download) ===== */
+.rdoc{display:flex;flex-direction:column;gap:14px;color:var(--ink);font-size:14px}
+.rdoc h1{margin:0;font-size:19px;font-weight:700}
+.rdoc h2{margin:10px 0 0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rdoc h3{margin:0 0 8px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.rwho{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.rava,.rav{width:28px;height:28px;border-radius:50%;background:var(--uu-gray-200,#EAECF0);color:var(--ink-3);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.rmeta{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.rmeta div{display:flex;flex-direction:column;gap:4px}
+.rmeta small{font-size:12px;color:var(--muted-2)}
+.rmeta b{font-weight:500}
+.rmeta span{font-size:12px;color:var(--muted-2)}
+.rpill{display:inline-flex;align-items:center;gap:6px;width:fit-content;padding:3px 10px;border-radius:6px;font-size:13px;font-weight:500}
+.rpill svg{width:16px;height:16px}
+.rpill.positive{background:#ECFDF3;color:#067647}.rpill.caution{background:#FFFAEB;color:#B54708}.rpill.negative{background:#FEF3F2;color:#B42318}
+.rtablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.rtable{width:100%;border-collapse:collapse}
+.rtable th{background:var(--soft-2);text-align:left;font-size:13px;font-weight:600;padding:12px;white-space:nowrap}
+.rtable td{padding:12px;border-top:1px solid var(--line);vertical-align:top;line-height:1.5}
+.rtable td:first-child{width:30%}.rtable td:nth-child(2){width:120px;white-space:nowrap}
+.stars span{color:#D0D5DD;font-size:17px;letter-spacing:1px}.stars span.on{color:#F79009}
+.rcols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:640px){.rcols{grid-template-columns:1fr}}
+.rcols h3 .ok{color:#079455;display:inline-flex}.rcols h3 .warn{color:#F79009;display:inline-flex}
+.rcols h3 svg{width:18px;height:18px}
+.rbox{border-radius:8px;padding:12px 14px;line-height:1.55}
+.rbox.ok{background:#ECFDF3}.rbox.warn{background:#FFFAEB}
+.rbox ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.rbox p{margin:0;color:var(--muted-2)}
+.rrec p{margin:6px 0 0;line-height:1.6;color:var(--ink-2)}
+.rreview{border:1px solid var(--line);border-radius:8px;padding:12px 14px}.rreview p{margin:4px 0}.rreview small{color:var(--muted-2)}
+.rtx{display:flex;flex-direction:column;gap:12px}
+.rmsg{background:var(--uu-gray-50,#F9FAFB);border-radius:10px;padding:12px 14px;position:relative}
+.rmsg.me{margin-left:56px;background:#F2F4F7}
+.rmh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rav.ai{background:var(--accent);color:#fff;font-size:12px}
+.rmsg:not(.me) .rav{background:var(--accent);color:#fff}.rmsg.me .rav{background:var(--sel-ink,#1570EF);color:#fff}
+.rmsg p{margin:0;line-height:1.55;padding-right:44px}
+.rmsg small{position:absolute;right:14px;bottom:12px;font-size:12px;color:var(--muted-2)}
+.rdisc{border-top:1px solid var(--line);padding-top:12px}.rdisc p{margin:0;font-size:12.5px;color:var(--ink-3);line-height:1.5}
+@media print{.rmsg,.rtable tr,.rbox{break-inside:avoid}}
+
+.stars em{font-style:normal;font-size:12.5px;color:var(--ink-3);margin-left:8px;letter-spacing:0}
+.chipm{display:inline-block;margin-left:8px;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:#FFFAEB;color:#B54708}
+.rcards{display:flex;flex-direction:column;gap:12px}
+.rcard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;break-inside:avoid}
+.rcardh{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.rcardh b{font-size:14.5px}
+.rtot{font-size:12.5px;font-weight:600;color:var(--ink-3);background:var(--uu-gray-100,#F2F4F7);border-radius:6px;padding:2px 8px}
+.rcrit{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.rcrit span{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--soft-2);color:var(--ink-2)}
+.rqa{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:8px}
+.rqa p{margin:0;line-height:1.5}.rqa .q{color:var(--ink-3)}
+.raudio{display:flex;flex-direction:column;gap:8px}
+.raudrow{display:flex;flex-direction:column;gap:4px}
+.raudio audio{width:100%}
+.rts{position:absolute;right:12px;bottom:10px;border:0;background:transparent;color:var(--sel-ink,#1570EF);font:inherit;font-size:12px;cursor:pointer;padding:0}
+.rts:hover{text-decoration:underline}
+@media print{.raudio{display:none}.rts{color:var(--muted-2)}}
 </style>
 </head>
 <body>
@@ -981,6 +1040,6 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 <aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261003v"></script>
+<script src="/agent-builder/app.js?v=20261003y"></script>
 </body>
 </html>

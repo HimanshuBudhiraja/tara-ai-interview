@@ -754,8 +754,94 @@
       h('div', { style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap' }, save,
         h('button', { class: 'obtn ghost', type: 'button', text: 'Download report', onclick: () => printAttempt(agentId, sid) }),
         h('span', { class: 'meta', text: d.review.at ? 'Last saved by ' + d.review.by + ' · ' + fmtDT(d.review.at) : 'Not reviewed yet' })));
-    if (d.evaluation) dr.append(resultView(d.evaluation));
-    if ((d.transcript || []).length) dr.append(transcriptView(d));
+    dr.append(reportDoc(d));
+  }
+  /* The participant report, laid out like the AI conversation report PDF: header,
+   * skill summary with 1-5 stars and AI notes, strengths and areas of improvement,
+   * recommendation, the timed transcript, disclaimer. Used in the panel and for download. */
+  function reportDoc(d) {
+    const ev = d.evaluation || {}, N = ev.narrative || {};
+    const lvl = { positive: 'positive', caution: 'caution', negative: 'negative' };
+    const recLevel = (() => { const r = (ev.recommendation || '').toLowerCase(); return r.startsWith('recommended') || r.startsWith('proceed') ? 'positive' : r.startsWith('not ') ? 'negative' : r ? 'caution' : ''; })();
+    const recPill = (txt, level) => h('span', { class: 'rpill ' + (lvl[level] || 'caution') }, h('span', { html: SVGI[level || 'caution'] }), txt);
+    // Level 1-5 from the Total Skill Score (/25); older results without a level fall back to the 0-100 score.
+    const levelOf = (k) => k.status !== 'ASSESSED' ? 0 : k.level || Math.max(1, Math.round((k.score || 0) / 20));
+    const stars = (n, label) => h('span', { class: 'stars', 'aria-label': n ? n + ' of 5' + (label ? ', ' + label : '') : 'Not discussed' },
+      [1, 2, 3, 4, 5].map((i) => h('span', { class: i <= n ? 'on' : '', text: '★' })), label ? h('em', { text: label }) : null);
+    const mmss = (x) => x == null ? '' : String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(Math.round(x % 60)).padStart(2, '0');
+    const name = d.name || d.email || 'Participant', persona = d.persona || 'Persona';
+    const strengths = (N.strengths || N.did_well || []).map((x) => x.text);
+    const improve = (N.improve || N.development_areas || []).concat(N.next_steps || N.try_next || []).map((x) => x.text);
+    const doc = h('article', { class: 'rdoc' },
+      h('h1', { text: 'AI Conversation Report' }),
+      h('div', { class: 'rwho' }, h('span', { class: 'rava', text: (name[0] || 'P').toUpperCase() }), h('b', { text: name })),
+      h('div', { class: 'rmeta' },
+        h('div', null, h('small', { text: 'AI Conversation Name' }), h('b', { text: d.agent_title }), h('span', { text: d.email || '' })),
+        h('div', null, h('small', { text: 'Recommendation' }), ev.recommendation ? recPill(ev.recommendation, recLevel) : h('b', { text: 'Not evaluated' })),
+        h('div', null, h('small', { text: 'Conversation date' }), h('b', { text: d.date ? new Date(d.date * 1000).toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' }) : '–' })),
+        h('div', null, h('small', { text: 'Conversation language' }), h('b', { text: d.language || '–' })),
+        h('div', null, h('small', { text: 'Invitation type' }), h('b', { text: d.invitation_type || '–' }))));
+    if (d.evaluation) {
+      doc.append(h('h2', { text: 'Skill Summary' + (ev.overall != null ? ' · overall ' + Math.round(ev.overall) + ' / 100' : '') }),
+        h('div', { class: 'rtablewrap' }, h('table', { class: 'rtable' },
+          h('thead', null, h('tr', null, h('th', { text: 'Skill' }), h('th', { text: 'Level (1-5)' }), h('th', null, h('span', { class: 'spark', text: '✦ ' }), 'AI Evaluation Notes'))),
+          h('tbody', null, (ev.skills || []).map((k) => h('tr', null,
+            h('td', null, k.name, k.discussion === 'mentioned' ? h('span', { class: 'chipm', text: 'Mentioned' }) : null),
+            h('td', null, stars(levelOf(k), k.level_label || '')),
+            h('td', { text: k.status === 'ASSESSED' ? (k.rationale || '—') : 'Not discussed in the conversation.' })))))),
+        h('div', { class: 'rcols' },
+          h('section', null, h('h3', null, h('span', { class: 'ok', html: SVGI.positive }), 'Strengths'), h('div', { class: 'rbox ok' }, strengths.length ? h('ul', null, strengths.map((t) => h('li', { text: t }))) : h('p', { text: 'None identified from the evidence.' }))),
+          h('section', null, h('h3', null, h('span', { class: 'warn', html: SVGI.caution }), 'Areas of Improvement'), h('div', { class: 'rbox warn' }, improve.length ? h('ul', null, improve.map((t) => h('li', { text: t }))) : h('p', { text: 'None identified from the evidence.' })))),
+        h('div', { class: 'rrec' }, h('h2', null, 'Recommendation ', recPill(ev.recommendation, recLevel)), N.summary ? h('p', { text: N.summary }) : null));
+      // Per-skill detail cards: level, total out of 25, the five criteria, and the questions asked with the answers given.
+      const turns = d.transcript || [], pIdx = {}; let pn = 0;
+      turns.forEach((t, i) => { if (t.role === 'user') { pn++; pIdx['P' + pn] = i; } });
+      const evById = {}; (ev.evidence || []).forEach((e) => { evById[e.id] = e; });
+      const cards = (ev.skills || []).filter((k) => k.status === 'ASSESSED').map((k) => {
+        const qa = []; const seen = new Set();
+        (k.evidence_ids || []).map((i) => evById[i]).filter(Boolean).forEach((e) => {
+          const at = pIdx[e.turn]; if (at == null || seen.has(at)) return; seen.add(at);
+          let q = ''; for (let j = at - 1; j >= 0; j--) { if (turns[j].role === 'agent') { q = turns[j].text; break; } }
+          qa.push({ q, a: turns[at].text, t: turns[at].t, quote: e.quote, polarity: e.polarity });
+        });
+        return h('section', { class: 'rcard' },
+          h('div', { class: 'rcardh' }, h('b', { text: k.name }), stars(levelOf(k), k.level_label || ''),
+            h('span', { class: 'rtot', text: (k.total != null ? k.total : Math.round((k.score || 0) / 4)) + ' / 25' }),
+            k.discussion === 'mentioned' ? h('span', { class: 'chipm', text: 'Mentioned' }) : null),
+          Object.keys(k.criteria || {}).length ? h('div', { class: 'rcrit' }, Object.entries(k.criteria).map(([c, v]) => h('span', null, c, h('b', { text: ' ' + (v == null ? '–' : v + '/5') })))) : null,
+          qa.length ? h('ol', { class: 'rqa' }, qa.map((x) => h('li', null,
+            h('p', { class: 'q' }, h('b', { text: persona + ': ' }), x.q || '—'),
+            h('p', { class: 'a' }, h('b', { text: name + (x.t != null ? ' · ' + mmss(x.t) : '') + ': ' }), x.a)))) : h('p', { class: 'meta', text: 'No question and answer evidence recorded for this skill.' }));
+      });
+      if (cards.length) doc.append(h('h2', { text: 'Skill Details' }), h('div', { class: 'rcards' }, cards));
+    } else {
+      doc.append(h('p', { class: 'meta', text: d.evaluation_error ? 'Not evaluated: ' + (d.evaluation_error.problems || []).join('; ') : 'Not evaluated yet.' }));
+    }
+    if (d.review && (d.review.decision || d.review.notes)) doc.append(h('div', { class: 'rreview' }, h('h3', { text: 'Reviewer' }),
+      d.review.decision ? h('p', null, h('b', { text: 'Recommendation: ' }), d.review.decision) : null, d.review.notes ? h('p', { text: d.review.notes }) : null,
+      d.review.by ? h('small', { text: 'By ' + d.review.by + (d.review.at ? ' · ' + new Date(d.review.at * 1000).toLocaleString() : '') }) : null));
+    if ((d.transcript || []).length) {
+      const audio = h('div', { class: 'raudio', 'data-audio': '' });
+      const seek = (sec) => { const a = audio.querySelector('audio'); if (a && sec != null) { a.currentTime = sec; a.play().catch(() => {}); } };
+      doc.append(h('h2', { text: 'Audio and Transcriptions' }), audio, h('div', { class: 'rtx' }, d.transcript.map((t) => {
+        const ai = t.role === 'agent', who = ai ? persona : name;
+        return h('div', { class: 'rmsg' + (ai ? '' : ' me') }, h('div', { class: 'rmh' }, h('span', { class: 'rav' + (ai ? ' ai' : ''), text: ai ? '✦' : (who[0] || 'P').toUpperCase() }), h('b', { text: who })),
+          h('p', { text: t.text }), t.t != null ? h('button', { type: 'button', class: 'rts', title: 'Play from here', text: mmss(t.t), onclick: () => seek(t.t) }) : null);
+      })));
+      if (d.agent_id && d.session_id) loadAudio(d.agent_id, d.session_id, audio);
+    }
+    doc.append(h('div', { class: 'rdisc' }, h('h3', { text: 'Disclaimer' }), h('p', { text: 'This automated evaluation is based on the participant\'s responses during the AI conversation. We recommend a follow-up conversation with a person to validate these findings and explore anything that needs a closer look.' })));
+    return doc;
+  }
+  async function loadAudio(agentId, sid, box) {
+    box.append(h('p', { class: 'meta', text: 'Loading the recording…' }));
+    let r; try { r = await api('/agents/' + encodeURIComponent(agentId) + '/attempts/' + encodeURIComponent(sid) + '/audio'); } catch (e) { r = { recordings: [] }; }
+    box.textContent = '';
+    if (!r.recordings.length) { box.append(h('p', { class: 'meta', text: 'No recording is available for this conversation.' })); return; }
+    r.recordings.forEach((x) => box.append(h('div', { class: 'raudrow' },
+      r.recordings.length > 1 ? h('small', { text: 'Part ' + x.part + ' (reconnected)' }) : null,
+      h('audio', { controls: true, preload: 'none', src: x.url, 'aria-label': 'Recording' + (r.recordings.length > 1 ? ', part ' + x.part : '') }))));
+    if (r.recordings.length > 1) box.append(h('p', { class: 'meta', text: 'Timestamps play from the first part.' }));
   }
   function transcriptView(d) {
     return h('details', { class: 'resskill' }, h('summary', null, h('b', { text: 'Transcript (' + d.transcript.length + ' turns)' })),
@@ -765,14 +851,10 @@
   async function printAttempt(agentId, sid) {
     let d; try { d = await fetchAttempt(agentId, sid); } catch (e) { toast(e.message); return; }
     const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups for this page to download the report.'); return; }
-    const box = h('div', { class: 'printdoc' },
-      h('h1', { text: d.agent_title + ' · report' }),
-      h('p', { class: 'meta', text: (d.name || 'Participant') + ' · ' + d.email + (d.attempt > 1 ? ' · attempt ' + d.attempt : '') }),
-      d.review.decision || d.review.notes ? h('div', { class: 'airec' }, h('b', { text: 'Reviewer: ' }), (d.review.decision ? d.review.decision + '. ' : '') + (d.review.notes || '')) : null,
-      d.evaluation ? resultView(d.evaluation) : h('p', { text: 'Not evaluated.' }));
+    const box = h('div', { class: 'printdoc' }, reportDoc(d));
     box.querySelectorAll('details').forEach((x) => x.setAttribute('open', ''));
     const css = [...document.querySelectorAll('style')].map((x) => x.textContent).join('\n');
-    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + (d.name || 'Report').replace(/</g, '') + ' report</title><style>' + css +
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + (d.name || 'Participant').replace(/</g, '') + ' · AI Conversation Report</title><style>' + css +
       ' body{padding:32px;max-width:860px;margin:0 auto}.printdoc h1{font-size:22px;margin:0 0 6px}@media print{body{padding:0}}</style></head><body></body></html>');
     w.document.body.append(w.document.importNode(box, true)); w.document.close();
     setTimeout(() => { w.focus(); w.print(); }, 300);

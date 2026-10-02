@@ -134,7 +134,8 @@ AGENT_DESIGNER_MODEL = _first("AGENT_DESIGNER_MODEL", default="anthropic/claude-
 AGENT_REVISER_MODEL = _first("AGENT_REVISER_MODEL", default="anthropic/claude-sonnet-5.5")
 QUESTION_SUGGESTER_MODEL = _first("QUESTION_SUGGESTER_MODEL", default="google/gemini-3.8-flash")
 REHEARSAL_MODEL = _first("REHEARSAL_MODEL", default="openai/gpt-5.4-mini")
-AGENT_SCORER_MODEL = _first("AGENT_SCORER_MODEL", default="anthropic/claude-opus-5.5")
+#: Evaluation runs on GPT OSS 120B, as in iMocha's Tara evaluation document.
+AGENT_SCORER_MODEL = _first("AGENT_SCORER_MODEL", default="openai/gpt-oss-120b")
 
 # Kept for the runtime modules that still read them by these names.
 MODEL_FAST = ANSWER_CLASSIFIER_MODEL

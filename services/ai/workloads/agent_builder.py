@@ -83,13 +83,19 @@ def _complete(system: str, user: str, max_tokens: int = 4000, workload: str = "a
     gateway = get_gateway()
     if not gateway.live:
         raise LLMError("no model provider configured — set OPENROUTER_API_KEY")
-    result = gateway.generate(Workload(workload), system, user, max_tokens=max_tokens)
-    if not result.success:
-        raise LLMError(result.error or "model call failed")
-    try:
-        return _extract_json(result.text)
-    except AIError as exc:
-        raise LLMError(str(exc)) from exc
+    last = ""
+    # Strict JSON: an answer that can't be parsed is asked for once more, with
+    # the instruction repeated, before giving up (iMocha evaluation doc, 6.1).
+    for attempt in range(2):
+        prompt = user if attempt == 0 else user + "\n\nYour previous answer was not valid JSON. Reply with only the JSON object."
+        result = gateway.generate(Workload(workload), system, prompt, max_tokens=max_tokens)
+        if not result.success:
+            raise LLMError(result.error or "model call failed")
+        try:
+            return _extract_json(result.text)
+        except AIError as exc:
+            last = str(exc)
+    raise LLMError(last or "the model's answer was not valid JSON")
 
 
 def _voices_prompt() -> str:
