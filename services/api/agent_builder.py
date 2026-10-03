@@ -549,7 +549,7 @@ async def test_call(agent_id: str, request: Request) -> dict[str, Any]:
 
     try:
         async with httpx.AsyncClient(timeout=20) as http:
-            r = await http.post(f"{RETELL}/v2/create-web-call", json=body,
+            r = await http.post(f"{RETELL}/v3/create-web-call", json=body,
                                 headers={"Authorization": f"Bearer {config.RETELL_API_KEY}"})
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(502, "Couldn't reach the voice service.") from exc
@@ -560,7 +560,7 @@ async def test_call(agent_id: str, request: Request) -> dict[str, Any]:
     row.setdefault("tests", []).append({"call_id": call_id, "kind": "voice", "at": time.time(),
                                         "version": int(row.get("version") or 0)})
     store.save(row)
-    return {"access_token": out.get("access_token", ""), "call_id": call_id,
+    return {**{k: out[k] for k in ("call_id", "access_token", "transport", "url", "ice_servers", "expires_at") if k in out}, "call_id": call_id,
             "max_minutes": rx.TEST_CALL_MINUTES}
 
 

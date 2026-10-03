@@ -36,6 +36,7 @@ from services import config, observability  # noqa: E402
 from services.ai.brain import get_llm  # noqa: E402
 from services.api import (  # noqa: E402
     agent_builder,
+    retell_relay,
     participant,
     auth,
     builder,
@@ -196,6 +197,10 @@ BUILDER_GUARD = [Depends(builder.builder_scope)]
 app.include_router(design.router, prefix="/api/recruiter", dependencies=RECRUITER_GUARD)
 app.include_router(builder.router, prefix="/api/recruiter", dependencies=BUILDER_GUARD)
 app.include_router(agent_builder.router, prefix="/api/recruiter", dependencies=BUILDER_GUARD)
+# Retell's v3 browser client, pointed at us: stop-call and the live-transcript relay.
+# Each route carries its own guard (the call must belong to this participant / agent).
+app.include_router(retell_relay.participant_router)
+app.include_router(retell_relay.builder_router)
 app.include_router(questions.router, prefix="/api/recruiter", dependencies=RECRUITER_GUARD)
 app.include_router(publish.router, prefix="/api/recruiter", dependencies=RECRUITER_GUARD)
 # Before the recruiter router: `/sessions/{id}/evaluation` has to be matched

@@ -285,7 +285,7 @@ def test_a_test_call_goes_to_the_one_agent_with_the_persona_overrides(client, mo
     # A test is the real agent, kept short, and the persona is told so it can wrap up.
     assert sent["body"]["agent_override"]["agent"]["max_call_duration_ms"] == rx.TEST_CALL_MINUTES * 60_000
     assert sent["body"]["retell_llm_dynamic_variables"]["max_minutes"] == str(rx.TEST_CALL_MINUTES)
-    assert sent["url"].endswith("/v2/create-web-call")
+    assert sent["url"].endswith("/v3/create-web-call")      # v2 is retired on 2026-10-18
     assert sent["body"]["agent_id"] == "agent_one"
     assert set(sent["body"]["retell_llm_dynamic_variables"]) == set(rx.VARIABLES)
     assert store.by_call("call_123")["agent_id"] == aid
@@ -1022,3 +1022,54 @@ def test_slots_are_open_around_the_clock_by_default(monkeypatch):
     assert slots.now_option([], 25, now=at) is not None
     starts = slots.offered(at)
     assert len({t.astimezone(slots.ZoneInfo(slots.TZ)).strftime("%H:%M") for t in starts}) == 48   # every half hour
+
+
+# --------------------------------------------------------------------------- #
+#  Retell v3 browser client, pointed at our server
+# --------------------------------------------------------------------------- #
+def test_the_v3_relay_serves_only_your_own_call(client, monkeypatch):
+    import contextlib
+
+    from services.api import retell_relay
+    from services.data import agent_sessions
+    from starlette.websockets import WebSocketDisconnect
+
+    (p, sid), = _signed_in(client)
+    row = agent_sessions.load(sid)
+    row["calls"] = ["call_mine"]
+    agent_sessions.save(row)
+    stopped = []
+
+    async def fake_stop(cid):
+        stopped.append(cid)
+    monkeypatch.setattr(retell_relay, "_stop", fake_stop)
+    base = f"/api/participant/session/{sid}/retell"
+    assert p.post(f"{base}/v2/stop-call/call_mine").status_code == 200 and stopped == ["call_mine"]
+    assert p.post(f"{base}/v2/stop-call/call_someone_else").status_code == 404     # not this participant's call
+    assert TestClient(app).post(f"{base}/v2/stop-call/call_mine").status_code == 404  # no session cookie
+
+    class FakeUpstream:
+        close_code = 1000
+        def __init__(self):
+            self.msgs = ['{"type":"transcript_updated","transcript":[{"id":"1","role":"agent","content":"Hello"}]}']
+        def __aiter__(self):
+            return self
+        async def __anext__(self):
+            if not self.msgs:
+                raise StopAsyncIteration
+            return self.msgs.pop(0)
+        async def send(self, m):
+            pass
+
+    @contextlib.asynccontextmanager
+    async def fake_connect(url, subprotocols=None, open_timeout=None):
+        assert url.endswith("/v2/monitor-call/call_mine") and subprotocols[0] == "bearer"
+        yield FakeUpstream()
+
+    import websockets
+    monkeypatch.setattr(websockets, "connect", fake_connect)
+    with p.websocket_connect(f"{base}/v2/monitor-call/call_mine", subprotocols=["bearer", "session"]) as ws:
+        assert "Hello" in ws.receive_text()
+    with pytest.raises(WebSocketDisconnect):
+        with p.websocket_connect(f"{base}/v2/monitor-call/call_someone_else", subprotocols=["bearer", "session"]) as ws:
+            ws.receive_text()

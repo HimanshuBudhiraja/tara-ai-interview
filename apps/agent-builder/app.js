@@ -1297,6 +1297,46 @@
   $('scoreBtn').addEventListener('click', scoreTest);
 
   /* ---------- the real Retell call ---------- */
+  /* Retell's v3 browser client (the v2 RetellWebClient is retired on 2026-10-18),
+   * pointed at OUR server. Our /call (or /test-call) has already run every check
+   * and created the call with the secret key, so the client's own "create call"
+   * is answered with that; whatever else it asks (stop, the live transcript) goes
+   * to our relay, with the session cookie as the only credential. It speaks the
+   * old event names, so the screens above it don't change. */
+  async function retellV3(sdkUrl, base, created) {
+    const mod = await import(sdkUrl);
+    const handlers = {};
+    const fire = (k, a) => { const f = handlers[k]; if (f) f(a); };
+    const ourFetch = (url, o) => {
+      if (String(url).endsWith('/v3/create-web-call')) {
+        return Promise.resolve(new Response(JSON.stringify(created), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      }
+      const headers = Object.assign({}, (o && o.headers) || {});
+      delete headers.Authorization;
+      return fetch(url, Object.assign({}, o, { headers, credentials: 'same-origin' }));
+    };
+    const client = new mod.RetellClient({ key: 'session', baseURL: base, fetch: ourFetch });
+    let call = null;
+    return {
+      on: (k, f) => { handlers[k] = f; },
+      startCall: () => {
+        call = client.createWebCall({ agent_id: 'session', transcript: true, hooks: {
+          onStatus: (st) => { if (st === 'live') fire('call_started'); },
+          onAgentStartTalking: () => fire('agent_start_talking'),
+          onAgentStopTalking: () => fire('agent_stop_talking'),
+          onTranscript: (tr) => fire('update', { transcript: (tr || []).filter((x) => x && (x.role === 'agent' || x.role === 'user')) }),
+          onUpdate: (u) => fire('update', u),
+          onEnd: () => fire('call_ended'),
+          onError: (e) => fire('error', e)
+        } });
+        return call.ready;
+      },
+      mute: () => { if (call) call.mute(); },
+      unmute: () => { if (call) call.unmute(); },
+      stopCall: () => { if (call) call.end(); }
+    };
+  }
+
   async function startVoice() {
     const v = S.voice;
     // Ask for the microphone first, before a call is placed: a blocked mic is
@@ -1316,8 +1356,8 @@
       await saveNow();
       const r = await api('/agents/' + encodeURIComponent(S.agentId) + '/test-call', { method: 'POST' });
       v.callId = r.call_id;
-      const mod = await import('https://cdn.jsdelivr.net/npm/retell-client-js-sdk@3/+esm');
-      const client = new mod.RetellWebClient();
+      const client = await retellV3('https://cdn.jsdelivr.net/npm/retell-client-js-sdk@3.0.2/+esm',
+        location.origin + '/api/agent-builder/agents/' + encodeURIComponent(S.agentId) + '/retell', r);
       v.client = client;
       client.on('call_started', () => {
         v.state = 'live'; v.left = (r.max_minutes || OPT.test_call_minutes || 5) * 60;
@@ -1336,7 +1376,7 @@
       });
       client.on('call_ended', () => { clearInterval(v.tick); v.left = null; v.state = 'ended'; v.client = null; v.dur = Math.round((Date.now() - v.t0) / 1000); renderTest(); });
       client.on('error', (err) => { v.state = 'failed'; v.err = 'The call dropped. ' + ((err && err.message) || ''); v.client = null; try { client.stopCall(); } catch (e) { /* gone */ } renderTest(); });
-      await client.startCall({ accessToken: r.access_token });
+      await client.startCall();
     } catch (e) {
       v.state = 'failed'; v.err = e.message || 'The call couldn\'t start.'; v.client = null; renderTest();
     }

@@ -310,7 +310,7 @@ async def call(body: CallBody, row: dict[str, Any] = Depends(participant_scope))
     if not (config.RETELL_API_KEY and config.RETELL_AGENT_BUILDER_AGENT_ID):
         raise HTTPException(503, "Voice isn't available right now.")
     if len(row.get("calls") or []) >= 5:
-        raise HTTPException(429, "Too many reconnects for one conversation. Contact the hiring team.")
+        raise HTTPException(429, "Too many reconnects for one conversation. Contact the team that invited you.")
     # Only in the booked slot: that is what keeps live calls within Retell's limit.
     if not slots.can_join(row.get("booking"), resuming=bool(row.get("calls"))):
         raise HTTPException(409, {"error": "slot", "message": "Your conversation opens at your booked time."
@@ -329,12 +329,14 @@ async def call(body: CallBody, row: dict[str, Any] = Depends(participant_scope))
         metadata={"participant_session": row["session_id"]},
     )
     if rx.leaked_cues(body_, snap):
-        raise HTTPException(409, "This conversation isn't available right now. Contact the hiring team.")
+        raise HTTPException(409, "This conversation isn't available right now. Contact the team that invited you.")
     import httpx
 
     try:
         async with httpx.AsyncClient(timeout=20) as http:
-            r = await http.post(f"{RETELL}/v2/create-web-call", json=body_,
+            # v3: the v2 endpoint and the browser's RetellWebClient are retired on
+            # 2026-10-18. The answer carries everything the browser needs to connect.
+            r = await http.post(f"{RETELL}/v3/create-web-call", json=body_,
                                 headers={"Authorization": f"Bearer {config.RETELL_API_KEY}"})
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(502, "Couldn't reach the voice service.") from exc
@@ -347,8 +349,7 @@ async def call(body: CallBody, row: dict[str, Any] = Depends(participant_scope))
     row["status"] = "in_call"
     row.setdefault("started_at", time.time())
     sessions.save(row)
-    return {"access_token": out.get("access_token", ""), "call_id": out.get("call_id", ""),
-            "resumed": bool(resume)}
+    return {**{k: out[k] for k in ("call_id", "access_token", "transport", "url", "ice_servers", "expires_at") if k in out}, "resumed": bool(resume)}
 
 
 class Turn(BaseModel):

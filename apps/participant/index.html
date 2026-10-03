@@ -677,7 +677,7 @@ class Component extends DCLogic {
   static SKILL_COLORS = ['#3B6FF6', '#7C5CFC', '#14B8C4', '#12B76A', '#F79009', '#F04438', '#6741E0'];
   static REFS = { email: { label: '', kind: '' }, shot: { label: '', kind: '' }, image: { label: '', kind: '' }, table: { label: '', kind: '' }, chart: { label: '', kind: '' }, graph: { label: '', kind: '' } };
   static SPEEDS = { slow: { label: 'Slow', rate: 0.85 }, normal: { label: 'Normal', rate: 1 }, fast: { label: 'Fast', rate: 1.15 } };
-  static SDK = 'https://cdn.jsdelivr.net/npm/retell-client-js-sdk@3/+esm';
+  static SDK = 'https://cdn.jsdelivr.net/npm/retell-client-js-sdk@3.0.2/+esm';
   static KEY = 'tara-participant-session';
 
   static errs(p, org) {
@@ -1037,8 +1037,7 @@ class Component extends DCLogic {
     try {
       const r = await this.api(this.sess('/call'), 'POST', { speed: this.state.speed });
       const wait = resume ? 0 : this.tone(this.state.v.call.sound);
-      const mod = await import(Component.SDK);
-      const client = new mod.RetellWebClient(); this.client = client;
+      const client = await window.retellV3(Component.SDK, location.origin + '/api/participant/session/' + encodeURIComponent(this.state.sid) + '/retell', r); this.client = client;
       client.on('call_started', () => { this.setPhase(this.state.v.call.speaker === 'Participant opens' && !r.resumed ? 'waiting' : 'thinking'); });
       client.on('agent_start_talking', () => this.setPhase('speaking'));
       client.on('agent_stop_talking', () => { if (this.state.phase === 'speaking') this.setPhase('waiting'); });
@@ -1068,7 +1067,7 @@ class Component extends DCLogic {
       client.on('error', () => { this.client = null; this.setState({ inCall: false }); if (!this.userEnded) this.openError('interrupted'); });
       this.prevRows = resume ? this.state.rows.slice() : [];
       if (wait) await new Promise(res => setTimeout(res, wait));
-      await client.startCall({ accessToken: r.access_token });
+      await client.startCall();
       if (this.state.muted) try { client.mute(); } catch (e) { /* ignore */ }
     } catch (e) {
       this.setState({ inCall: false });
@@ -1473,6 +1472,46 @@ function chartSVG(c) {
   }
 
 window.chartSVG = chartSVG;
+/* Retell's v3 browser client (the v2 RetellWebClient is retired on 2026-10-18),
+ * pointed at OUR server. Our /call (or /test-call) has already run every check
+ * and created the call with the secret key, so the client's own "create call"
+ * is answered with that; whatever else it asks (stop, the live transcript) goes
+ * to our relay, with the session cookie as the only credential. It speaks the
+ * old event names, so the screens above it don't change. */
+async function retellV3(sdkUrl, base, created) {
+  const mod = await import(sdkUrl);
+  const handlers = {};
+  const fire = (k, a) => { const f = handlers[k]; if (f) f(a); };
+  const ourFetch = (url, o) => {
+    if (String(url).endsWith('/v3/create-web-call')) {
+      return Promise.resolve(new Response(JSON.stringify(created), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    }
+    const headers = Object.assign({}, (o && o.headers) || {});
+    delete headers.Authorization;
+    return fetch(url, Object.assign({}, o, { headers, credentials: 'same-origin' }));
+  };
+  const client = new mod.RetellClient({ key: 'session', baseURL: base, fetch: ourFetch });
+  let call = null;
+  return {
+    on: (k, f) => { handlers[k] = f; },
+    startCall: () => {
+      call = client.createWebCall({ agent_id: 'session', transcript: true, hooks: {
+        onStatus: (st) => { if (st === 'live') fire('call_started'); },
+        onAgentStartTalking: () => fire('agent_start_talking'),
+        onAgentStopTalking: () => fire('agent_stop_talking'),
+        onTranscript: (tr) => fire('update', { transcript: (tr || []).filter((x) => x && (x.role === 'agent' || x.role === 'user')) }),
+        onUpdate: (u) => fire('update', u),
+        onEnd: () => fire('call_ended'),
+        onError: (e) => fire('error', e)
+      } });
+      return call.ready;
+    },
+    mute: () => { if (call) call.mute(); },
+    unmute: () => { if (call) call.unmute(); },
+    stopCall: () => { if (call) call.end(); }
+  };
+}
+window.retellV3 = retellV3;
 </script>
 <script>
 /* What you're saying, under the orb, grows with your answer; if it gets long

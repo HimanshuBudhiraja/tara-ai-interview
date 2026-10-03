@@ -122,7 +122,8 @@ def _candidates(app: Any) -> Iterable[tuple[str, str, Any, set[str]]]:
                 yield (
                     path,
                     getattr(endpoint, "__name__", type(ctx).__name__),
-                    getattr(ctx, "dependant", None),
+                    # Same for a websocket's guards: they live on the original route.
+                    getattr(ctx, "dependant", None) or getattr(getattr(ctx, "original_route", None), "dependant", None),
                     set(getattr(ctx, "methods", None) or {"WS"}),
                 )
             continue
@@ -143,7 +144,9 @@ def derive(route: Route) -> str:
     """The class the route's own wiring implies."""
     # `builder_scope` is `recruiter_scope` plus an exception that exists only
     # off production, only from loopback, and only when switched on.
-    if {"recruiter_scope", "builder_scope"} & set(route.dependencies):
+    # The v3 browser-call relay's builder guards: a test call of the caller's own
+    # agent, under the same rules as `builder_scope`.
+    if {"recruiter_scope", "builder_scope", "builder_relay_scope", "builder_relay_ws_scope"} & set(route.dependencies):
         if any("{" + name + "}" in route.path for name in OWNED_PARAMS):
             return RECRUITER_ORGANIZATION_SCOPED
         return RECRUITER_AUTHENTICATED
@@ -152,7 +155,8 @@ def derive(route: Route) -> str:
     # Both session guards, because they are the same class of control: a
     # per-session secret in an HttpOnly cookie, proving this browser owns this
     # session and no other. `roleplay_scope` is the role-play surface's copy.
-    if {"candidate_scope", "roleplay_scope", "participant_scope"} & set(route.dependencies):
+    if {"candidate_scope", "roleplay_scope", "participant_scope",
+        "participant_relay_scope", "participant_relay_ws_scope"} & set(route.dependencies):
         return CANDIDATE_TOKEN_SCOPED
     if route.path.startswith("/api/"):
         return PUBLIC
@@ -242,6 +246,11 @@ DECLARED: dict[tuple[str, str], str] = {
     ("POST", "/api/participant/session/{session_id}/complete"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/participant/session/{session_id}/feedback"): CANDIDATE_TOKEN_SCOPED,
     ("GET", "/api/participant/session/{session_id}/exhibit-images/{name}"): CANDIDATE_TOKEN_SCOPED,
+    # Retell v3 browser client, pointed at us (services/api/retell_relay.py).
+    ("POST", "/api/participant/session/{session_id}/retell/v2/stop-call/{call_id}"): CANDIDATE_TOKEN_SCOPED,
+    ("WS", "/api/participant/session/{session_id}/retell/v2/monitor-call/{call_id}"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/agent-builder/agents/{agent_id}/retell/v2/stop-call/{call_id}"): RECRUITER_AUTHENTICATED,
+    ("WS", "/api/agent-builder/agents/{agent_id}/retell/v2/monitor-call/{call_id}"): RECRUITER_AUTHENTICATED,
     ("GET", "/participant"): INTERNAL_ONLY,
     ("GET", "/participant/support.js"): INTERNAL_ONLY,
     ("GET", "/participant/assets/{name}"): INTERNAL_ONLY,
