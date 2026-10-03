@@ -105,10 +105,50 @@ def _voices_prompt() -> str:
 # --------------------------------------------------------------------------- #
 #  Draft, in two stages
 # --------------------------------------------------------------------------- #
+#: The Scenario Context a brief may carry (iMocha one-pager: max 10,000 chars).
+BRIEF_MAX = 10_000
+
+_SPLIT_SHAPE = """{
+  "persona_context": "everything the persona needs to play the scenario, copied word for word from the brief",
+  "evaluation_context": "everything that is only for judging the participant, copied word for word from the brief"
+}"""
+
+
+def split_context(brief: str) -> tuple[dict[str, str], str]:
+    """Stage 0: separate what the PERSONA may know from what only the EVALUATOR may see.
+
+    A long brief mixes both. The persona needs the situation, the role context,
+    what to probe and which objections to raise. Expected answers, strong versus
+    weak answers, accuracy rules and what to reward or penalise belong to the
+    evaluator: a persona that knew them could hint at them. Copied, not
+    summarised, so no fact or figure is lost.
+    """
+    user = (
+        "Brief:\n" + fence(brief[:BRIEF_MAX])
+        + "\n\nSplit this brief into two parts. Copy sentences WORD FOR WORD; do not summarise, shorten or drop facts, "
+          "names or numbers, and do not add anything.\n"
+          "persona_context: what the persona needs to play the scenario realistically: who the participant is, the role "
+          "and company context, the products or areas in scope, each situation the persona can be in, what to probe, the "
+          "objections to raise, and how to run the conversation.\n"
+          "evaluation_context: what is only for judging the participant: the competencies being assessed and their "
+          "definitions, expected or model responses, strong versus weak answers, accuracy rules, accepted figures, and what "
+          "to reward or penalise.\n"
+          "Every sentence of the brief goes in exactly one part. Return only JSON in this shape:\n" + _SPLIT_SHAPE
+    )
+    try:
+        out = _complete(_RULES, user, 9000, "agent_designer")
+        pc, ec = _s(out.get("persona_context")), _s(out.get("evaluation_context"))
+        if len(pc) + len(ec) >= 0.6 * len(brief.strip()):     # nothing important went missing
+            return {"persona_context": pc[:BRIEF_MAX], "evaluation_context": ec[:BRIEF_MAX]}, "model"
+    except LLMError:
+        pass
+    return {"persona_context": brief.strip()[:BRIEF_MAX], "evaluation_context": ""}, "template"
+
+
 def plan(brief: str, mode: str) -> tuple[dict[str, Any], str]:
     """Stage 1. Returns (plan, drafted_by)."""
     user = (
-        "Brief:\n" + fence(brief[:4000])
+        "Brief:\n" + fence(brief[:BRIEF_MAX])
         + f"\n\nAgent type the person picked: {MODES.get(mode, 'Role-play')}."
         + "\n\nLength is set by depth: Light = 10 min, Probing = 20 min, Deep dive = 30 min. "
           "Pick the depth whose length best fits the brief, and Probing if it gives no length."
@@ -123,16 +163,21 @@ def plan(brief: str, mode: str) -> tuple[dict[str, Any], str]:
         return normalise_plan(_offline_plan(brief, mode), mode), "template"
 
 
-def content(p: dict[str, Any]) -> tuple[dict[str, Any], str]:
-    """Stage 2: questions, rubric, closing line, for an existing plan."""
+def content(p: dict[str, Any], contexts: dict[str, str] | None = None) -> tuple[dict[str, Any], str]:
+    """Stage 2: questions, rubric, closing line, for an existing plan, grounded in the brief's own detail."""
     n = rx.DEPTH_QUESTIONS.get(p["agent"]["depth"], 6)
+    ctx = contexts or {}
     user = (
         "The agent so far:\n" + json.dumps({"scenario": p["fields"], **p["agent"]}, indent=1)
+        + ("\n\nWhat the persona knows (from the brief):\n" + fence(ctx["persona_context"][:6000]) if ctx.get("persona_context") else "")
+        + ("\n\nHow the participant is judged (from the brief):\n" + fence(ctx["evaluation_context"][:6000]) if ctx.get("evaluation_context") else "")
         + f"\n\nWrite exactly {n} questions that fit the role, difficulty and a "
           f"{rx.DEPTH_MINUTES[p['agent']['depth']]}-minute conversation, in the order Tara should ask them. "
-          "If this is a role-play, the 'questions' are the moves and topics the character brings up. "
-          "Write 4-5 rubric competencies drawn from the skills, with weights that total 100. "
-          "Tag every question with one competency's exact name."
+          "If this is a role-play, the 'questions' are the moves, probes and objections the character brings up, "
+          "taken from the brief where it gives them. "
+          "Rubric: if the brief names the competencies being assessed, use EXACTLY those (same names and count, up to 8), "
+          "with each anchor taken from the brief's own definition; otherwise write 4-5 drawn from the skills. "
+          "Weights total 100. Tag every question with one competency's exact name."
         + "\n\nReturn only JSON in this shape:\n" + _CONTENT_SHAPE
     )
     try:

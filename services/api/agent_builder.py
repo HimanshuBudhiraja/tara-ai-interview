@@ -142,7 +142,8 @@ def persona_only(agent: dict[str, Any]) -> dict[str, Any]:
     """
     first = rx.persona_first((agent.get("persona") or {}).get("name"))
     fix = lambda t: no_interview(rx._TARA.sub(first, t or ""))  # noqa: E731
-    for key in ("title", "type_label", "description", "instructions", "opening_line", "closing_line"):
+    for key in ("title", "type_label", "description", "instructions", "opening_line", "closing_line",
+                "context", "additional_context"):
         agent[key] = fix(agent.get(key))
     for q in agent.get("questions") or []:
         q["text"] = fix(q.get("text"))
@@ -150,6 +151,15 @@ def persona_only(agent: dict[str, Any]) -> dict[str, Any]:
 
 
 no_interview = rx.no_interview
+
+
+CONTEXT_MAX = ab.BRIEF_MAX
+ADDITIONAL_MAX = 3000
+
+
+def _text(v: Any) -> str:
+    """Long text kept as written: line breaks matter in a brief, only the ends are trimmed."""
+    return str(v or "").replace("\r\n", "\n").strip() if isinstance(v, (str, int, float)) else ""
 
 
 def clean_agent(agent: dict[str, Any]) -> dict[str, Any]:
@@ -171,6 +181,11 @@ def _clean_agent(agent: dict[str, Any]) -> dict[str, Any]:
         "persona": {k: _s(persona.get(k))[:160] for k in ("name", "role", "style")},
         "description": _s(agent.get("description"))[:2000],
         "instructions": _s(agent.get("instructions"))[:6000],
+        # The one-pager's limits: Scenario Context 10,000, Additional Context 3,000.
+        # Evaluation guidance is the scorer's alone and never reaches the voice agent.
+        "context": rx.without_lines(_text(agent.get("context"))[:CONTEXT_MAX], _text(agent.get("evaluation_context"))),
+        "additional_context": _text(agent.get("additional_context"))[:ADDITIONAL_MAX],
+        "evaluation_context": _text(agent.get("evaluation_context"))[:CONTEXT_MAX],
         "opening_line": _s(agent.get("opening_line"))[:600],
         "closing_line": rx.closing_without_question(_s(agent.get("closing_line"))[:600]) if _s(agent.get("closing_line")) else "",
         "questions": [{"text": _s(q.get("text"))[:600], "tag": _s(q.get("tag"))[:120]}
@@ -289,8 +304,11 @@ def _proctoring(row: dict[str, Any], image: bool | None = None, safe: bool | Non
             "safe_browser": bool(safe if safe is not None else cur.get("safe_browser", cfg.get("safe_browser", False)))}
 
 
-def _new_row(p: dict[str, Any], c: dict[str, Any], brief: str, mode: str, org: str) -> dict[str, Any]:
-    agent = clean_agent({**p["agent"], **c})
+def _new_row(p: dict[str, Any], c: dict[str, Any], brief: str, mode: str, org: str,
+             contexts: dict[str, str] | None = None) -> dict[str, Any]:
+    ctx = contexts or {}
+    agent = clean_agent({**p["agent"], **c, "context": ctx.get("persona_context", ""),
+                         "evaluation_context": ctx.get("evaluation_context", "")})
     cfg = clean_cfg({"tone": p["fields"]["difficulty"], "depth": agent["depth"], "voice": agent["voice"]})
     return {
         "agent_id": store.new_id(agent["title"]),
@@ -331,8 +349,12 @@ def options() -> dict[str, Any]:
 #  Draft
 # --------------------------------------------------------------------------- #
 class DraftBody(BaseModel):
-    brief: str = Field(min_length=1, max_length=4000)
+    brief: str = Field(min_length=1, max_length=ab.BRIEF_MAX)
     mode: str = "roleplay"
+
+
+#: Briefs longer than this carry real detail (situations, expected answers) and are split.
+SPLIT_FROM = 1200
 
 
 def _sse(event: str, data: Any) -> str:
@@ -359,11 +381,17 @@ def draft(
 
     def events():
         try:
+            # A short brief is all scenario; a long one is split so the persona
+            # never sees the answer key (expected answers, accuracy rules).
+            contexts, by0 = (ab.split_context(brief) if len(brief) > SPLIT_FROM
+                             else ({"persona_context": "", "evaluation_context": ""}, "none"))
+            yield _sse("context", {"persona_chars": len(contexts["persona_context"]),
+                                   "evaluation_chars": len(contexts["evaluation_context"]), "drafted_by": by0})
             p, by1 = ab.plan(brief, mode)
             yield _sse("plan", {**p, "drafted_by": by1})
-            c, by2 = ab.content(p)
+            c, by2 = ab.content(p, contexts)
             yield _sse("content", {**c, "drafted_by": by2})
-            row = store.save(_new_row(p, c, brief, mode, org))
+            row = store.save(_new_row(p, c, brief, mode, org, contexts))
             yield _sse("done", public(row))
         except Exception as exc:  # noqa: BLE001 — the stream must end with a reason
             yield _sse("error", {"message": "Tara couldn't finish the draft. Try again.",

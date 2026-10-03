@@ -164,6 +164,14 @@ the participant actually said. Never invent, merge or tidy up a quote: copy it
 character for character from one [P#] turn. Reply with JSON only."""
 
 
+def guidance(snapshot: dict[str, Any]) -> str:
+    """The scenario's own evaluation guidance (expected answers, accuracy rules), if its author wrote any."""
+    g = str(((snapshot.get("agent") or {}).get("evaluation_context")) or "").strip()
+    return ("\n\nThe scenario author's evaluation guidance (expected answers, what strong and weak answers look like, "
+            "accuracy rules). Use it to judge what the participant said; it is never evidence by itself:\n<<<\n"
+            + g[:10000] + "\n>>>\n") if g else ""
+
+
 def _extract(complete: Complete, snapshot: dict[str, Any], skills: list[dict[str, Any]],
              criteria: list[str], transcript_text: str) -> list[dict[str, Any]]:
     a = snapshot["agent"]
@@ -172,6 +180,7 @@ def _extract(complete: Complete, snapshot: dict[str, Any], skills: list[dict[str
         "Skills to find evidence for (with what strong performance looks like):\n"
         + "\n".join(f"- {s['name']}: {s.get('anchor') or ''}" for s in skills)
         + "\nCriteria: " + ", ".join(criteria)
+        + guidance(snapshot)
         + "\n\nFind the moments in the transcript that show each skill, strong or weak. For each, copy an exact quote "
           "(at least six words) from ONE participant turn, name the turn id, the skill, the single most relevant criterion, "
           "whether it shows a strength or a weakness, and one sentence on why it matters. Up to 4 items per skill. If a skill "
@@ -209,7 +218,7 @@ def _verify(raw: list[dict[str, Any]], turns: list[dict[str, Any]], skills: list
 
 
 def _judge(complete: Complete, skills: list[dict[str, Any]], criteria: list[str],
-           evidence: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+           evidence: list[dict[str, Any]], guide: str = "") -> dict[str, dict[str, Any]]:
     if not skills:
         return {}
     blocks = []
@@ -223,7 +232,10 @@ def _judge(complete: Complete, skills: list[dict[str, Any]], criteria: list[str]
         "Do not reward length. Say whether the skill was 'discussed' (directly assessed with a substantive answer) or only "
         "'mentioned' (came up in passing, not substantively assessed). Write the AI Evaluation Note: 2-3 sentences on what the "
         "participant actually said and what was missing, grounded in the evidence. Cite the evidence ids you used.\n"
-        "Criteria: " + ", ".join(criteria) + "\n\n" + "\n\n".join(blocks)
+        "Criteria: " + ", ".join(criteria) + guide
+        + ("Where the guidance gives expected answers or accuracy rules, an answer that contradicts them or invents figures "
+           "scores low on Accuracy; an answer that matches them scores high.\n" if guide else "")
+        + "\n\n" + "\n\n".join(blocks)
         + '\n\nReturn {"skills": [{"name": "", "status": "discussed|mentioned", "criteria": {"' + criteria[0] + '": 3}, '
           '"rationale": "the AI Evaluation Note", "evidence_ids": ["E1"]}]}'
     )
@@ -370,7 +382,7 @@ def evaluate(snapshot: dict[str, Any], transcript: list[dict[str, Any]], *, comp
     raw = _extract(complete, snapshot, skills, criteria, _numbered(transcript, persona))
     evidence, dropped = _verify(raw, turns, skills, criteria)
     enough = [s for s in skills if sum(1 for e in evidence if e["skill"] == s["name"]) >= min_ev]
-    judged = _judge(complete, enough, criteria, evidence)
+    judged = _judge(complete, enough, criteria, evidence, guidance(snapshot))
 
     rows = []
     for s in skills:

@@ -193,7 +193,8 @@ def test_nothing_in_the_code_creates_a_retell_agent():
 # --------------------------------------------------------------------------- #
 def test_draft_streams_plan_then_content_then_the_saved_agent(client):
     ev = _draft(client)
-    assert list(ev) == ["plan", "content", "done"]
+    assert list(ev) == ["context", "plan", "content", "done"]
+    assert ev["context"]["drafted_by"] == "none"     # a short brief is all scenario: nothing to split
     done = ev["done"]
     assert done["agent"]["questions"] and done["agent"]["rubric"]
     assert sum(r["weight"] for r in done["agent"]["rubric"]) == 100
@@ -1153,3 +1154,45 @@ def test_audio_setup_is_passed_through_to_retell_only_for_your_own_call(client, 
     assert seen["auth"] == "Bearer call_token" and b"offer" in seen["body"]      # the call's own token, as sent
     assert p.post(f"{base}/call_other/v1/webrtc/sessions", json={}).status_code == 404   # not your call
     assert p.post(f"{base}/call_mine/v2/anything-else", json={}).status_code == 404      # only WebRTC signalling
+
+
+LONG_BRIEF = (
+    "ROLE CONTEXT: The participant is a pre-sales consultant at a travel-technology firm meeting an airline CIO. "
+    + "The airline runs Sabre for reservations and wants to move loyalty onto a new platform. " * 12
+    + "\nEXPECTED RESPONSE: A strong answer names both Sabre outcome sets and quantifies the migration risk. "
+    + "ACCURACY RULES: Penalise any invented revenue figure or a claim of zero downtime."
+)
+
+
+def test_a_long_brief_is_accepted_and_split_so_the_persona_never_sees_the_answer_key(client, monkeypatch):
+    persona = LONG_BRIEF.split("\nEXPECTED")[0]
+    secret = "EXPECTED RESPONSE: A strong answer names both Sabre outcome sets and quantifies the migration risk."
+    monkeypatch.setattr(ab, "split_context", lambda brief: (
+        {"persona_context": persona + "\n" + secret, "evaluation_context": LONG_BRIEF[len(persona):].strip()}, "model"))
+    assert len(LONG_BRIEF) > 1200
+    ev = _draft(client, brief=LONG_BRIEF)
+    assert ev["context"]["evaluation_chars"] > 0
+    a = ev["done"]["agent"]
+    assert "Sabre for reservations" in a["context"] and "ACCURACY RULES" in a["evaluation_context"]
+    # A line the model put in both parts is taken out of the persona's copy.
+    assert "quantifies the migration risk" not in a["context"]
+    v = rx.dynamic_variables(store.load(ev["done"]["agent_id"]))
+    assert "Sabre for reservations" in v["conversation_instructions"]
+    assert "invented revenue figure" not in json.dumps(v)
+
+
+def test_briefs_are_capped_at_the_scenario_context_limit(client):
+    r = client.post(f"{BASE}/drafts", json={"brief": "x" * (ab.BRIEF_MAX + 1), "mode": "roleplay"})
+    assert r.status_code == 422
+
+
+def test_evaluation_guidance_copied_into_the_instructions_is_a_leak():
+    row = {"agent": {"rubric": [], "evaluation_context": "Penalise any invented revenue figure or a claim of zero downtime."}}
+    body = {"x": "Tara: remember to penalise any invented revenue figure or a claim of zero downtime."}
+    assert rx.leaked_cues(body, row)
+
+
+def test_the_split_falls_back_to_the_whole_brief_when_the_model_drops_content(monkeypatch):
+    monkeypatch.setattr(ab, "_complete", lambda *a, **k: {"persona_context": "short", "evaluation_context": ""})
+    out, by = ab.split_context(LONG_BRIEF)
+    assert by == "template" and out["persona_context"] == LONG_BRIEF.strip()

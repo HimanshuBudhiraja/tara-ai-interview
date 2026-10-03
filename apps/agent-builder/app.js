@@ -274,7 +274,7 @@
     const ol = $('steps2'); ol.textContent = '';
     STEPS.forEach((s, i) => {
       const st = i < at ? 'done' : (i === at && !S.buildErr ? 'act' : 'wait');
-      const detail = i === 1 ? ([F.type, F.role, F.difficulty].filter(Boolean).join(' · ') || 'Type, role and difficulty') : s.detail;
+      const detail = i === 0 && S.ctxNote ? S.ctxNote : i === 1 ? ([F.type, F.role, F.difficulty].filter(Boolean).join(' · ') || 'Type, role and difficulty') : s.detail;
       ol.append(h('li', { class: st }, h('span', { class: 'sdot ' + st, html: st === 'done' ? ICON.check14 : '' }), h('span', null, h('b', { text: s.label }), h('small', { text: detail }))));
     });
     $('err2').hidden = !S.buildErr; $('err2').textContent = S.buildErr;
@@ -305,7 +305,7 @@
   }
   async function build() {
     if (S.building || !S.brief.trim()) return;
-    S.building = true; S.stage = 0; S.buildErr = ''; S.pf = S.pa = S.pc = null;
+    S.building = true; S.stage = 0; S.buildErr = ''; S.pf = S.pa = S.pc = null; S.ctxNote = '';
     go(2); renderS2(); syncCreate();
     try {
       const r = await fetch(API + '/drafts', {
@@ -331,7 +331,8 @@
           const raw = (chunk.match(/^data: (.*)$/m) || [])[1];
           if (!ev || !raw) continue;
           const data = JSON.parse(raw);
-          if (ev === 'plan') { S.stage = 1; S.pf = data.fields; S.pa = data.agent; if (data.drafted_by === 'template') note('No model is configured, so Tara filled this draft from a template. Edit it on the next screen.'); }
+          if (ev === 'context') { S.ctxNote = data.evaluation_chars ? 'Split your brief: ' + data.persona_chars.toLocaleString() + ' characters for the persona, ' + data.evaluation_chars.toLocaleString() + ' for scoring only.' : ''; }
+          else if (ev === 'plan') { S.stage = 1; S.pf = data.fields; S.pa = data.agent; if (data.drafted_by === 'template') note('No model is configured, so Tara filled this draft from a template. Edit it on the next screen.'); }
           else if (ev === 'content') { S.stage = 2; S.pc = data; }
           else if (ev === 'done') { S.stage = 3; loadRow(data); finished = true; }
           else if (ev === 'error') throw new Error(data.message || 'Tara couldn\'t finish the draft. Try again.');
@@ -368,6 +369,7 @@
       { id: 'context', label: 'Instructions', group: 'AGENT SETUP', done: !!a.instructions.trim() },
       { id: 'persona', label: 'Persona', group: 'AGENT SETUP', done: !!a.persona.name.trim() },
       { id: 'rubric', label: 'Skills', group: 'AGENT SETUP', done: rubOk, review: !rubOk },
+      { id: 'knowledge', label: 'Scenario knowledge', group: 'OPTIONAL', opt: true, done: !!((a.context || '').trim() || (a.additional_context || '').trim() || (a.evaluation_context || '').trim()) },
       { id: 'questions', label: 'Potential AI Questions', group: 'OPTIONAL', opt: true, done: a.questions.length > 0 },
       { id: 'exhibits', label: 'Exhibits', group: 'OPTIONAL', opt: true, done: (a.exhibits || []).length > 0 },
       { id: 'settings', label: 'Conversation settings', group: 'OPTIONAL', opt: true },
@@ -483,6 +485,21 @@
           h('textarea', { id: 'close-t', class: 'inp', rows: '3', value: a.closing_line, oninput: (e) => { bind(a, 'closing_line')(e); $('closeWarn').hidden = !/\?/.test(e.target.value); } }),
           h('small', { id: 'closeWarn', class: 'advhint', style: 'color:#B54708', hidden: !/\?/.test(a.closing_line || ''),
             text: 'The call ends right after the closing line, so a question here would be asked and then hung up on. Questions are removed when you save; the persona already asks "anything else?" in the wrap-up and waits for the answer.' })))));
+
+    const ctxBox = (id, key, label, hint, max, rows) => {
+      const cnt = h('small', { class: 'advhint', style: 'text-align:right;margin-top:0' });
+      const upd = () => { const n = (a[key] || '').length; cnt.textContent = n.toLocaleString() + ' / ' + max.toLocaleString(); cnt.style.color = n > max ? '#B42318' : ''; };
+      upd();
+      return h('div', { class: 'fld' }, h('label', { for: id, text: label }),
+        h('textarea', { id, class: 'inp', rows: String(rows), maxlength: String(max), value: a[key] || '', placeholder: hint, oninput: (e) => { bind(a, key)(e); upd(); } }),
+        h('div', { style: 'display:flex;justify-content:space-between;gap:12px' }, h('small', { class: 'advhint', style: 'margin-top:0', text: '' }), cnt));
+    };
+    m.append(h('section', { id: 'knowledge', class: 'card', style: 'gap:16px', 'aria-labelledby': 'kn-h' },
+      h('div', { class: 'ch2' }, h('div', { class: 'tt' }, h('h2', { id: 'kn-h', text: 'Scenario knowledge' }), h('p', { class: 'sub', text: 'The detail from your brief, kept word for word. Long briefs are split so the persona never sees the answer key.' })), h('span', { class: 'privpill' }, h('span', { class: 'spark', html: ICON.eyeoff }), 'Private')),
+      ctxBox('kn-ctx', 'context', 'Scenario context (the persona plays from this)', 'Role and company context, products in scope, situations, what to probe, objections to raise.', 10000, 8),
+      ctxBox('kn-add', 'additional_context', 'Additional context (facts the persona may share when asked)', 'e.g. pricing, policies, product facts. If a participant asks about something not here, the persona says it doesn\'t have that detail.', 3000, 4),
+      ctxBox('kn-eval', 'evaluation_context', 'Evaluation guidance (used for scoring only)', 'Expected answers, strong versus weak answers, accuracy rules, what to reward or penalise.', 10000, 8),
+      h('small', { class: 'advhint', style: 'margin-top:-6px', text: 'Evaluation guidance is never sent to the voice agent. Publishing is blocked if any of its sentences appear in the instructions, context or questions.' })));
 
     m.append(h('section', { id: 'persona', class: 'card', style: 'gap:22px', 'aria-labelledby': 'per-h' },
       h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'per-h', text: 'Persona' }), h('p', { class: 'sub', text: 'Who participants will meet. Change the name and it updates everywhere the participant hears or reads it.' })),
@@ -1008,7 +1025,7 @@
       .filter(([n], i, all) => n && all.findIndex(([m]) => m === n) === i).sort((x, y) => y[0].length - x[0].length);
     const swap = (t) => { pairs.forEach(([n, to]) => { t = t.replace(new RegExp('\\b' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), to); }); return t; };
     let changed = 0;
-    ['title', 'opening_line', 'closing_line', 'instructions', 'description'].forEach((k) => { const t = swap(a[k] || ''); if (t !== a[k]) { a[k] = t; changed++; } });
+    ['title', 'opening_line', 'closing_line', 'instructions', 'description', 'context', 'additional_context'].forEach((k) => { const t = swap(a[k] || ''); if (t !== a[k]) { a[k] = t; changed++; } });
     (a.questions || []).forEach((q) => { const t = swap(q.text || ''); if (t !== q.text) { q.text = t; changed++; } });
     return changed;
   }
@@ -1020,7 +1037,7 @@
     const first = (a.persona.name || '').replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '').split(/\s+/)[0] || 'the persona';
     let changed = false;
     const fix = (t) => { const n = (t || '').replace(/\bTara\b/g, first); if (n !== t) changed = true; return n; };
-    ['title', 'description', 'instructions', 'opening_line', 'closing_line'].forEach((k) => { a[k] = fix(a[k]); });
+    ['title', 'description', 'instructions', 'opening_line', 'closing_line', 'context', 'additional_context'].forEach((k) => { a[k] = fix(a[k]); });
     (a.questions || []).forEach((q) => { q.text = fix(q.text); });
     return changed;
   }
@@ -1072,7 +1089,7 @@
       S.row = row; renderSide(); toast('Published. Invite participants from the sidebar or the header.');
     } catch (e) {
       const d = e.detail || {};
-      toast(d.missing ? 'Finish ' + d.missing.join(', ').toLowerCase() + ' first.' : d.leaked ? 'Reword this first: the instructions or questions repeat the "what a 5 looks like" text of a skill, which the voice agent must not see: "' + String(d.leaked[0]).slice(0, 90) + (String(d.leaked[0]).length > 90 ? '…' : '') + '"' : e.message);
+      toast(d.missing ? 'Finish ' + d.missing.join(', ').toLowerCase() + ' first.' : d.leaked ? 'Reword this first: the instructions, context or questions repeat scoring-only text (a skill\'s "what a 5 looks like" or the evaluation guidance), which the voice agent must not see: "' + String(d.leaked[0]).slice(0, 90) + (String(d.leaked[0]).length > 90 ? '…' : '') + '"' : e.message);
     }
   });
   // One access code per participant, for the published version. The link opens the participant flow.

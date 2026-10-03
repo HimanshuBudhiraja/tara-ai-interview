@@ -160,3 +160,11 @@ def test_a_mentioned_skill_gets_only_minimal_credit():
     bad = copy.deepcopy(r)
     next(x for x in bad["skills"] if x["name"] == "Negotiation")["total"] = 22
     assert any("don't agree" in p for p in sim.integrity(bad, TRANSCRIPT))
+
+
+def test_the_authors_evaluation_guidance_reaches_the_extractor_and_the_judge():
+    snap = snapshot()
+    snap["agent"]["evaluation_context"] = "Penalise any invented revenue figure."
+    llm = FakeLLM(EVIDENCE, JUDGED)
+    sim.evaluate(snap, TRANSCRIPT, complete=llm)
+    assert "Penalise any invented revenue figure." in llm.calls[0] and "Penalise any invented revenue figure." in llm.calls[1]

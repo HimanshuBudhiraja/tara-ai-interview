@@ -195,7 +195,8 @@ def dynamic_variables(row: dict[str, Any], candidate_name: str = "not given",
         "difficulty": _s(cfg.get("tone")) or "Realistic",
         "follow_up_depth": _s(cfg.get("depth")) or "Probing",
         "adaptive_followups": "on" if cfg.get("followups", True) else "off",
-        "conversation_instructions": _s(agent.get("instructions")) + exhibits_text(agent.get("exhibits") or []),
+        "conversation_instructions": _s(agent.get("instructions")) + context_text(agent)
+                                     + exhibits_text(agent.get("exhibits") or []),
         "question_bank": "\n".join(
             f"{i}. {_s(q.get('text'))}" for i, q in enumerate(agent.get("questions") or [], 1)
             if _s(q.get("text"))
@@ -221,7 +222,7 @@ def dynamic_variables(row: dict[str, Any], candidate_name: str = "not given",
     return out
 
 
-_TARA = re.compile(r"\bTara\b")
+_TARA = re.compile(r"\bTara\b", re.I)
 _TITLES = {"dr", "mr", "mrs", "ms", "miss", "prof", "sir"}
 
 
@@ -360,6 +361,36 @@ def web_call_body(row: dict[str, Any], agent_id: str, webhook_url: str = "", *,
     }
 
 
+def _lines(text: str) -> list[str]:
+    """A long text's lines and sentences, for comparing two texts piece by piece."""
+    out = []
+    for line in (text or "").splitlines():
+        out += [p.strip(" -•*\t") for p in re.split(r"(?<=[.!?])\s+", line) if p.strip(" -•*\t")]
+    return out
+
+
+def without_lines(text: str, secret: str) -> str:
+    """`text` minus any line that also sits in `secret` (the scorer's guidance must not reach the persona)."""
+    if not text or not secret:
+        return text
+    hidden = {re.sub(r"\s+", " ", s).lower() for s in _lines(secret) if len(s) > 24}
+    kept = [ln for ln in text.splitlines()
+            if not (ln.strip() and re.sub(r"\s+", " ", ln.strip(" -•*\t")).lower() in hidden)]
+    return "\n".join(kept).strip()
+
+
+def context_text(agent: dict[str, Any]) -> str:
+    """The brief's own detail, for the persona: what to play from and what to answer from."""
+    out = ""
+    if _s(agent.get("context")):
+        out += ("\n\nSCENARIO CONTEXT (your reference for this conversation; use it to play the scenario, raise its "
+                "situations and objections naturally, one at a time, and never read it out):\n" + agent["context"].strip())
+    if _s(agent.get("additional_context")):
+        out += ("\n\nADDITIONAL CONTEXT (answer the participant's questions about these facts only from here; if it isn't "
+                "here, say you don't have that detail):\n" + agent["additional_context"].strip())
+    return out
+
+
 def assessment_content(row: dict[str, Any]) -> list[str]:
     """Every string that belongs to the scorer and nobody else.
 
@@ -371,6 +402,8 @@ def assessment_content(row: dict[str, Any]) -> list[str]:
     """
     agent = row.get("agent") or {}
     out = [_s(r.get("anchor")) for r in agent.get("rubric") or []]
+    # The evaluation guidance (expected answers, accuracy rules), sentence by sentence.
+    out += _lines(agent.get("evaluation_context") or "")
     # Short strings are skipped: a one-line anchor fragment can coincide with
     # ordinary words. A check that fires on coincidence gets switched off.
     return sorted({s for s in out if len(s) > 24})
