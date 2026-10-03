@@ -13,14 +13,14 @@
  * So what is left for the browser is genuinely small: join, surface enough
  * state to render an orb and a status line, and leave.
  *
- * **On `RetellWebClient` being deprecated.** The v3 SDK prefers `RetellClient`
- * with `createWebCall()`, which mints the call from the browser — and minting
- * requires the Retell API key. Putting a provider key in a candidate's browser
- * would hand every candidate the ability to place calls on the account, and
- * this codebase refuses that everywhere else. The deprecated class is the only
- * entry point that takes a bare `accessToken` the server already obtained, so
- * it is the correct one here. If it is removed in v4, the replacement must
- * still be a token-only join; it must not become a key in the bundle.
+ * **On Retell's v3 client.** `RetellWebClient` and POST /v2/create-web-call are
+ * retired on 2026-10-18. The v3 `RetellClient` normally mints the call from the
+ * browser with a key, which would hand every candidate the ability to place
+ * calls on the account. So its address is set to THIS server instead: the
+ * server already minted the call with the secret key (/voice), its answer is
+ * handed to the client in place of the client's own "create", and the only
+ * other things the client asks for, stopping the call and the live
+ * transcript, go to this session's relay. No key is ever in the bundle.
  *
  * **On the dynamic import.** The SDK is around 590 KB of JavaScript (LiveKit
  * underneath), and importing it at module scope nearly tripled the candidate
@@ -30,6 +30,8 @@
  * on a vendor they may never reach. Loading it inside `join` means the cost is
  * paid once, at the moment of joining, by the only people it is for.
  */
+
+import type { VoiceCall } from "../lib/api";
 
 export type CallPhase = "connecting" | "speaking" | "listening" | "ended" | "failed";
 
@@ -48,100 +50,115 @@ interface Utterance {
   content?: string;
 }
 
-/**
- * Exactly what we use of the SDK.
- *
- * Declared here so this module needs no static import of the package. The
- * event names below are checked against the SDK's own `emit` calls, not
- * guessed — `RetellWebClient` extends an untyped `EventEmitter`, so a wrong
- * name would compile perfectly and simply never fire.
- */
-interface WebClient {
-  on(event: string, handler: (arg: never) => void): unknown;
-  startCall(config: {
-    accessToken: string;
-    emitRawAudioSamples?: boolean;
-  }): Promise<void>;
-  stopCall(): void;
+/** Exactly what we use of the v3 SDK, declared so there's no static import of the package. */
+interface WebCallSession {
+  ready: Promise<void>;
+  mute(): void;
+  unmute(): void;
+  end(): Promise<void>;
+}
+interface V3Client {
+  createWebCall(options: Record<string, unknown>): WebCallSession;
+}
+interface V3Module {
+  RetellClient: new (config: { key: string; baseURL: string; fetch: typeof fetch }) => V3Client;
 }
 
 export class RetellCall {
-  private client: WebClient | null = null;
+  private session: WebCallSession | null = null;
   private ended = false;
 
   get active(): boolean {
-    return this.client !== null && !this.ended;
+    return this.session !== null && !this.ended;
   }
 
-  async join(accessToken: string, handlers: CallHandlers): Promise<void> {
+  /**
+   * Join a call the server already created.
+   * `relayBase` is this session's relay: `/api/session/{id}/voice/retell`.
+   */
+  async join(created: VoiceCall, relayBase: string, handlers: CallHandlers): Promise<void> {
     handlers.onPhase("connecting");
-
-    const { RetellWebClient } = await import("retell-client-js-sdk");
-    const client = new RetellWebClient() as unknown as WebClient;
-    this.client = client;
     this.ended = false;
 
-    const on = (event: string, handler: (arg: never) => void) =>
-      client.on(event, handler);
-
-    on("call_started", () => handlers.onPhase("listening"));
-    on("agent_start_talking", () => handlers.onPhase("speaking"));
-    // Back to listening the moment Tara stops. The microphone is Retell's to
-    // manage — this only moves the picture on screen.
-    on("agent_stop_talking", () => handlers.onPhase("listening"));
-
-    on("update", ((update: { transcript?: Utterance[] }) => {
-      const rows = update?.transcript ?? [];
-      // The last thing the CANDIDATE said. Device feedback — proof the
-      // microphone is reaching Retell — not a transcript to read back.
-      for (let i = rows.length - 1; i >= 0; i -= 1) {
-        if (rows[i]?.role === "user") {
-          handlers.onHeard((rows[i].content ?? "").trim());
-          return;
-        }
+    const { RetellClient } = (await import("retell-client-js-sdk")) as unknown as V3Module;
+    // The client's own "create call" is answered with what the server already
+    // created; anything else goes to the relay with the session cookie only.
+    const ourFetch: typeof fetch = (input, init) => {
+      const url = String(input);
+      if (url.endsWith("/v3/create-web-call")) {
+        return Promise.resolve(new Response(JSON.stringify(created), {
+          status: 200, headers: { "Content-Type": "application/json" },
+        }));
       }
-    }) as (arg: never) => void);
-
-    on("audio", ((samples: Float32Array) => {
-      // RMS rather than peak: peak makes the orb twitch on consonants, where
-      // RMS tracks how loudly someone is actually speaking.
-      let sum = 0;
-      for (let i = 0; i < samples.length; i += 1) sum += samples[i] * samples[i];
-      handlers.onLevel(Math.min(1, Math.sqrt(sum / (samples.length || 1)) * 4));
-    }) as (arg: never) => void);
-
-    on("call_ended", () => {
-      this.ended = true;
-      handlers.onPhase("ended");
-      handlers.onEnded();
+      const headers = { ...((init?.headers as Record<string, string>) ?? {}) };
+      delete headers.Authorization;
+      return fetch(url, { ...init, headers, credentials: "same-origin" });
+    };
+    const client = new RetellClient({
+      key: "session",
+      baseURL: new URL(relayBase, window.location.origin).toString(),
+      fetch: ourFetch,
     });
 
-    on("error", ((err: unknown) => {
+    const fail = (err: unknown) => {
+      if (this.ended) return;
       this.ended = true;
       handlers.onPhase("failed");
-      handlers.onError(
-        err instanceof Error ? err.message : "The call dropped unexpectedly.",
-      );
-    }) as (arg: never) => void);
+      handlers.onError(err instanceof Error ? err.message : "The call dropped unexpectedly.");
+    };
 
-    await client.startCall({
-      accessToken,
+    const session = client.createWebCall({
+      agent_id: "session",
+      transcript: true,
       // Raw samples so the orb reacts to the candidate's own voice. Without
       // this the orb is inert while they speak, which reads as "it can't hear
       // me" — the single most common thing a voice interface gets wrong.
-      emitRawAudioSamples: true,
+      audio: { emitRawAudioSamples: true },
+      hooks: {
+        onStatus: (status: string) => { if (status === "live") handlers.onPhase("listening"); },
+        onAgentStartTalking: () => handlers.onPhase("speaking"),
+        // Back to listening the moment Tara stops. The microphone is Retell's
+        // to manage — this only moves the picture on screen.
+        onAgentStopTalking: () => handlers.onPhase("listening"),
+        onTranscript: (rows: Utterance[]) => {
+          // The last thing the CANDIDATE said. Device feedback — proof the
+          // microphone is reaching Retell — not a transcript to read back.
+          for (let i = (rows?.length ?? 0) - 1; i >= 0; i -= 1) {
+            if (rows[i]?.role === "user") {
+              handlers.onHeard((rows[i].content ?? "").trim());
+              return;
+            }
+          }
+        },
+        onAudio: (samples: Float32Array) => {
+          // RMS rather than peak: peak makes the orb twitch on consonants,
+          // where RMS tracks how loudly someone is actually speaking.
+          let sum = 0;
+          for (let i = 0; i < samples.length; i += 1) sum += samples[i] * samples[i];
+          handlers.onLevel(Math.min(1, Math.sqrt(sum / (samples.length || 1)) * 4));
+        },
+        onEnd: () => {
+          if (this.ended) return;
+          this.ended = true;
+          handlers.onPhase("ended");
+          handlers.onEnded();
+        },
+        onError: fail,
+      },
     });
+    this.session = session;
+    await session.ready;
   }
 
   /** End the call. Safe to call twice, and on a call that never started. */
   leave(): void {
     this.ended = true;
     try {
-      this.client?.stopCall();
+      void this.session?.end();
     } catch {
       // Already gone. Leaving is best-effort by nature: the server closes the
       // session from its own side when the socket drops.
     }
-    this.client = null;
+    this.session = null;
   }
 }

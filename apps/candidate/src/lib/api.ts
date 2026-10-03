@@ -62,8 +62,9 @@ export const api = {
    * on the server, which is the whole reason this is a round trip rather than
    * the browser calling Retell directly.
    */
+  /** The v3 connection details for a call the server has already created. */
   startVoiceCall: (sessionId: string) =>
-    request<{ access_token: string; call_id: string }>(
+    request<VoiceCall>(
       `/api/session/${encodeURIComponent(sessionId)}/voice`,
       { method: "POST" },
     ),
@@ -79,4 +80,14 @@ export const api = {
 export function socketUrl(sessionId: string): string {
   const proto = location.protocol === "https:" ? "wss:" : "ws:";
   return `${proto}//${location.host}/ws/interview/${sessionId}`;
+}
+
+/** What the server returns from /voice: Retell v3's answer, passed straight to the browser client. */
+export interface VoiceCall {
+  call_id: string;
+  access_token: string;
+  transport?: string;
+  url?: string;
+  ice_servers?: unknown[];
+  expires_at?: number;
 }

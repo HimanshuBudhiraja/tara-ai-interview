@@ -51,14 +51,14 @@ export function useRetellCall({
 
     (async () => {
       try {
-        const { access_token } = await api.startVoiceCall(sessionId);
+        const created = await api.startVoiceCall(sessionId);
         if (!live) return;
-        if (!access_token) {
+        if (!created.access_token) {
           setError("The voice service didn't return a call. Please reopen your link.");
           setPhase("failed");
           return;
         }
-        await instance.join(access_token, {
+        await instance.join(created, `/api/session/${encodeURIComponent(sessionId)}/voice/retell`, {
           onPhase: (p) => live && setPhase(p),
           onLevel: (l) => live && setLevel(l),
           onHeard: (t) => live && setHeard(t),

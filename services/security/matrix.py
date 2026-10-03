@@ -122,7 +122,8 @@ def _candidates(app: Any) -> Iterable[tuple[str, str, Any, set[str]]]:
                 yield (
                     path,
                     getattr(endpoint, "__name__", type(ctx).__name__),
-                    getattr(ctx, "dependant", None),
+                    # A websocket's guards live on the original route.
+                    getattr(ctx, "dependant", None) or getattr(getattr(ctx, "original_route", None), "dependant", None),
                     set(getattr(ctx, "methods", None) or {"WS"}),
                 )
             continue
@@ -147,7 +148,7 @@ def derive(route: Route) -> str:
         return RECRUITER_AUTHENTICATED
     if "current_principal" in route.dependencies:
         return RECRUITER_AUTHENTICATED
-    if "candidate_scope" in route.dependencies:
+    if {"candidate_scope", "candidate_ws_scope"} & set(route.dependencies):
         return CANDIDATE_TOKEN_SCOPED
     if route.path.startswith("/api/"):
         return PUBLIC
@@ -178,6 +179,9 @@ DECLARED: dict[tuple[str, str], str] = {
     ("GET", "/api/invite/{token}"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/invite/{token}/precheck"): CANDIDATE_TOKEN_SCOPED,
     ("POST", "/api/session/{session_id}/voice"): CANDIDATE_TOKEN_SCOPED,
+    # Retell v3 browser client, pointed at this server (services/api/retell.py).
+    ("POST", "/api/session/{session_id}/voice/retell/v2/stop-call/{call_id}"): CANDIDATE_TOKEN_SCOPED,
+    ("WS", "/api/session/{session_id}/voice/retell/v2/monitor-call/{call_id}"): CANDIDATE_TOKEN_SCOPED,
     # Retell connects INBOUND to this, so it is not a route a browser calls and
     # there is no principal to check. It is safe only because the call id in
     # the path resolves against a binding the server made when an authorised

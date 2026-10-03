@@ -1320,3 +1320,13 @@ def test_production_boot_revokes_a_stale_demo_invitation(data_dir, monkeypatch):
         pass
 
     assert invites.get(config.DEMO_TOKEN).effective_status == "revoked"
+
+
+
+def test_the_bearer_shape_catches_a_written_token_not_a_joined_one():
+    from tools import secrets_audit
+
+    assert "hardcoded bearer" in secrets_audit._scan('headers:{Authorization:"Bearer sk_live_0123456789abc"}', {})
+    assert "hardcoded bearer" in secrets_audit._scan("Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.x'", {})
+    # Retell's v3 client: the header is joined at run time from a value we set.
+    assert "hardcoded bearer" not in secrets_audit._scan('o=(d={Authorization:"Bearer "+(c=a.auth).key}', {})

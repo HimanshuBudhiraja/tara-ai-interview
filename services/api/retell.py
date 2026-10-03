@@ -27,12 +27,13 @@ import json
 import random
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect, WebSocketException
 
 from services import config
 from services.data import invites
 from services.data import sessions as store
 from services.orchestrator.engine import Orchestrator
+from services.security import principal as security
 
 router = APIRouter(tags=["voice"])
 
@@ -202,7 +203,8 @@ async def create_web_call(session_id: str, request: Request) -> dict[str, Any]:
     try:
         async with httpx.AsyncClient(timeout=20) as http:
             response = await http.post(
-                "https://api.retellai.com/v2/create-web-call",
+                # v3: v2 and the browser's RetellWebClient are retired on 2026-10-18.
+                "https://api.retellai.com/v3/create-web-call",
                 headers={"Authorization": f"Bearer {config.RETELL_API_KEY}"},
                 json={
                     "agent_id": config.RETELL_AGENT_ID,
@@ -230,10 +232,8 @@ async def create_web_call(session_id: str, request: Request) -> dict[str, Any]:
     bind(str(body.get("call_id") or ""), session_id)
     # Only what the browser SDK needs. The call object also carries account
     # detail that has no business leaving the server.
-    return {
-        "access_token": body.get("access_token", ""),
-        "call_id": body.get("call_id", ""),
-    }
+    # The v3 connection details the browser's RetellClient needs to join.
+    return {k: body[k] for k in ("call_id", "access_token", "transport", "url", "ice_servers", "expires_at") if k in body}
 
 
 def _session_belongs_to_caller(request: Request, state: Any) -> bool:
@@ -414,3 +414,75 @@ def _finish(state: Any) -> None:
 
         invite.completed_at = time.time()
         invites.update(invite)
+
+
+
+# --------------------------------------------------------------------------- #
+#  Retell's v3 browser client, pointed at this server
+# --------------------------------------------------------------------------- #
+# The v3 client would normally mint calls from the browser with a key. It is
+# pointed here instead: /voice above already minted the call with the secret
+# key, and the two things the client still asks for, stopping a call and the
+# live transcript, are relayed for this candidate's own call only.
+def _own_call(session_id: str, call_id: str) -> bool:
+    return bool(call_id) and session_for(call_id) == session_id
+
+
+@router.post("/api/session/{session_id}/voice/retell/v2/stop-call/{call_id}")
+async def stop_own_call(session_id: str, call_id: str,
+                        _: security.CandidateScope = Depends(security.candidate_scope)) -> dict[str, Any]:
+    if not _own_call(session_id, call_id):
+        raise HTTPException(404, "No such call.")
+    import httpx
+
+    async with httpx.AsyncClient(timeout=15) as http:
+        await http.post(f"https://api.retellai.com/v2/stop-call/{call_id}",
+                        headers={"Authorization": f"Bearer {config.RETELL_API_KEY}"})
+    return {"ok": True}
+
+
+def candidate_ws_scope(websocket: WebSocket, session_id: str, call_id: str) -> None:
+    """`candidate_scope` for the live-transcript socket, plus: the call is this session's."""
+    try:
+        security.candidate_scope(websocket, session_id)  # type: ignore[arg-type]
+    except HTTPException as exc:
+        raise WebSocketException(code=4404, reason="No such call.") from exc
+    if not _own_call(session_id, call_id):
+        raise WebSocketException(code=4404, reason="No such call.")
+
+
+@router.websocket("/api/session/{session_id}/voice/retell/v2/monitor-call/{call_id}")
+async def relay_transcript(ws: WebSocket, call_id: str, _: None = Depends(candidate_ws_scope)) -> None:
+    """Retell's monitor stream for this call, relayed with the secret key (never sent to the browser)."""
+    import asyncio
+
+    import websockets
+
+    await ws.accept(subprotocol="bearer")
+    code = 1000
+    try:
+        async with websockets.connect(f"wss://api.retellai.com/v2/monitor-call/{call_id}",
+                                      subprotocols=["bearer", config.RETELL_API_KEY], open_timeout=15) as up:
+            async def down() -> None:
+                async for msg in up:
+                    await ws.send_text(msg if isinstance(msg, str) else msg.decode())
+
+            async def upstream() -> None:
+                while True:
+                    m = await ws.receive()
+                    if m.get("type") == "websocket.disconnect":
+                        return
+                    if m.get("text") is not None:
+                        await up.send(m["text"])
+
+            _done, pending = await asyncio.wait({asyncio.create_task(down()), asyncio.create_task(upstream())},
+                                                return_when=asyncio.FIRST_COMPLETED)
+            for t in pending:
+                t.cancel()
+            code = up.close_code or 1000
+    except Exception:  # noqa: BLE001 — the "we can hear you" line is a convenience; the call goes on
+        code = 1011
+    try:
+        await ws.close(code=code if 1000 <= code <= 4999 else 1011)
+    except RuntimeError:
+        pass

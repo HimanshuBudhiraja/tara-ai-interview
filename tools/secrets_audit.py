@@ -57,7 +57,10 @@ SHAPES = {
     "openai key": r"\bsk-[A-Za-z0-9]{32,}",
     "provider key name": r"OPENROUTER_API_KEY|RETELL_API_KEY|OPENAI_API_KEY",
     "scrypt password hash": r"scrypt\$\d+\$",
-    "hardcoded bearer": r"Authorization\s*:\s*['\"]Bearer\s+\S",
+    # A token written inside the string ("Bearer abc123..."), not one joined on at
+    # run time ("Bearer " + key): Retell's v3 browser client builds its header
+    # that way from a value our pages set to a placeholder, never a key.
+    "hardcoded bearer": r"Authorization\s*:\s*['\"]Bearer\s+[A-Za-z0-9._~+/=-]{8,}",
 }
 
 

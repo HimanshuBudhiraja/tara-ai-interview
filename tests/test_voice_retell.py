@@ -207,3 +207,83 @@ def test_a_genuine_rejoin_still_resumes(data_dir):
 
     text, _ = _opening(state)
     assert not text.startswith("Hi Priya!"), "replayed the greeting mid-interview"
+
+
+# --------------------------------------------------------------------------- #
+#  Retell v3 (v2 and RetellWebClient are retired on 2026-10-18)
+# --------------------------------------------------------------------------- #
+def _own_session():
+    from services.data import sessions as store
+    from services.orchestrator.state import SessionState
+
+    state = SessionState.new(candidate_name="Priya Sharma", candidate_id="c1", role="csr",
+                             invite_token="tok_v3", interview_id="iv", interview_version=1)
+    state.session_grant = "grant_v3"
+    store.save(state)
+    return state.session_id
+
+
+def test_the_call_is_created_on_v3_and_the_relay_serves_only_your_own_call(data_dir, monkeypatch):
+    import contextlib
+
+    import httpx
+    import websockets
+    from fastapi.testclient import TestClient
+    from starlette.websockets import WebSocketDisconnect
+
+    from services import config
+    from services.api.app import app
+
+    monkeypatch.setattr(config, "RETELL_API_KEY", "key_test")
+    monkeypatch.setattr(config, "RETELL_AGENT_ID", "agent_test")
+    sid = _own_session()
+    sent = []
+
+    class FakeResponse:
+        status_code = 201
+        def json(self):
+            return {"call_id": "call_v3", "access_token": "tok", "transport": "livekit",
+                    "ice_servers": [], "expires_at": 1, "agent_secret_thing": "never forwarded"}
+
+    class FakeClient:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def post(self, url, json=None, headers=None):
+            sent.append(url)
+            return FakeResponse()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    c = TestClient(app)
+    c.cookies.set("tara_candidate", "grant_v3")
+    r = c.post(f"/api/session/{sid}/voice")
+    assert r.status_code == 200, r.text
+    assert sent[0].endswith("/v3/create-web-call")
+    assert r.json() == {"call_id": "call_v3", "access_token": "tok", "transport": "livekit", "ice_servers": [], "expires_at": 1}
+
+    base = f"/api/session/{sid}/voice/retell"
+    assert c.post(f"{base}/v2/stop-call/call_v3").status_code == 200 and sent[-1].endswith("/v2/stop-call/call_v3")
+    assert c.post(f"{base}/v2/stop-call/call_other").status_code == 404           # not this session's call
+    assert TestClient(app).post(f"{base}/v2/stop-call/call_v3").status_code == 404  # no grant
+
+    class Upstream:
+        close_code = 1000
+        def __init__(self): self.left = ['{"type":"transcript_updated","transcript":[{"role":"user","content":"Hi"}]}']
+        def __aiter__(self): return self
+        async def __anext__(self):
+            if not self.left:
+                raise StopAsyncIteration
+            return self.left.pop()
+        async def send(self, m): pass
+
+    @contextlib.asynccontextmanager
+    async def fake_connect(url, subprotocols=None, open_timeout=None):
+        assert url.endswith("/v2/monitor-call/call_v3") and subprotocols == ["bearer", "key_test"]
+        yield Upstream()
+
+    monkeypatch.setattr(websockets, "connect", fake_connect)
+    with c.websocket_connect(f"{base}/v2/monitor-call/call_v3", subprotocols=["bearer", "session"]) as ws:
+        assert '"Hi"' in ws.receive_text()
+    with pytest.raises(WebSocketDisconnect):
+        with c.websocket_connect(f"{base}/v2/monitor-call/call_other", subprotocols=["bearer", "session"]) as ws:
+            ws.receive_text()
