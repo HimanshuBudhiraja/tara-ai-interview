@@ -820,7 +820,13 @@ class Component extends DCLogic {
     data.slots.forEach((sl) => { const k = dayKey(sl.start); let d = days.find((x) => x.k === k); if (!d) { d = { k, label: dayLabel(sl.start), slots: [] }; days.push(d); } d.slots.push(sl); });
     if (!days.length) return card([head, E('div', { key: 'n', style: { fontSize: 13, color: 'var(--ink4,#767F93)' } }, 'No times are open right now. Check back later.')]);
     const cur = days[Math.min(day, days.length - 1)];
-    return card([head,
+    // A place is free right now: offer it first, so nobody waits for a slot that's already open.
+    const nowBtn = data.now && data.now.left > 0 ? E('button', { key: 'now', type: 'button', disabled: busy, onClick: () => { onBook('now'); setChanging(false); },
+      style: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', marginBottom: 12, borderRadius: 10, cursor: busy ? 'wait' : 'pointer',
+        border: '1px solid #1B3FB0', background: 'var(--tintB,#EEF3FF)', color: 'var(--blueInk,#1B3FB0)', textAlign: 'left' } },
+      E('span', null, E('span', { style: { display: 'block', fontSize: 14, fontWeight: 700 } }, 'Start now'), E('span', { style: { display: 'block', fontSize: 12.5, opacity: .85 } }, 'A place is free right now. Book it and start when you\'re ready.')),
+      E('span', { 'aria-hidden': true, style: { fontSize: 18, fontWeight: 700 } }, '→')) : null;
+    return card([head, nowBtn,
       E('div', { key: 'd', role: 'tablist', 'aria-label': 'Day', style: { display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6, marginBottom: 10 } },
         days.map((d, i) => { const on = d === cur; const free = d.slots.filter((x) => x.left > 0).length;
           return E('button', { key: d.k, type: 'button', role: 'tab', 'aria-selected': on, onClick: () => setDay(i),
@@ -1134,7 +1140,7 @@ class Component extends DCLogic {
   }
   async bookSlot(start) {
     this.setState({ booking: true });
-    try { const v = await this.api(this.sess('/booking'), 'POST', { start }); this.setState({ v, booking: false }); this.toastMsg('Booked. See you then.'); }
+    try { const v = await this.api(this.sess('/booking'), 'POST', { start }); this.setState({ v, booking: false }); this.toastMsg(start === 'now' ? 'Your place is booked. Start when you\'re ready.' : 'Booked. See you then.'); }
     catch (e) { this.setState({ booking: false }); this.toastMsg(e.message || "Couldn't book that time."); }
     this.loadSlots();
   }

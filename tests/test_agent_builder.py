@@ -961,3 +961,50 @@ def test_exhibits_reach_the_persona_and_the_participant_only(client):
     assert img.status_code == 200 and img.headers["content-type"] == "image/png" and img.content == PNG
     assert TestClient(app).get(ex[1]["image"]).status_code == 404                # another browser: no session, no image
     assert "description" not in json.dumps(ex)                                  # what the persona knows stays with the persona
+
+
+def test_capacity_is_18_by_default_and_never_above_retell(monkeypatch):
+    from services.assessment import slots
+
+    monkeypatch.delenv("TARA_SLOT_CAPACITY", raising=False)
+    monkeypatch.setattr(slots, "_cap_cache", (0.0, 0))
+    monkeypatch.setattr(slots, "retell_concurrency", lambda: (0, 20))
+    assert slots.capacity() == 18
+    monkeypatch.setenv("TARA_SLOT_CAPACITY", "25")
+    assert slots.capacity() == 20                                   # Retell's limit wins when lower
+    monkeypatch.setattr(slots, "_cap_cache", (0.0, 0))
+    monkeypatch.setattr(slots, "retell_concurrency", lambda: (0, 0))  # Retell can't be asked
+    assert slots.capacity() == 25
+
+
+def test_start_now_is_offered_only_when_there_is_room(client, monkeypatch):
+    from services.assessment import slots
+
+    monkeypatch.setenv("TARA_SLOT_CAPACITY", "1")
+    monkeypatch.setattr(slots, "_cap_cache", (0.0, 0))
+    monkeypatch.setattr(slots, "retell_concurrency", lambda: (0, 20))
+    (p1, s1), (p2, s2) = _signed_in(client, 2)
+    now = p1.get(f"/api/participant/session/{s1}/slots").json()["now"]
+    assert now and now["now"] is True and now["left"] == 1
+    b = p1.post(f"/api/participant/session/{s1}/booking", json={"start": "now"})
+    assert b.status_code == 200 and b.json()["booking"]["can_join_now"] is True
+    # The only place right now is taken: the second person isn't offered "now" and can't book it.
+    assert p2.get(f"/api/participant/session/{s2}/slots").json()["now"] is None
+    full = p2.post(f"/api/participant/session/{s2}/booking", json={"start": "now"})
+    assert full.status_code == 409 and full.json()["detail"]["error"] == "full"
+    # Live calls at the cap also close "now", whatever the bookings say.
+    monkeypatch.setattr(slots, "retell_concurrency", lambda: (1, 20))
+    assert slots.now_option([], 25) is None
+
+
+def test_start_now_respects_the_daily_hours(monkeypatch):
+    from datetime import datetime, timezone
+
+    from services.assessment import slots
+
+    monkeypatch.setattr(slots, "HOURS", "09:00-21:00")
+    monkeypatch.setattr(slots, "TZ", "Asia/Kolkata")
+    monkeypatch.setattr(slots, "retell_concurrency", lambda: (0, 20))
+    monkeypatch.setattr(slots, "_cap_cache", (0.0, 0))
+    assert slots.now_option([], 25, now=datetime(2026, 10, 3, 5, 0, tzinfo=timezone.utc)) is not None    # 10:30 IST
+    assert slots.now_option([], 25, now=datetime(2026, 10, 3, 18, 0, tzinfo=timezone.utc)) is None       # 23:30 IST

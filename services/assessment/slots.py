@@ -36,8 +36,10 @@ HOURS = os.environ.get("TARA_SLOT_HOURS", "09:00-21:00")
 TZ = os.environ.get("TARA_SLOT_TZ", "Asia/Kolkata")
 JOIN_EARLY_MIN = int(os.environ.get("TARA_SLOT_JOIN_EARLY", "5"))
 JOIN_LATE_MIN = int(os.environ.get("TARA_SLOT_JOIN_LATE", "15"))
-#: Places per block when Retell can't be asked. Overridden by TARA_SLOT_CAPACITY.
-FALLBACK_CAPACITY = 20
+#: Most conversations booked into one block: 18 by default (TARA_SLOT_CAPACITY),
+#: leaving headroom under Retell's 20 lines for builder test calls. If Retell
+#: reports a lower account limit, the lower number wins.
+DEFAULT_CAPACITY = 18
 
 #: One booking at a time, so two people can't both take the last place.
 LOCK = threading.Lock()
@@ -46,17 +48,14 @@ _cap_cache: tuple[float, int] = (0.0, 0)
 
 
 def capacity() -> int:
-    """Places per block: TARA_SLOT_CAPACITY, else Retell's concurrency limit
-    (cached for 10 minutes), else 20."""
+    """Places per block: TARA_SLOT_CAPACITY (default 18), never above Retell's
+    concurrency limit (asked at most every 10 minutes)."""
     global _cap_cache
-    forced = os.environ.get("TARA_SLOT_CAPACITY", "").strip()
-    if forced.isdigit():
-        return max(1, int(forced))
-    if time.time() - _cap_cache[0] < 600 and _cap_cache[1]:
-        return _cap_cache[1]
-    limit = retell_concurrency()[1] or FALLBACK_CAPACITY
-    _cap_cache = (time.time(), limit)
-    return limit
+    raw = os.environ.get("TARA_SLOT_CAPACITY", "").strip()
+    configured = max(1, int(raw)) if raw.isdigit() else DEFAULT_CAPACITY
+    if not (time.time() - _cap_cache[0] < 600 and _cap_cache[1]):
+        _cap_cache = (time.time(), retell_concurrency()[1])
+    return min(configured, _cap_cache[1]) if _cap_cache[1] else configured
 
 
 def retell_concurrency() -> tuple[int, int]:
@@ -155,3 +154,20 @@ def can_join(booking: dict[str, Any] | None, resuming: bool = False, now: dateti
     now = now or datetime.now(timezone.utc)
     opens, closes, ends = window(booking)
     return opens <= now <= (ends if resuming else closes)
+
+
+def now_option(bookings: list[dict[str, Any]], cap_minutes: int, session_id: str = "",
+               now: datetime | None = None) -> dict[str, Any] | None:
+    """'Start now', when there's room: the blocks from this minute have a free place
+    and Retell's live calls are below the cap. None when it isn't offered."""
+    now = (now or datetime.now(timezone.utc)).replace(second=0, microsecond=0)
+    local = now.astimezone(ZoneInfo(TZ))
+    h0, h1 = HOURS.split("-")
+    if not (h0 <= local.strftime("%H:%M") < h1):   # outside the daily hours: no "now"
+        return None
+    cap = capacity()
+    used = usage(bookings, exclude=session_id)
+    left = min(cap - used.get(k, 0) for k in blocks_for(now, cap_minutes))
+    running, _ = retell_concurrency()
+    left = min(left, cap - running)
+    return {"start": iso(now), "left": max(0, left), "now": True} if left > 0 else None

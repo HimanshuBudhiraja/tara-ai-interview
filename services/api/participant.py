@@ -245,11 +245,12 @@ def list_slots(row: dict[str, Any] = Depends(participant_scope)) -> dict[str, An
     return {"timezone": slots.TZ, "slot_minutes": slots.SLOT_MINUTES, "length_minutes": _cap_minutes(row),
             "join_early_minutes": slots.JOIN_EARLY_MIN, "join_late_minutes": slots.JOIN_LATE_MIN,
             "slots": slots.available(sessions.all_bookings(), _cap_minutes(row), session_id=row["session_id"]),
+            "now": slots.now_option(sessions.all_bookings(), _cap_minutes(row), session_id=row["session_id"]),
             "booking": booking_view(row)}
 
 
 class BookingBody(BaseModel):
-    start: str = Field(min_length=10, max_length=40)
+    start: str = Field(min_length=3, max_length=40)   # an ISO time, or "now"
 
 
 @router.post("/session/{session_id}/booking")
@@ -258,17 +259,25 @@ def book(body: BookingBody, row: dict[str, Any] = Depends(participant_scope)) ->
         raise HTTPException(409, "This conversation has already been submitted.")
     if row.get("calls"):
         raise HTTPException(409, {"error": "started", "message": "Your conversation has started, so the time can't change."})
-    try:
-        start = slots.parse(body.start)
-    except ValueError as exc:
-        raise HTTPException(422, "That time isn't valid.") from exc
-    if slots.iso(start) not in {slots.iso(t) for t in slots.offered()}:
-        raise HTTPException(422, {"error": "unavailable", "message": "That time isn't offered. Pick another."})
+    start_now = body.start == "now"
+    if not start_now:
+        try:
+            start = slots.parse(body.start)
+        except ValueError as exc:
+            raise HTTPException(422, "That time isn't valid.") from exc
+        if slots.iso(start) not in {slots.iso(t) for t in slots.offered()}:
+            raise HTTPException(422, {"error": "unavailable", "message": "That time isn't offered. Pick another."})
     with slots.LOCK:
         # Re-read under the lock: the check and the write must see the same bookings.
         fresh = sessions.load(row["session_id"]) or row
-        left = next((s["left"] for s in slots.available(sessions.all_bookings(), _cap_minutes(fresh),
-                                                        session_id=fresh["session_id"]) if s["start"] == slots.iso(start)), 0)
+        if start_now:
+            opt = slots.now_option(sessions.all_bookings(), _cap_minutes(fresh), session_id=fresh["session_id"])
+            if opt is None:
+                raise HTTPException(409, {"error": "full", "message": "There's no free place right now. Pick a time instead."})
+            start, left = slots.parse(opt["start"]), opt["left"]
+        else:
+            left = next((s["left"] for s in slots.available(sessions.all_bookings(), _cap_minutes(fresh),
+                                                            session_id=fresh["session_id"]) if s["start"] == slots.iso(start)), 0)
         if left <= 0:
             raise HTTPException(409, {"error": "full", "message": "That time just filled up. Pick another."})
         fresh["booking"] = {"start": slots.iso(start), "cap_minutes": _cap_minutes(fresh), "booked_at": time.time()}
