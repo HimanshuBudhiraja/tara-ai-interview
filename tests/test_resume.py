@@ -76,3 +76,14 @@ def test_a_topic_the_participant_raised_counts_as_covered():
          {"role": "user", "text": "Before numbers, what changed in your budget this year?"},
          {"role": "agent", "text": "A hiring freeze."}]
     assert R.covered_items(["What changed in your budget this year?", "What would a two year commitment need?"], t) == [True, False]
+
+
+def test_the_call_never_ends_on_a_question():
+    assert rx.closing_without_question("Thanks so much for the conversation today. Before we wrap up, do you have a question or two for me?") \
+        == "Thanks so much for the conversation today."
+    assert rx.closing_without_question("Any questions?") == rx.DEFAULT_CLOSING
+    assert rx.closing_without_question("Great talking with you. Goodbye!") == "Great talking with you. Goodbye!"
+    row = {"agent": {"persona": {"name": "Anthony"}, "closing_line": "Thanks! Do you have any questions for me?", "instructions": "x",
+                     "questions": [], "rubric": [], "title": "t", "type_label": "r"},
+           "cfg": {"tone": "Realistic", "depth": "Probing", "voice": "adrian"}, "fields": {}}
+    assert rx.dynamic_variables(row)["closing_line"] == "Thanks!"            # also for agents saved before this rule

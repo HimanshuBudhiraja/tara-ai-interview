@@ -479,7 +479,10 @@
       h('textarea', { id: 'ctx-t', class: 'inp', rows: '6', value: a.instructions, oninput: bind(a, 'instructions') }),
       h('div', { class: 'grid4' },
         h('div', { class: 'fld' }, h('label', { for: 'open-t', text: 'Opening line' }), h('textarea', { id: 'open-t', class: 'inp', rows: '3', value: a.opening_line, oninput: bind(a, 'opening_line') })),
-        h('div', { class: 'fld' }, h('label', { for: 'close-t', text: 'Closing line' }), h('textarea', { id: 'close-t', class: 'inp', rows: '3', value: a.closing_line, oninput: bind(a, 'closing_line') })))));
+        h('div', { class: 'fld' }, h('label', { for: 'close-t', text: 'Closing line' }),
+          h('textarea', { id: 'close-t', class: 'inp', rows: '3', value: a.closing_line, oninput: (e) => { bind(a, 'closing_line')(e); $('closeWarn').hidden = !/\?/.test(e.target.value); } }),
+          h('small', { id: 'closeWarn', class: 'advhint', style: 'color:#B54708', hidden: !/\?/.test(a.closing_line || ''),
+            text: 'The call ends right after the closing line, so a question here would be asked and then hung up on. Questions are removed when you save; the persona already asks "anything else?" in the wrap-up and waits for the answer.' })))));
 
     m.append(h('section', { id: 'persona', class: 'card', style: 'gap:22px', 'aria-labelledby': 'per-h' },
       h('div', { class: 'tt', style: 'display:flex;flex-direction:column;gap:6px' }, h('h2', { id: 'per-h', text: 'Persona' }), h('p', { class: 'sub', text: 'Who participants will meet. Change the name and it updates everywhere the participant hears or reads it.' })),

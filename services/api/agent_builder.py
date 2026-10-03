@@ -172,7 +172,7 @@ def _clean_agent(agent: dict[str, Any]) -> dict[str, Any]:
         "description": _s(agent.get("description"))[:2000],
         "instructions": _s(agent.get("instructions"))[:6000],
         "opening_line": _s(agent.get("opening_line"))[:600],
-        "closing_line": _s(agent.get("closing_line"))[:600],
+        "closing_line": rx.closing_without_question(_s(agent.get("closing_line"))[:600]) if _s(agent.get("closing_line")) else "",
         "questions": [{"text": _s(q.get("text"))[:600], "tag": _s(q.get("tag"))[:120]}
                       for q in (agent.get("questions") or [])[:30] if _s(q.get("text"))],
         "rubric": rubric[:10],

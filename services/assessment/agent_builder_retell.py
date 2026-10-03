@@ -201,7 +201,7 @@ def dynamic_variables(row: dict[str, Any], candidate_name: str = "not given",
             if _s(q.get("text"))
         ),
         "opening_line": "" if user_first else _s(agent.get("opening_line")),
-        "closing_line": _s(agent.get("closing_line")),
+        "closing_line": closing_without_question(_s(agent.get("closing_line"))),
         "target_minutes": str(target),
         "ending_mode": _s(cfg.get("ending")) or ENDINGS[0],
         "max_minutes": str(cap),
@@ -235,6 +235,19 @@ def no_interview(text: str) -> str:
         word = "conversation" + m.group(2)
         return word.capitalize() if m.group(1)[0].isupper() else word
     return _INTERVIEW.sub(sub, _AN_INTERVIEW.sub(r"\1\2", text))
+
+
+DEFAULT_CLOSING = "Thank you for your time today. Take care."
+
+
+def closing_without_question(text: str) -> str:
+    """The closing line is the last thing said before the call ends, so it can't
+    ask anything: a question there is asked and then hung up on. Question
+    sentences are dropped; if nothing is left, a plain goodbye.
+    (Questions for the participant belong in the wrap-up, which waits for them.)"""
+    parts = re.split(r"(?<=[.!?])\s+", (text or "").strip())
+    kept = " ".join(p for p in parts if p and not p.rstrip().endswith("?"))
+    return kept.strip() or DEFAULT_CLOSING
 
 
 def exhibits_text(exhibits: list[dict[str, Any]]) -> str:
