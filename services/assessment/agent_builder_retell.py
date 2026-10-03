@@ -285,22 +285,35 @@ SPEEDS = {"slow": 0.85, "normal": 1.0, "fast": 1.15}
 
 def web_call_body(row: dict[str, Any], agent_id: str, webhook_url: str = "", *,
                   candidate_name: str = "not given", resume: list[dict[str, str]] | None = None,
+                  reconnect: dict[str, Any] | None = None,
                   speed: str = "normal", metadata: dict[str, Any] | None = None,
                   engine: str | None = None) -> dict[str, Any]:
-    """The body for Retell's `POST /v2/create-web-call`.
+    """The body for Retell's `POST /v3/create-web-call`.
 
-    `resume` is the transcript so far when a dropped call reconnects: the agent
-    is told what was said and opens with a short "we got cut off" instead of
-    its opening line.
+    On a reconnect after a dropped call, `reconnect` carries the brief built by
+    `services.assessment.resume` ({"context", "opening", "minutes_used"}): the
+    persona gets the brief as {{resume_context}}, opens with the rejoin line,
+    and both the persona and Retell's hard limit see the time that REMAINS,
+    not a fresh allowance. (`resume`, a bare transcript, still works and is
+    turned into a brief without a model.)
     """
+    from services.assessment import resume as resume_mod
+
     cfg = row["cfg"]
     v = voice(cfg.get("voice") or DEFAULT_VOICE)
-    persona = _s((row["agent"].get("persona") or {}).get("name")) or "Tara"
-    variables = dynamic_variables(row, candidate_name, resume_text(resume, persona) if resume else "none")
-    _, cap = lengths(cfg)
+    target, cap = lengths(cfg)
+    if reconnect is None and resume:
+        ctx, opening, _ = resume_mod.for_reconnect(row, resume, 0, target)
+        reconnect = {"context": ctx, "opening": opening, "minutes_used": 0}
+    variables = dynamic_variables(row, candidate_name, reconnect["context"] if reconnect else "none")
     user_first = cfg.get("speaker") == "Participant opens"
-    if resume:
-        variables["opening_line"] = "Sorry about that, we got cut off. Let's pick up where we left off."
+    if reconnect:
+        used = float(reconnect.get("minutes_used") or 0)
+        variables["opening_line"] = no_interview(reconnect["opening"])
+        # The new call's clock starts at zero; what's left is what counts.
+        target = max(1, round(target - used))
+        cap = max(2, round(cap - used))
+        variables["target_minutes"], variables["max_minutes"] = str(target), str(cap)
         user_first = False
     agent_override: dict[str, Any] = {
         "voice_id": v.voice_id,

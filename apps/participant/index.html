@@ -1035,7 +1035,10 @@ class Component extends DCLogic {
     this.setState({ inCall: true, error: null, recovering: false });
     this.setPhase(resume ? 'thinking' : 'processing');
     try {
-      const r = await this.api(this.sess('/call'), 'POST', { speed: this.state.speed });
+      // On a reconnect, what this page saw so far: the server prefers Retell's own
+      // transcript and uses this only if that isn't ready yet.
+      const r = await this.api(this.sess('/call'), 'POST', { speed: this.state.speed,
+        transcript: resume ? this.state.rows.slice(-200).map((x) => ({ role: x.role, text: x.text })) : [], elapsed_sec: resume ? Math.round(this.state.elapsed || 0) : 0 });
       const wait = resume ? 0 : this.tone(this.state.v.call.sound);
       const client = await window.retellV3(Component.SDK, location.origin + '/api/participant/session/' + encodeURIComponent(this.state.sid) + '/retell', r); this.client = client;
       client.on('call_started', () => { this.setPhase(this.state.v.call.speaker === 'Participant opens' && !r.resumed ? 'waiting' : 'thinking'); });

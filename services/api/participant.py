@@ -287,6 +287,61 @@ def book(body: BookingBody, row: dict[str, Any] = Depends(participant_scope)) ->
 
 class CallBody(BaseModel):
     speed: str = "normal"
+    # What this page saw of the earlier call(s), for a reconnect when Retell's own
+    # transcript isn't ready yet (it takes a few seconds after a drop). Used only to
+    # brief the persona, never for scoring, which reads Retell's transcript.
+    transcript: list[dict[str, str]] = Field(default_factory=list, max_length=200)
+    elapsed_sec: int = Field(default=0, ge=0, le=7200)
+
+
+async def _earlier_calls(call_ids: list[str]) -> tuple[list[dict[str, Any]], float]:
+    """(transcript, minutes actually spent in those calls), from Retell's own records."""
+    import httpx
+
+    from services.api.agent_builder import transcript_of
+
+    turns: list[dict[str, Any]] = []
+    minutes = 0.0
+    if not config.RETELL_API_KEY:
+        return turns, minutes
+    async with httpx.AsyncClient(timeout=15) as http:
+        for cid in call_ids:
+            try:
+                r = await http.get(f"{RETELL}/v2/get-call/{cid}", headers={"Authorization": f"Bearer {config.RETELL_API_KEY}"})
+            except Exception:  # noqa: BLE001 — one unreadable call shouldn't stop the reconnect
+                continue
+            if r.status_code >= 400:
+                continue
+            c = r.json()
+            turns += transcript_of(c)
+            start, end = c.get("start_timestamp"), c.get("end_timestamp") or time.time() * 1000
+            if start is not None:
+                minutes += max(0.0, (end - start) / 60000)
+    return turns, minutes
+
+
+async def _reconnect_brief(row: dict[str, Any], snap: dict[str, Any], body: "CallBody") -> dict[str, Any]:
+    """What the persona needs to pick up after a drop. See services/assessment/resume.py."""
+    from services.ai.workloads import agent_builder as ab
+    from services.assessment import resume as resume_mod
+
+    transcript, minutes = await _earlier_calls(row["calls"])
+    if not transcript and body.transcript:
+        # Retell hasn't finished the dropped call's transcript yet: the page's copy,
+        # for context only.
+        transcript = [{"role": "agent" if t.get("role") == "agent" else "user", "text": str(t.get("text") or "")[:2000]}
+                      for t in body.transcript if str(t.get("text") or "").strip()]
+    if not minutes and body.elapsed_sec:
+        minutes = body.elapsed_sec / 60
+    target, _cap = rx.lengths(snap["cfg"])
+
+    import asyncio
+    try:
+        ctx, opening, _brief = await asyncio.wait_for(asyncio.to_thread(
+            resume_mod.for_reconnect, snap, transcript, minutes, target, ab._complete), timeout=8)
+    except Exception:  # noqa: BLE001 — slow or failing model: the code-only brief
+        ctx, opening, _brief = resume_mod.for_reconnect(snap, transcript, minutes, target)
+    return {"context": ctx, "opening": opening, "minutes_used": minutes}
 
 
 async def _transcripts(call_ids: list[str]) -> list[dict[str, str]]:
@@ -319,13 +374,13 @@ async def call(body: CallBody, row: dict[str, Any] = Depends(participant_scope))
     if limit and running >= limit:
         raise HTTPException(503, {"error": "busy", "message": "All sessions are in use."})
     snap = _snapshot(row)
-    # A second call on the same session is a reconnect: the agent is told what
-    # was already said, and picks up there instead of starting over.
-    resume = await _transcripts(row["calls"]) if row.get("calls") else None
+    # A second call on the same session is a reconnect: the persona gets a brief
+    # (time left, what's covered, where it stopped) and picks up there.
+    reconnect = await _reconnect_brief(row, snap, body) if row.get("calls") else None
     body_ = rx.web_call_body(
         snap, config.RETELL_AGENT_BUILDER_AGENT_ID,
         f"{config.PUBLIC_URL}/api/agent-builder/retell-webhook" if config.PUBLIC_URL else "",
-        candidate_name=row["name"], resume=resume or None, speed=body.speed,
+        candidate_name=row["name"], reconnect=reconnect, speed=body.speed,
         metadata={"participant_session": row["session_id"]},
     )
     if rx.leaked_cues(body_, snap):
@@ -349,7 +404,7 @@ async def call(body: CallBody, row: dict[str, Any] = Depends(participant_scope))
     row["status"] = "in_call"
     row.setdefault("started_at", time.time())
     sessions.save(row)
-    return {**{k: out[k] for k in ("call_id", "access_token", "transport", "url", "ice_servers", "expires_at") if k in out}, "resumed": bool(resume)}
+    return {**{k: out[k] for k in ("call_id", "access_token", "transport", "url", "ice_servers", "expires_at") if k in out}, "resumed": bool(reconnect)}
 
 
 class Turn(BaseModel):

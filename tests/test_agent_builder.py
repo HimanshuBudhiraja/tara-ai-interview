@@ -1081,3 +1081,41 @@ def test_assessment_is_on_hold_everywhere(client):
     out = client.put(f"{BASE}/agents/{d['agent_id']}", json={"fields": {**d["fields"], "type": "Assessment"},
                      "agent": d["agent"], "cfg": d["cfg"]}).json()
     assert out["fields"]["type"] == "Role-play"
+
+
+def test_a_fast_rejoin_uses_the_pages_transcript_and_the_real_time_used(client, monkeypatch):
+    aid, code = _published_invite(client)
+    p = TestClient(app)
+    sid = p.post("/api/participant/sign-in", json={"code": code, "name": "Aarav", "email": "a@x.test", "consent": True}).json()["session_id"]
+    monkeypatch.setattr(config, "RETELL_API_KEY", "key_test")
+    monkeypatch.setattr(config, "RETELL_AGENT_BUILDER_AGENT_ID", "agent_one")
+    monkeypatch.setattr(ab, "_complete", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("no model in tests")))
+    _book_now(p, sid, monkeypatch)
+    sent = []
+
+    class R:
+        def __init__(self, code, body): self.status_code, self._b = code, body
+        def json(self): return self._b
+
+    class FakeClient:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def post(self, url, json=None, headers=None):
+            sent.append(json)
+            return R(201, {"call_id": f"call_{len(sent)}", "access_token": "tok"})
+        async def get(self, url, headers=None):
+            # Retell hasn't finished the dropped call's transcript, but knows it lasted 9 minutes.
+            return R(200, {"transcript_object": [], "start_timestamp": 0, "end_timestamp": 9 * 60_000})
+
+    import httpx
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    assert p.post(f"/api/participant/session/{sid}/call", json={}).status_code == 200
+    page = [{"role": "agent", "text": "Walk me through how you'd evaluate a RAG system."},
+            {"role": "user", "text": "First I'd build a labelled set of questions and"}]
+    again = p.post(f"/api/participant/session/{sid}/call", json={"transcript": page, "elapsed_sec": 300}).json()
+    assert again["resumed"] is True
+    v = sent[1]["retell_llm_dynamic_variables"]
+    assert "labelled set of questions" in v["resume_context"] and "may not have finished" in v["resume_context"]
+    assert "About 9 minutes are already used" in v["resume_context"]           # Retell's time, not the page's
+    assert "middle of your answer" in v["opening_line"]                        # no model: the code's rejoin line
