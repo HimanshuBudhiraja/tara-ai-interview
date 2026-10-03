@@ -1008,3 +1008,17 @@ def test_start_now_respects_the_daily_hours(monkeypatch):
     monkeypatch.setattr(slots, "_cap_cache", (0.0, 0))
     assert slots.now_option([], 25, now=datetime(2026, 10, 3, 5, 0, tzinfo=timezone.utc)) is not None    # 10:30 IST
     assert slots.now_option([], 25, now=datetime(2026, 10, 3, 18, 0, tzinfo=timezone.utc)) is None       # 23:30 IST
+
+
+def test_slots_are_open_around_the_clock_by_default(monkeypatch):
+    from datetime import datetime, timezone
+
+    from services.assessment import slots
+
+    monkeypatch.setattr(slots, "HOURS", "00:00-24:00")
+    monkeypatch.setattr(slots, "retell_concurrency", lambda: (0, 20))
+    monkeypatch.setattr(slots, "_cap_cache", (0.0, 0))
+    at = datetime(2026, 10, 3, 20, 45, tzinfo=timezone.utc)                       # 02:15 IST
+    assert slots.now_option([], 25, now=at) is not None
+    starts = slots.offered(at)
+    assert len({t.astimezone(slots.ZoneInfo(slots.TZ)).strftime("%H:%M") for t in starts}) == 48   # every half hour

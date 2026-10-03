@@ -237,7 +237,7 @@
     list.forEach((a) => {
       const pub = a.published_version > 0;
       g.append(h('button', { class: 'tc', type: 'button', 'aria-label': 'Open ' + a.title, onclick: () => openAgent(a.agent_id) },
-        h('span', { class: 'tr' }, h('span', { class: 'cat ' + (pub ? 'pub' : 'draft'), text: pub ? 'Published · v' + a.published_version : 'Draft' }), h('span', { class: 'kind', text: a.type_label })),
+        h('span', { class: 'tr' }, h('span', { class: 'cat ' + (pub ? 'pub' : 'draft'), text: pub ? 'Published' : 'Draft', title: pub ? 'Version ' + a.published_version : 'Not published yet' }), h('span', { class: 'kind', text: a.type_label })),
         h('span', { class: 'tt', text: a.title }),
         h('span', { class: 'td', text: a.description }),
         h('span', { class: 'tf' }, h('span', null,
@@ -381,7 +381,7 @@
     if (S.row && S.row.published_version) {
       const ol = S.row.open_link || {};
       side.append(h('div', { class: 'clink' },
-        h('div', { class: 'top' }, h('span', { text: 'Participants' }), h('small', { text: 'v' + S.row.published_version })),
+        h('div', { class: 'top' }, h('span', { text: 'Participants' })),
         h('p', { class: 'clstate', text: ol.enabled ? 'Open link is on: anyone with it can join.' : 'Open link is off. Invite people by email, or switch the open link on.' }),
         h('button', { class: 'obtn ghost', type: 'button', text: 'Invite participants', onclick: () => openInvite(ol.enabled ? 'link' : 'email') })));
     }
@@ -392,7 +392,8 @@
     });
     $('crumbT').textContent = a.title;
     const pub = S.row && S.row.published_version;
-    $('dpill').textContent = pub ? 'PUBLISHED · v' + pub : 'DRAFT';
+    $('dpill').textContent = pub ? 'PUBLISHED' : 'DRAFT';
+    $('dpill').title = pub ? 'Version ' + pub : 'Not published yet';
     $('dpill').className = 'draftpill' + (pub ? ' pub' : '');
     // Published: the header button duplicates instead of publishing again.
     $('pubBtn').textContent = S.row && S.row.locked ? 'Duplicate to edit' : 'Publish';
@@ -666,7 +667,7 @@
     });
     m.querySelectorAll('[draggable]').forEach((el) => el.setAttribute('draggable', 'false'));
     m.prepend(h('div', { class: 'lockbar', role: 'status' },
-      h('div', null, h('b', { text: 'Published · v' + S.row.published_version + ' · locked' }),
+      h('div', null, h('b', { text: 'Published · locked' }),
         h('span', { text: 'You can test it, invite people and read its reports. To change anything, duplicate it into a new draft.' })),
       h('button', { class: 'cwt', type: 'button', text: 'Duplicate to edit', onclick: duplicateAgent })));
   }
@@ -1059,7 +1060,7 @@
     try {
       await saveNow();
       const row = await api('/agents/' + encodeURIComponent(S.agentId) + '/publish', { method: 'POST' });
-      S.row = row; renderSide(); toast('Published as version ' + row.published_version + '. The participant link is in the sidebar.');
+      S.row = row; renderSide(); toast('Published. Invite participants from the sidebar or the header.');
     } catch (e) {
       const d = e.detail || {};
       toast(d.missing ? 'Finish ' + d.missing.join(', ').toLowerCase() + ' first.' : d.leaked ? 'Reword this first: the instructions or questions repeat the "what a 5 looks like" text of a skill, which the voice agent must not see: "' + String(d.leaked[0]).slice(0, 90) + (String(d.leaked[0]).length > 90 ? '…' : '') + '"' : e.message);

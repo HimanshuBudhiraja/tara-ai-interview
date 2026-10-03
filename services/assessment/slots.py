@@ -32,7 +32,8 @@ from services import config
 
 SLOT_MINUTES = int(os.environ.get("TARA_SLOT_MINUTES", "30"))
 DAYS_AHEAD = int(os.environ.get("TARA_SLOT_DAYS", "7"))
-HOURS = os.environ.get("TARA_SLOT_HOURS", "09:00-21:00")
+#: Open around the clock by default; set e.g. "09:00-21:00" to narrow it.
+HOURS = os.environ.get("TARA_SLOT_HOURS", "00:00-24:00")
 TZ = os.environ.get("TARA_SLOT_TZ", "Asia/Kolkata")
 JOIN_EARLY_MIN = int(os.environ.get("TARA_SLOT_JOIN_EARLY", "5"))
 JOIN_LATE_MIN = int(os.environ.get("TARA_SLOT_JOIN_LATE", "15"))
@@ -118,7 +119,8 @@ def offered(now: datetime | None = None) -> list[datetime]:
     for d in range(DAYS_AHEAD + 1):
         day = today + timedelta(days=d)
         t = datetime(day.year, day.month, day.day, open_h, open_m, tzinfo=tz)
-        end = datetime(day.year, day.month, day.day, close_h, close_m, tzinfo=tz)
+        end = (datetime(day.year, day.month, day.day, tzinfo=tz) + timedelta(days=1) if close_h >= 24
+               else datetime(day.year, day.month, day.day, close_h, close_m, tzinfo=tz))
         while t < end:
             # The slot already under way is still offered while it can be joined
             # (up to JOIN_LATE_MIN after it started), so someone can start now.
