@@ -287,3 +287,40 @@ def test_the_call_is_created_on_v3_and_the_relay_serves_only_your_own_call(data_
     with pytest.raises(WebSocketDisconnect):
         with c.websocket_connect(f"{base}/v2/monitor-call/call_other", subprotocols=["bearer", "session"]) as ws:
             ws.receive_text()
+
+
+
+def test_audio_setup_is_passed_through_for_your_own_call_only(data_dir, monkeypatch):
+    import httpx
+    from fastapi.testclient import TestClient
+
+    from services import config
+    from services.api.app import app
+
+    monkeypatch.setattr(config, "RETELL_API_KEY", "key_test")
+    monkeypatch.setattr(config, "RETELL_AGENT_ID", "agent_test")
+    sid = _own_session()
+    retell.bind("call_v3", sid)
+    seen = {}
+
+    class R:
+        status_code = 201
+        content = b'{"session_id":"s1","sdp":"answer"}'
+        headers = {"content-type": "application/json"}
+
+    class FakeClient:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def request(self, method, url, headers=None, content=None):
+            seen.update(url=url, auth=headers.get("authorization"))
+            return R()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    c = TestClient(app)
+    c.cookies.set("tara_candidate", "grant_v3")
+    base = f"/api/session/{sid}/voice/retell/webrtc-proxy"
+    r = c.post(f"{base}/call_v3/v1/webrtc/sessions", headers={"Authorization": "Bearer call_token"}, json={"sdp": "o"})
+    assert r.status_code == 201 and seen["url"].endswith("/webrtc-proxy/call_v3/v1/webrtc/sessions") and seen["auth"] == "Bearer call_token"
+    assert c.post(f"{base}/call_other/v1/webrtc/sessions", json={}).status_code == 404
+    assert TestClient(app).post(f"{base}/call_v3/v1/webrtc/sessions", json={}).status_code == 404

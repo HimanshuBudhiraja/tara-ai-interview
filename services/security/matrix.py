@@ -182,6 +182,10 @@ DECLARED: dict[tuple[str, str], str] = {
     # Retell v3 browser client, pointed at this server (services/api/retell.py).
     ("POST", "/api/session/{session_id}/voice/retell/v2/stop-call/{call_id}"): CANDIDATE_TOKEN_SCOPED,
     ("WS", "/api/session/{session_id}/voice/retell/v2/monitor-call/{call_id}"): CANDIDATE_TOKEN_SCOPED,
+    ("GET", "/api/session/{session_id}/voice/retell/webrtc-proxy/{call_id}/{rest:path}"): CANDIDATE_TOKEN_SCOPED,
+    ("POST", "/api/session/{session_id}/voice/retell/webrtc-proxy/{call_id}/{rest:path}"): CANDIDATE_TOKEN_SCOPED,
+    ("PATCH", "/api/session/{session_id}/voice/retell/webrtc-proxy/{call_id}/{rest:path}"): CANDIDATE_TOKEN_SCOPED,
+    ("DELETE", "/api/session/{session_id}/voice/retell/webrtc-proxy/{call_id}/{rest:path}"): CANDIDATE_TOKEN_SCOPED,
     # Retell connects INBOUND to this, so it is not a route a browser calls and
     # there is no principal to check. It is safe only because the call id in
     # the path resolves against a binding the server made when an authorised

@@ -441,6 +441,27 @@ async def stop_own_call(session_id: str, call_id: str,
     return {"ok": True}
 
 
+@router.api_route("/api/session/{session_id}/voice/retell/webrtc-proxy/{call_id}/{rest:path}",
+                  methods=["GET", "POST", "PATCH", "DELETE"])
+async def pass_signalling(request: Request, session_id: str, call_id: str, rest: str,
+                          _: security.CandidateScope = Depends(security.candidate_scope)):
+    """Retell's "gateway" transport sets up the audio (WebRTC signalling) at
+    <baseURL>/webrtc-proxy/<call>/v1/webrtc/..., and baseURL is this server. Passed
+    through for this candidate's own call; it carries the call's own access token,
+    never our key, and the audio itself flows browser <-> Retell."""
+    from fastapi import Response
+    import httpx
+
+    if not _own_call(session_id, call_id) or not rest.startswith("v1/webrtc/"):
+        raise HTTPException(404, "Not found.")
+    headers = {k: v for k, v in request.headers.items()
+               if k.lower() in ("authorization", "content-type", "x-retell-client-js-sdk-version")}
+    async with httpx.AsyncClient(timeout=20) as http:
+        r = await http.request(request.method, f"https://api.retellai.com/webrtc-proxy/{call_id}/{rest}",
+                               headers=headers, content=await request.body())
+    return Response(r.content, status_code=r.status_code, media_type=r.headers.get("content-type", "application/json"))
+
+
 def candidate_ws_scope(websocket: WebSocket, session_id: str, call_id: str) -> None:
     """`candidate_scope` for the live-transcript socket, plus: the call is this session's."""
     try:
