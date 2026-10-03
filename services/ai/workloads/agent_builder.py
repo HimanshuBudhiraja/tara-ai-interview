@@ -29,7 +29,7 @@ from services.assessment import agent_builder_retell as rx
 #: The configuration offers Role-play and Assessment. "interview" survives only as
 #: an alias, so agents drafted before the rename still open: it reads as Role-play.
 MODES = {"roleplay": "Role-play", "assessment": "Assessment", "interview": "Role-play"}
-TYPES = ("Role-play", "Assessment")
+TYPES = ("Role-play",)   # Assessment is on hold
 
 _RULES = """You design conversational agents for Tara by iMocha. Tara runs a spoken
 conversation (a role-play or an assessment) with a participant, and the
@@ -51,14 +51,14 @@ Rules:
 
 _PLAN_SHAPE = """{
   "scenario": {
-    "type": "Role-play | Assessment",
+    "type": "Role-play",
     "role": "the role or situation being assessed, short",
     "persona": "who Tara plays, short",
     "skills": "2-5 skills to assess, comma-separated",
     "difficulty": "Friendly | Realistic | Tough"
   },
   "title": "short agent name, max 6 words",
-  "type_label": "e.g. Technical role-play / Behavioural role-play / Sales role-play / Customer role-play / Assessment",
+  "type_label": "e.g. Technical role-play / Behavioural role-play / Sales role-play / Customer role-play",
   "persona": {"name": "full name", "role": "job title, and organisation only if the brief names one", "style": "3-6 words on tone"},
   "description": "2-3 encouraging sentences the participant reads before starting",
   "instructions": "4-6 sentences: how Tara runs it, what to cover in order, how to follow up, what never to do",

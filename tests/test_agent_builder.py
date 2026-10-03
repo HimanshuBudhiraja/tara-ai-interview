@@ -1073,3 +1073,11 @@ def test_the_v3_relay_serves_only_your_own_call(client, monkeypatch):
     with pytest.raises(WebSocketDisconnect):
         with p.websocket_connect(f"{base}/v2/monitor-call/call_someone_else", subprotocols=["bearer", "session"]) as ws:
             ws.receive_text()
+
+
+def test_assessment_is_on_hold_everywhere(client):
+    d = _draft(client, brief="An assessment of SQL skills for analysts.", mode="assessment")["done"]
+    assert d["fields"]["type"] == "Role-play" and d["mode"] == "roleplay"
+    out = client.put(f"{BASE}/agents/{d['agent_id']}", json={"fields": {**d["fields"], "type": "Assessment"},
+                     "agent": d["agent"], "cfg": d["cfg"]}).json()
+    assert out["fields"]["type"] == "Role-play"

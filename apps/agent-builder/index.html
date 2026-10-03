@@ -865,6 +865,10 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 .exrow{display:grid;grid-template-columns:1fr 120px 32px;gap:8px;align-items:center}
 .exprev{border:1px dashed var(--line);border-radius:10px;padding:10px;color:var(--ink-2);background:#fff}
 .exprev img{max-width:100%;max-height:320px;display:block;margin:0 auto;border-radius:6px}
+
+/* Assessment on hold */
+.modes button.held{color:var(--faint);cursor:not-allowed;display:inline-flex;align-items:center;gap:6px}
+.modes button.held .soon{font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:1px 6px;border-radius:999px;background:var(--uu-gray-100,#F2F4F7);color:var(--muted-2)}
 </style>
 </head>
 <body>
@@ -927,7 +931,7 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
     <div class="hero">
       <span class="newb"><span>NEW</span>Conversational Agent Builder</span>
       <h1 class="h1big">What should <span>Tara</span> do?</h1>
-      <p class="herop">Describe the role-play or assessment in plain words. Tara drafts the persona, questions, skills and conversation flow — you review and publish.</p>
+      <p class="herop">Describe the role-play in plain words. Tara drafts the persona, questions, skills and conversation flow — you review and publish.</p>
       <div class="pbox">
         <label class="sr" for="brief">Describe your agent</label>
         <textarea id="brief" placeholder="e.g. A 25-minute technical conversation for a senior AI Engineer at DeepMind. Probe ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI. Be friendly but rigorous."></textarea>
@@ -1051,6 +1055,6 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 <aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261004a"></script>
+<script src="/agent-builder/app.js?v=20261004b"></script>
 </body>
 </html>

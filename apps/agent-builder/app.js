@@ -104,7 +104,7 @@
     { cat: 'ai', kind: 'Role-play', title: 'AI Engineer Technical Conversation', desc: 'ML fundamentals, RAG vs fine-tuning, MLOps and responsible AI for mid-to-senior engineers.', mins: '25 min', format: 'Voice' },
     { cat: 'ai', kind: 'Role-play', title: 'Prompt Engineer Screening', desc: 'Prompt design, evaluation methods and failure analysis with live scenario questions.', mins: '20 min', format: 'Voice' },
     { cat: 'ai', kind: 'Role-play', title: 'ML Ops Engineer Deep-Dive', desc: 'Pipelines, drift monitoring, model serving and rollback strategy for production ML.', mins: '30 min', format: 'Voice' },
-    { cat: 'ai', kind: 'Assessment', title: 'Data Scientist Case Study', desc: 'The participant walks through a churn-prediction case: framing, features, metrics, trade-offs.', mins: '30 min', format: 'Voice' },
+    { cat: 'ai', kind: 'Role-play', title: 'Data Scientist Case Study', desc: 'The participant walks through a churn-prediction case: framing, features, metrics, trade-offs.', mins: '30 min', format: 'Voice' },
     { cat: 'sales', kind: 'Role-play', title: 'SDR Cold Call', desc: 'Tara plays a busy VP of Operations. Book a meeting in under five minutes.', mins: '10 min', format: 'Voice' },
     { cat: 'sales', kind: 'Role-play', title: 'Enterprise Discovery Call', desc: 'Uncover pain, budget and decision process with a cautious IT director.', mins: '20 min', format: 'Voice' },
     { cat: 'sales', kind: 'Role-play', title: 'Pricing Objection Handling', desc: 'A procurement lead pushes back hard on price. Defend value without discounting.', mins: '15 min', format: 'Voice' },
@@ -120,10 +120,14 @@
     { label: 'SDR cold-call roleplay', text: 'A cold-call roleplay where Tara is a busy VP of Operations at a logistics company. The rep must book a 30-minute demo. Push back on timing twice.', mode: 'roleplay' },
     { label: 'Support de-escalation practice', text: 'An angry customer whose order arrived damaged for the second time. Score empathy, ownership and resolution. 10 minutes, voice.', mode: 'roleplay' }
   ];
+  /* Assessment is on hold: shown, but it can't be chosen anywhere. */
   const MODES = [['roleplay', 'Role-play'], ['assessment', 'Assessment']];
   function renderS1() {
     const md = $('modes'); md.textContent = '';
-    MODES.forEach(([id, label]) => md.append(h('button', { type: 'button', 'aria-pressed': String(S.mode === id), text: label, onclick: () => { S.mode = id; renderS1(); } })));
+    S.mode = 'roleplay';
+    MODES.forEach(([id, label]) => md.append(id === 'assessment'
+      ? h('button', { type: 'button', class: 'held', disabled: true, 'aria-disabled': 'true', title: 'Assessment is coming soon' }, label, h('span', { class: 'soon', text: 'Soon' }))
+      : h('button', { type: 'button', 'aria-pressed': String(S.mode === id), text: label, onclick: () => { S.mode = id; renderS1(); } })));
     const sg = $('sugg'); sg.textContent = '';
     SUGG.forEach((x) => sg.append(h('button', { type: 'button', text: x.label, onclick: () => { S.brief = x.text; $('brief').value = x.text; S.mode = x.mode; renderS1(); $('brief').focus(); } })));
     const tb = $('ttabs'); tb.textContent = '';
@@ -143,7 +147,7 @@
   function syncCreate() { $('create').disabled = S.building || !S.brief.trim(); }
   function useTemplate(t) {
     S.brief = t.title + ': ' + t.desc + ' ' + t.mins + ', ' + t.format.toLowerCase() + '.';
-    S.mode = t.kind === 'Assessment' ? 'assessment' : 'roleplay';
+    S.mode = 'roleplay';
     $('brief').value = S.brief; renderS1(); build();
   }
   $('brief').addEventListener('input', (e) => { S.brief = e.target.value; syncCreate(); });
@@ -224,7 +228,7 @@
   async function openAgent(id) {
     try {
       const row = await api('/agents/' + encodeURIComponent(id));
-      S.brief = row.brief || ''; $('brief').value = S.brief; S.mode = row.mode === 'assessment' ? 'assessment' : 'roleplay';
+      S.brief = row.brief || ''; $('brief').value = S.brief; S.mode = 'roleplay';
       renderS1(); loadRow(row); go(3);
       history.replaceState(null, '', '?agent=' + encodeURIComponent(id));
     } catch (e) { toast('That agent couldn\'t be opened.'); }
@@ -451,7 +455,9 @@
     ));
     syncAsk();
 
-    const sel = (id, key, opts, obj) => h('select', { id, class: 'inp', onchange: bind(obj || S.fields, key, () => { renderSide(); }) }, opts.map((o) => h('option', { value: o, text: o, selected: (obj || S.fields)[key] === o || null })));
+    const HELD = { Assessment: 'Assessment (coming soon)' };
+    const sel = (id, key, opts, obj) => h('select', { id, class: 'inp', onchange: bind(obj || S.fields, key, () => { renderSide(); }) }, opts.map((o) =>
+      h('option', { value: o, text: HELD[o] || o, disabled: !!HELD[o], selected: (obj || S.fields)[key] === o || null })));
     const typeOpts = ['Role-play', 'Assessment'];
     m.append(h('section', { id: 'scenario', class: 'card', 'aria-labelledby': 'sc-h' },
       h('div', { class: 'ch2' }, h('div', { class: 'tt' }, h('h2', { id: 'sc-h', text: 'Scenario details' }), h('p', { class: 'sub', text: 'Tara filled these from your brief. Change any of them here.' }))),
@@ -1398,7 +1404,7 @@
     loadMine();
     const id = new URLSearchParams(location.search).get('agent');
     if (id) {
-      try { const row = await api('/agents/' + encodeURIComponent(id)); S.brief = row.brief || ''; $('brief').value = S.brief; S.mode = row.mode === 'assessment' ? 'assessment' : 'roleplay'; renderS1(); loadRow(row); go(3); }
+      try { const row = await api('/agents/' + encodeURIComponent(id)); S.brief = row.brief || ''; $('brief').value = S.brief; S.mode = 'roleplay'; renderS1(); loadRow(row); go(3); }
       catch (e) { toast('That agent couldn\'t be opened.'); }
     }
   })();

@@ -219,8 +219,9 @@ def clean_exhibits(raw: Any) -> list[dict[str, Any]]:
 
 def clean_fields(fields: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
     out = {k: _s((fields or {}).get(k))[:400] for k in ("type", "role", "persona", "skills")}
-    if out["type"] not in ("Role-play", "Assessment"):
-        out["type"] = "Role-play"
+    # Assessment is on hold: every agent is a Role-play, whatever an older
+    # draft, Ask Tara or a request says.
+    out["type"] = "Role-play"
     out["difficulty"] = cfg["tone"]
     out["length"] = f"{rx.lengths(cfg)[0]} min"
     return out
@@ -249,7 +250,7 @@ def public(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "agent_id": row["agent_id"],
         "brief": row.get("brief", ""),
-        "mode": "roleplay" if row.get("mode", "roleplay") == "interview" else row.get("mode", "roleplay"),
+        "mode": "roleplay",   # Assessment is on hold
         "fields": row["fields"],
         # Shown with today's wording rules ("conversation", the persona's name), even
         # for an agent saved or published before them; edits save it this way too.
@@ -353,7 +354,7 @@ def draft(
     brief = body.brief.strip()
     if not brief:
         raise HTTPException(422, "Describe the agent you want to build.")
-    mode = body.mode if body.mode in ("roleplay", "assessment") else "roleplay"
+    mode = "roleplay"   # Assessment is on hold
     org = _org(request)
 
     def events():
