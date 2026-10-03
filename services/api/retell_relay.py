@@ -11,6 +11,12 @@ in the participant's browser. Instead, its address is set to this server:
     .../retell/v2/stop-call/{call_id}       the client's "end before it started".
     .../retell/v2/monitor-call/{call_id}    the live transcript: a WebSocket we
                                             relay to Retell with the secret key.
+    .../retell/webrtc-proxy/{call_id}/...   the audio connection's set-up (WebRTC
+                                            signalling) on Retell's "gateway"
+                                            transport, passed through as-is. It
+                                            carries the call's own access token,
+                                            not our key; the audio itself flows
+                                            browser <-> Retell directly.
 
 Both work only for a call this participant (or this builder's agent) placed.
 The secret key never leaves the server.
@@ -21,7 +27,7 @@ import asyncio
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, WebSocket, WebSocketException
 
 from services import config
 from services.data import agent_sessions as sessions
@@ -40,6 +46,21 @@ async def _stop(call_id: str) -> None:
         return
     async with httpx.AsyncClient(timeout=15) as http:
         await http.post(f"{RETELL}/v2/stop-call/{call_id}", headers={"Authorization": f"Bearer {config.RETELL_API_KEY}"})
+
+
+_PASS_HEADERS = ("authorization", "content-type", "x-retell-client-js-sdk-version")
+
+
+async def _signal(request: Request, call_id: str, rest: str) -> Response:
+    """Pass one WebRTC signalling request through to Retell's gateway for this call."""
+    if not rest.startswith("v1/webrtc/"):
+        raise HTTPException(404, "Not found.")
+    headers = {k: v for k, v in request.headers.items() if k.lower() in _PASS_HEADERS}
+    async with httpx.AsyncClient(timeout=20) as http:
+        r = await http.request(request.method, f"{RETELL}/webrtc-proxy/{call_id}/{rest}",
+                               headers=headers, content=await request.body())
+    return Response(r.content, status_code=r.status_code,
+                    media_type=r.headers.get("content-type", "application/json"))
 
 
 async def _relay(ws: WebSocket, call_id: str) -> None:
@@ -109,6 +130,12 @@ def participant_relay_ws_scope(websocket: WebSocket, session_id: str, call_id: s
     return row
 
 
+@participant_router.api_route("/webrtc-proxy/{call_id}/{rest:path}", methods=["GET", "POST", "PATCH", "DELETE"])
+async def participant_signal(request: Request, call_id: str, rest: str,
+                             _: dict[str, Any] = Depends(participant_relay_scope)) -> Response:
+    return await _signal(request, call_id, rest)
+
+
 @participant_router.websocket("/v2/monitor-call/{call_id}")
 async def participant_monitor(ws: WebSocket, call_id: str, _: dict[str, Any] = Depends(participant_relay_ws_scope)) -> None:
     await _relay(ws, call_id)
@@ -148,6 +175,11 @@ def builder_relay_ws_scope(websocket: WebSocket, agent_id: str, call_id: str) ->
     """The same check for the live-transcript WebSocket."""
     if not _builder_may(websocket, agent_id, call_id):
         raise WebSocketException(code=4404, reason="No such call.")
+
+
+@builder_router.api_route("/webrtc-proxy/{call_id}/{rest:path}", methods=["GET", "POST", "PATCH", "DELETE"])
+async def builder_signal(request: Request, call_id: str, rest: str, _: None = Depends(builder_relay_scope)) -> Response:
+    return await _signal(request, call_id, rest)
 
 
 @builder_router.websocket("/v2/monitor-call/{call_id}")

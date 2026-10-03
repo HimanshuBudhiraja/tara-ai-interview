@@ -1119,3 +1119,37 @@ def test_a_fast_rejoin_uses_the_pages_transcript_and_the_real_time_used(client, 
     assert "labelled set of questions" in v["resume_context"] and "may not have finished" in v["resume_context"]
     assert "About 9 minutes are already used" in v["resume_context"]           # Retell's time, not the page's
     assert "middle of your answer" in v["opening_line"]                        # no model: the code's rejoin line
+
+
+def test_audio_setup_is_passed_through_to_retell_only_for_your_own_call(client, monkeypatch):
+    import httpx
+
+    from services.data import agent_sessions
+
+    (p, sid), = _signed_in(client)
+    row = agent_sessions.load(sid)
+    row["calls"] = ["call_mine"]
+    agent_sessions.save(row)
+    seen = {}
+
+    class R:
+        status_code = 201
+        content = b'{"session_id":"s1","sdp":"answer"}'
+        headers = {"content-type": "application/json"}
+
+    class FakeClient:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def request(self, method, url, headers=None, content=None):
+            seen.update(method=method, url=url, auth=headers.get("authorization"), body=content)
+            return R()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    base = f"/api/participant/session/{sid}/retell/webrtc-proxy"
+    r = p.post(f"{base}/call_mine/v1/webrtc/sessions", headers={"Authorization": "Bearer call_token"}, json={"sdp": "offer"})
+    assert r.status_code == 201 and r.json()["session_id"] == "s1"
+    assert seen["url"] == "https://api.retellai.com/webrtc-proxy/call_mine/v1/webrtc/sessions"
+    assert seen["auth"] == "Bearer call_token" and b"offer" in seen["body"]      # the call's own token, as sent
+    assert p.post(f"{base}/call_other/v1/webrtc/sessions", json={}).status_code == 404   # not your call
+    assert p.post(f"{base}/call_mine/v2/anything-else", json={}).status_code == 404      # only WebRTC signalling
