@@ -168,3 +168,67 @@ def test_the_authors_evaluation_guidance_reaches_the_extractor_and_the_judge():
     llm = FakeLLM(EVIDENCE, JUDGED)
     sim.evaluate(snap, TRANSCRIPT, complete=llm)
     assert "Penalise any invented revenue figure." in llm.calls[0] and "Penalise any invented revenue figure." in llm.calls[1]
+
+
+class FlakyJudge(FakeLLM):
+    """The judge answers badly first (criteria scored as skills, then empty), then well."""
+
+    def __init__(self, bad):
+        super().__init__(EVIDENCE, JUDGED)
+        self.bad = list(bad)
+
+    def __call__(self, system, user, max_tokens, workload):
+        if '"skills"' in user and self.bad:
+            self.calls.append(user)
+            return self.bad.pop(0)
+        return super().__call__(system, user, max_tokens, workload)
+
+
+def test_an_unusable_judge_answer_is_retried_never_scored_as_zero():
+    llm = FlakyJudge([{"skills": [{"name": "Accuracy", "criteria": {"Accuracy": 1}}]}, {"skills": []}])
+    r = sim.evaluate(snapshot(), TRANSCRIPT, complete=llm)
+    by = {s["name"]: s for s in r["skills"]}
+    assert by["Negotiation"]["total"] == 22 and by["Discovery"]["total"] == 13
+
+
+def test_a_judge_that_never_answers_usably_fails_loudly():
+    llm = FlakyJudge([{"skills": []}] * (sim.JUDGE_ATTEMPTS * sim.JUDGE_SAMPLES))
+    with pytest.raises(sim.EvaluationError, match="no usable score"):
+        sim.evaluate(snapshot(), TRANSCRIPT, complete=llm)
+
+
+def test_a_judged_skill_missing_a_criterion_is_not_usable():
+    assert sim._usable({"criteria": {"Accuracy": 4}}, ["Accuracy", "Depth"]) is None
+    assert sim._usable({"criteria": {"accuracy": 4, "Depth": None}}, ["Accuracy", "Depth"]) == {"Accuracy": 4, "Depth": 0}
+
+
+def test_scoring_runs_only_on_the_pinned_hosts(monkeypatch):
+    from services import config
+    from services.ai import gateway as g
+
+    assert g._PROVIDERS[g.Workload.AGENT_SCORER] == config.AGENT_SCORER_PROVIDERS and "AkashML" not in config.AGENT_SCORER_PROVIDERS
+
+
+def test_scores_are_the_median_of_independent_runs_and_status_is_the_majority():
+    runs = [
+        {"criteria": {"Accuracy": 4, "Depth": 4}, "status": "discussed", "rationale": "a"},
+        {"criteria": {"Accuracy": 1, "Depth": 1}, "status": "mentioned", "rationale": "b"},
+        {"criteria": {"Accuracy": 3, "Depth": 5}, "status": "discussed", "rationale": "c"},
+    ]
+    out = sim._combine(runs, ["Accuracy", "Depth"])
+    assert out["criteria"] == {"Accuracy": 3, "Depth": 4} and out["status"] == "discussed" and out["samples"] == 3
+
+
+def test_all_zero_for_a_skill_with_quotes_is_a_broken_answer_and_is_retried():
+    zero = {"skills": [{"name": n, "status": "mentioned", "criteria": dict.fromkeys(sim.criteria_of({}), 0)}
+                       for n in ("Negotiation", "Discovery")]}
+    r = sim.evaluate(snapshot(), TRANSCRIPT, complete=FlakyJudge([zero, zero]))
+    assert {s["name"]: s["total"] for s in r["skills"]}["Negotiation"] == 22
+
+
+def test_two_sentences_of_one_turn_joined_by_the_model_still_verify_word_for_word():
+    turn = "With Sabre we modernized a large estate. The problem was slow change. The case study reports 30 percent savings."
+    q = "With Sabre we modernized a large estate. The case study reports 30 percent savings."
+    assert sim.verify_quote(q, turn) and sim.shown_quote(q, turn) == "With Sabre we modernized a large estate. … The case study reports 30 percent savings."
+    assert sim.verify_quote(sim.shown_quote(q, turn), turn)
+    assert not sim.verify_quote("With Sabre we modernized a large estate. The case study reports 60 percent savings.", turn)

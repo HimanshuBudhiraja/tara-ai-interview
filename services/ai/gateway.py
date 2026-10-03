@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import re
+import random
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -174,6 +175,12 @@ _MODELS: dict[Workload, str] = {
     Workload.QUESTION_SUGGESTER: config.QUESTION_SUGGESTER_MODEL,
     Workload.REHEARSAL: config.REHEARSAL_MODEL,
     Workload.AGENT_SCORER: config.AGENT_SCORER_MODEL,
+}
+
+
+#: Hosts a workload's model may run on (OpenRouter provider routing). Absent = any.
+_PROVIDERS: dict[Workload, list[str]] = {
+    Workload.AGENT_SCORER: config.AGENT_SCORER_PROVIDERS,
 }
 
 
@@ -416,6 +423,12 @@ class AIModelGateway:
             "temperature": cfg.temperature if temperature is None else temperature,
             "max_tokens": cfg.max_tokens if max_tokens is None else max_tokens,
         }
+        providers = _PROVIDERS.get(workload)
+        if providers and chosen_model == cfg.model and "openrouter.ai" in config.OPENROUTER_BASE_URL:
+            # A fresh random order on every call: OpenRouter otherwise keeps sending
+            # repeats to the same host, so a retry would meet the same bad answer.
+            order = random.sample(providers, len(providers))
+            body["provider"] = {"order": order, "only": providers, "allow_fallbacks": True}
         if structured is not None:
             schema, schema_name = structured
             body["response_format"] = {

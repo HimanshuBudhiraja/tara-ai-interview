@@ -27,6 +27,7 @@ from services.api import agent_builder as api
 from services.api.app import app
 from services.assessment import agent_builder_retell as rx
 from services.data import built_agents as store
+from services.evaluation import simulation as sim
 from tests.conftest import sign_in
 
 BASE = "/api/recruiter/agent-builder"
@@ -794,7 +795,7 @@ def test_a_session_is_evaluated_once_and_only_admins_see_it(client, monkeypatch)
     monkeypatch.setattr(ab, "_complete", llm)
     part.evaluate_session(row)
     part.evaluate_session(row)                                # a retried webhook / second completion
-    assert row["evaluation"]["purpose"] == "General" and len(llm.calls) == 3
+    assert row["evaluation"]["purpose"] == "General" and len(llm.calls) == 2 + sim.JUDGE_SAMPLES   # extract, judge x3, narrative
     agent_sessions.save(row)
     v = p.get(f"/api/participant/session/{sid}").json()
     assert "result" not in v and "evaluation" not in json.dumps(v)

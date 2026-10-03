@@ -136,6 +136,14 @@ QUESTION_SUGGESTER_MODEL = _first("QUESTION_SUGGESTER_MODEL", default="google/ge
 REHEARSAL_MODEL = _first("REHEARSAL_MODEL", default="openai/gpt-5.4-mini")
 #: Evaluation runs on GPT OSS 120B, as in iMocha's Tara evaluation document.
 AGENT_SCORER_MODEL = _first("AGENT_SCORER_MODEL", default="openai/gpt-oss-120b")
+# OpenRouter serves gpt-oss-120b from many hosts and they do not answer alike:
+# on 2026-10-03, with the same scoring prompt, some returned an empty list and
+# some scored the five criteria as if they were the skills. Scoring goes only to
+# the hosts that answered correctly (comma separated; empty = OpenRouter chooses).
+AGENT_SCORER_PROVIDERS = [p.strip() for p in _first(
+    "AGENT_SCORER_PROVIDERS",
+    default="DekaLLM,BaseTen,Parasail,SambaNova,Amazon Bedrock,DigitalOcean,CoreWeave,Groq",
+).split(",") if p.strip()]
 
 # Kept for the runtime modules that still read them by these names.
 MODEL_FAST = ANSWER_CLASSIFIER_MODEL

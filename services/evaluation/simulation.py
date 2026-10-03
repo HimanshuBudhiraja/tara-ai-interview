@@ -29,6 +29,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import statistics
 from typing import Any, Callable
 
 ENGINE_VERSION = "sim_eval_v2"
@@ -136,9 +137,29 @@ def participant_turns(transcript: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
+def _pieces(quote: str) -> list[str]:
+    """A quote's pieces: split at an ellipsis, or between sentences."""
+    return [p for p in re.split(r"\s*(?:\.\.\.|…)\s*|(?<=[.!?])\s+", quote or "") if _norm(p)]
+
+
 def verify_quote(quote: str, turn_text: str) -> bool:
-    q = _norm(quote)
-    return len(q.split()) >= MIN_QUOTE_WORDS and q in _norm(turn_text)
+    """Word for word from the turn. Several sentences of one turn may be joined
+    (the model often does that with two sentences that weren't next to each
+    other): then every piece must be in the turn, word for word."""
+    q, turn = _norm(quote), _norm(turn_text)
+    if len(q.split()) < MIN_QUOTE_WORDS:
+        return False
+    if q in turn:
+        return True
+    parts = [_norm(p) for p in _pieces(quote)]
+    return len(parts) > 1 and all(len(p.split()) >= 3 and p in turn for p in parts)
+
+
+def shown_quote(quote: str, turn_text: str) -> str:
+    """The quote as the report shows it: pieces that weren't next to each other are joined with an ellipsis."""
+    if _norm(quote) in _norm(turn_text):
+        return quote
+    return " … ".join(p.strip() for p in _pieces(quote))
 
 
 def _numbered(transcript: list[dict[str, Any]], persona: str) -> str:
@@ -187,8 +208,20 @@ def _extract(complete: Complete, snapshot: dict[str, Any], skills: list[dict[str
           "never came up, give no items for it. Do not score anything.\n\nTranscript:\n<<<\n" + transcript_text + "\n>>>\n"
           'Return {"evidence": [{"skill": "", "turn": "P3", "quote": "", "criterion": "", "polarity": "strength|weakness", "why": ""}]}'
     )
-    out = complete(_SYSTEM, user, 4000, "agent_scorer")
-    return [e for e in out.get("evidence") or [] if isinstance(e, dict)]
+    # Some hosts answer with an empty list now and then. A participant who spoke
+    # at length and "showed nothing" is far more likely a bad answer: ask again.
+    spoke = len(transcript_text.split()) >= 120
+    for attempt in range(2):
+        try:
+            out = complete(_SYSTEM, user, 4000, "agent_scorer")
+        except Exception:  # noqa: BLE001
+            if attempt:
+                raise
+            continue
+        items = [e for e in (out.get("evidence") or [] if isinstance(out, dict) else []) if isinstance(e, dict)]
+        if items or not spoke:
+            return items
+    return []
 
 
 def _verify(raw: list[dict[str, Any]], turns: list[dict[str, Any]], skills: list[dict[str, Any]],
@@ -198,7 +231,8 @@ def _verify(raw: list[dict[str, Any]], turns: list[dict[str, Any]], skills: list
     crit = {c.lower(): c for c in criteria}
     kept, dropped, seen = [], 0, set()
     for e in raw:
-        turn = by_id.get(str(e.get("turn") or "").strip().upper())
+        m = re.search(r"P\s*(\d+)", str(e.get("turn") or ""), re.I)
+        turn = by_id.get(f"P{m.group(1)}") if m else None
         skill = names.get(str(e.get("skill") or "").strip().lower())
         quote = str(e.get("quote") or "").strip().strip('"“”')
         if not (turn and skill and verify_quote(quote, turn["text"])):
@@ -209,7 +243,7 @@ def _verify(raw: list[dict[str, Any]], turns: list[dict[str, Any]], skills: list
             continue
         seen.add(key)
         kept.append({
-            "id": f"E{len(kept) + 1}", "skill": skill, "turn": turn["id"], "t": turn.get("t"), "quote": quote,
+            "id": f"E{len(kept) + 1}", "skill": skill, "turn": turn["id"], "t": turn.get("t"), "quote": shown_quote(quote, turn["text"]),
             "criterion": crit.get(str(e.get("criterion") or "").strip().lower(), criteria[0]),
             "polarity": "weakness" if str(e.get("polarity")).lower().startswith("weak") else "strength",
             "why": str(e.get("why") or "").strip()[:400],
@@ -217,36 +251,112 @@ def _verify(raw: list[dict[str, Any]], turns: list[dict[str, Any]], skills: list
     return kept, dropped
 
 
-def _judge(complete: Complete, skills: list[dict[str, Any]], criteria: list[str],
-           evidence: list[dict[str, Any]], guide: str = "") -> dict[str, dict[str, Any]]:
-    if not skills:
-        return {}
+def _usable(j: Any, criteria: list[str]) -> dict[str, int] | None:
+    """The criteria scores of one judged skill, keyed exactly as `criteria`, or None if any is missing or not 0-5.
+
+    An explicit null is "no evidence for this criterion" and counts 0; a criterion left out is a bad answer.
+    """
+    raw = (j or {}).get("criteria") if isinstance(j, dict) else None
+    if not isinstance(raw, dict):
+        return None
+    by = {str(k).strip().lower(): v for k, v in raw.items()}
+    out = {}
+    for c in criteria:
+        if c.lower() not in by:
+            return None
+        v = by[c.lower()]
+        if v is None:                 # explicitly "no sign of it": counts 0
+            out[c] = 0
+            continue
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not 0 <= v <= 5:
+            return None
+        out[c] = int(round(v))
+    return out
+
+
+def _judge_once(complete: Complete, skills: list[dict[str, Any]], criteria: list[str],
+                evidence: list[dict[str, Any]], guide: str) -> dict[str, dict[str, Any]]:
     blocks = []
     for s in skills:
         items = [e for e in evidence if e["skill"] == s["name"]]
-        blocks.append(f"Skill: {s['name']}\nStrong performance looks like: {s.get('anchor') or ''}\nEvidence:\n"
+        blocks.append(f"=== SKILL: {s['name']} ===\nStrong performance looks like: {s.get('anchor') or ''}\nVerified quotes:\n"
                       + "\n".join(f"  {e['id']} [{e['polarity']}, {e['criterion']}] \"{e['quote']}\" ({e['why']})" for e in items))
+    example = ", ".join(f'"{c}": 3' for c in criteria)
     user = (
-        "Score each skill below from its verified evidence ONLY, calibrated to what the role expects. For EVERY criterion give a "
-        "whole number 0-5 (0 = no sign of it, 1 = poor, 2 = below expectations, 3 = meets expectations, 4 = strong, 5 = exceptional). "
-        "Do not reward length. Say whether the skill was 'discussed' (directly assessed with a substantive answer) or only "
-        "'mentioned' (came up in passing, not substantively assessed). Write the AI Evaluation Note: 2-3 sentences on what the "
-        "participant actually said and what was missing, grounded in the evidence. Cite the evidence ids you used.\n"
-        "Criteria: " + ", ".join(criteria) + guide
+        f"You are scoring {len(skills)} SKILL(S): " + "; ".join(s["name"] for s in skills) + ".\n"
+        "Each skill gets five CRITERIA scores: " + ", ".join(criteria) + ". The criteria are not skills: return exactly one "
+        "entry per skill above, using the skill's exact name, and inside it a score for every one of the five criteria.\n"
+        "Score each skill from its verified quotes ONLY, calibrated to what the role expects. Each criterion is a whole number "
+        "0-5 (0 = no sign of it, 1 = poor, 2 = below expectations, 3 = meets expectations, 4 = strong, 5 = exceptional). "
+        "Do not reward length or confidence. Say whether the skill was 'discussed' (directly assessed with a substantive answer) "
+        "or only 'mentioned' (came up in passing, not substantively assessed). Write the AI Evaluation Note: 2-3 sentences on "
+        "what the participant actually said and what was missing, grounded in the quotes. Cite the quote ids you used."
+        + guide
         + ("Where the guidance gives expected answers or accuracy rules, an answer that contradicts them or invents figures "
-           "scores low on Accuracy; an answer that matches them scores high.\n" if guide else "")
+           "scores low on Accuracy (0-1) and must not score high elsewhere for the same claim; an answer that matches them "
+           "scores high.\n" if guide else "")
         + "\n\n" + "\n\n".join(blocks)
-        + '\n\nReturn {"skills": [{"name": "", "status": "discussed|mentioned", "criteria": {"' + criteria[0] + '": 3}, '
-          '"rationale": "the AI Evaluation Note", "evidence_ids": ["E1"]}]}'
+        + '\n\nReturn only JSON: {"skills": [{"name": "' + skills[0]["name"] + '", "status": "discussed", "criteria": {'
+        + example + '}, "rationale": "the AI Evaluation Note", "evidence_ids": ["E1"]}]} with one entry for each of the '
+        + str(len(skills)) + " skill(s)."
     )
-    out = complete(_SYSTEM, user, 3000, "agent_scorer")
+    try:
+        out = complete(_SYSTEM, user, 4000, "agent_scorer")
+    except Exception:  # noqa: BLE001 — a failed call is retried like an unusable answer
+        return {}
     got: dict[str, dict[str, Any]] = {}
     names = {s["name"].lower(): s["name"] for s in skills}
-    for j in out.get("skills") or []:
-        name = names.get(str((j or {}).get("name") or "").strip().lower())
-        if name:
-            got[name] = j
+    for j in out.get("skills") or [] if isinstance(out, dict) else []:
+        name = names.get(str((j or {}).get("name") or "").strip().lower()) if isinstance(j, dict) else None
+        crit = _usable(j, criteria) if name else None
+        # Every skill sent here has verified quotes, so "no sign of it" on all five is a broken answer.
+        if crit is not None and not any(crit.values()):
+            crit = None
+        if name and crit is not None:
+            got[name] = {**j, "criteria": crit}
     return got
+
+
+#: Independent scorings per skill, combined by median: one run's "mentioned" or
+#: stray 0 must not decide a score (measured 2026-10-03: single runs of the same
+#: transcript ranged 5-21/25 on a skill; status flips caused most of it).
+JUDGE_SAMPLES = 3
+#: Rounds to collect them before the evaluation fails loudly.
+JUDGE_ATTEMPTS = 3
+
+
+def _combine(samples: list[dict[str, Any]], criteria: list[str]) -> dict[str, Any]:
+    """Median of each criterion, majority status, and the note of the run closest to the median."""
+    crit = {c: int(statistics.median_low([s["criteria"][c] for s in samples])) for c in criteria}
+    mentioned = sum(1 for s in samples if str(s.get("status") or "").lower().startswith("mention"))
+    status = "mentioned" if mentioned * 2 > len(samples) else "discussed"
+    target = sum(crit.values())
+    note = min(samples, key=lambda s: abs(sum(s["criteria"].values()) - target))
+    return {**note, "criteria": crit, "status": status, "samples": len(samples)}
+
+
+def _judge(complete: Complete, skills: list[dict[str, Any]], criteria: list[str],
+           evidence: list[dict[str, Any]], guide: str = "") -> dict[str, dict[str, Any]]:
+    """Scores for every skill, or EvaluationError. An unusable answer is never read as a zero."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    samples: dict[str, list[dict[str, Any]]] = {s["name"]: [] for s in skills}
+    for attempt in range(JUDGE_ATTEMPTS):
+        todo = [s for s in skills if len(samples[s["name"]]) < JUDGE_SAMPLES]
+        if not todo:
+            break
+        need = max(JUDGE_SAMPLES - min(len(samples[s["name"]]) for s in todo), 1)
+        with ThreadPoolExecutor(max_workers=need) as pool:
+            runs = list(pool.map(lambda _: _judge_once(complete, todo, criteria, evidence, guide), range(need)))
+        for got in runs:
+            for name, j in got.items():
+                if len(samples[name]) < JUDGE_SAMPLES:
+                    samples[name].append(j)
+    # A skill scored by fewer runs than asked is still scored (best effort), but never by none.
+    missing = [n for n, v in samples.items() if not v]
+    if missing:
+        raise EvaluationError([f"the scoring model gave no usable score for: {', '.join(missing)}; try again"])
+    return {n: _combine(v, criteria) for n, v in samples.items()}
 
 
 def _narrative(complete: Complete, purpose: str, snapshot: dict[str, Any],
