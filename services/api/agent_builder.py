@@ -188,8 +188,9 @@ def _clean_agent(agent: dict[str, Any]) -> dict[str, Any]:
         "evaluation_context": _text(agent.get("evaluation_context"))[:CONTEXT_MAX],
         "opening_line": _s(agent.get("opening_line"))[:600],
         "closing_line": rx.closing_without_question(_s(agent.get("closing_line"))[:600]) if _s(agent.get("closing_line")) else "",
-        "questions": [{"text": _s(q.get("text"))[:600], "tag": _s(q.get("tag"))[:120]}
-                      for q in (agent.get("questions") or [])[:30] if _s(q.get("text"))],
+        # A question may test several skills (`tags`); `tag` stays as the first for older readers.
+        "questions": [ab.with_tags(_s(q.get("text"))[:600], ab.question_tags(q, {r["name"].lower(): r["name"] for r in rubric}))
+                      for q in (agent.get("questions") or [])[:30] if isinstance(q, dict) and _s(q.get("text"))],
         "rubric": rubric[:10],
         "exhibits": clean_exhibits(agent.get("exhibits")),
         "depth": _one(agent.get("depth"), rx.DEPTHS, "Probing"),

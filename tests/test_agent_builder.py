@@ -1197,3 +1197,29 @@ def test_the_split_falls_back_to_the_whole_brief_when_the_model_drops_content(mo
     monkeypatch.setattr(ab, "_complete", lambda *a, **k: {"persona_context": "short", "evaluation_context": ""})
     out, by = ab.split_context(LONG_BRIEF)
     assert by == "template" and out["persona_context"] == LONG_BRIEF.strip()
+
+
+def test_a_question_can_map_to_several_skills_and_names_follow_the_rubric(client):
+    row = _draft(client)["done"]
+    names = [r["name"] for r in row["agent"]["rubric"]]
+    row["agent"]["questions"] = [
+        {"text": "Two skills at once?", "tags": [names[0].upper(), names[1], names[0]]},   # case and duplicates fixed
+        {"text": "An older question with one skill", "tag": names[1]},                      # saved before tags existed
+        {"text": "Not mapped yet", "tags": []},
+    ]
+    saved = client.put(f"{BASE}/agents/{row['agent_id']}", json={k: row[k] for k in ("fields", "agent", "cfg")})
+    assert saved.status_code == 200, saved.text
+    q = saved.json()["agent"]["questions"]
+    assert q[0]["tags"] == [names[0], names[1]] and q[0]["tag"] == names[0]
+    assert q[1]["tags"] == [names[1]] and q[1]["tag"] == names[1]
+    assert q[2]["tags"] == [] and q[2]["tag"] == ""
+    # Skills are scorer-side: none of them reach the voice agent with the questions.
+    bank = rx.dynamic_variables(store.load(row["agent_id"]))["question_bank"]
+    assert "Two skills at once?" in bank and names[1] not in bank.replace("Two skills at once?", "")
+
+
+def test_the_model_may_tag_a_question_with_several_skills():
+    names = {"objection handling": "Objection handling", "evidence": "Evidence"}
+    assert ab.question_tags({"tags": ["objection handling", "Evidence"]}, names) == ["Objection handling", "Evidence"]
+    assert ab.question_tags({"tag": "Objection handling, evidence"}, names) == ["Objection handling", "Evidence"]
+    assert ab.with_tags("Q", ["Evidence"]) == {"text": "Q", "tags": ["Evidence"], "tag": "Evidence"}

@@ -301,6 +301,15 @@ textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
 .qbody .qt{font-size:15px;line-height:1.5;color:var(--ink)}
 .qbody textarea{font-size:15px;line-height:1.5;border:1px solid var(--accent);border-radius:8px;padding:6px 8px;resize:vertical;width:100%}
 .qtag{align-self:flex-start;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--accent-ink)}
+.qtags{display:flex;flex-wrap:wrap;gap:6px}
+.qtag.off{background:#FEF3F2;color:#B42318}
+.skpick{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:10px;background:var(--soft-2,#F7F7FB);border:1px solid var(--line-2)}
+.skpick .lbl{font-size:12px;font-weight:700;color:var(--ink-3);letter-spacing:.02em}
+.skchip{font:inherit;font-size:13px;font-weight:600;min-height:32px;padding:4px 12px;border-radius:999px;border:1px solid var(--line-2);background:#fff;color:var(--ink-2,#344054);cursor:pointer}
+.skchip:hover{border-color:#1570EF;color:#1570EF}
+.skchip[aria-pressed="true"]{background:#EFF8FF;border-color:#1570EF;color:#1570EF}
+.skchip[aria-pressed="true"]::before{content:"✓ "}
+.qedit-foot{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .togrow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);flex-wrap:wrap}
 .togrow b{font-size:15px;display:block}
 .togrow small{font-size:13px;color:var(--muted-2);display:block}
@@ -1055,6 +1064,6 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 <aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261004d"></script>
+<script src="/agent-builder/app.js?v=20261005a"></script>
 </body>
 </html>

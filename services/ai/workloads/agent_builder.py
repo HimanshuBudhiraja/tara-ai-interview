@@ -20,6 +20,7 @@ they spend a voice call.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from services.ai.brain import LLMError, get_llm
@@ -68,7 +69,7 @@ _PLAN_SHAPE = """{
 }"""
 
 _CONTENT_SHAPE = """{
-  "questions": [{"text": "a question Tara can ask", "tag": "the rubric competency it probes (exact name)"}],
+  "questions": [{"text": "a question Tara can ask", "tags": ["every rubric competency it probes (exact names; one or more)"]}],
   "rubric": [{"name": "competency", "anchor": "what a 5 out of 5 looks like, one sentence", "weight": 25}],
   "closing_line": "the persona's final goodbye, said after the participant has no more questions: thanks them, no question in it"
 }"""
@@ -145,6 +146,31 @@ def split_context(brief: str) -> tuple[dict[str, str], str]:
     return {"persona_context": brief.strip()[:BRIEF_MAX], "evaluation_context": ""}, "template"
 
 
+def question_tags(q: Any, names: dict[str, str]) -> list[str]:
+    """A question's skills: one or more rubric names (exact case), from `tags` or the older single `tag`.
+
+    `names` maps lower-case rubric names to their exact spelling; a name not in
+    the rubric is kept as written so the admin can see and fix it.
+    """
+    if not isinstance(q, dict):
+        return []
+    raw = q.get("tags")
+    raw = raw if isinstance(raw, list) else [raw] if isinstance(raw, str) else []
+    if not raw and _s(q.get("tag")):
+        raw = re.split(r"\s*[,;|]\s*", _s(q.get("tag")))
+    out: list[str] = []
+    for t in raw:
+        t = names.get(_s(t).lower(), _s(t))[:120]
+        if t and t not in out:
+            out.append(t)
+    return out[:6]
+
+
+def with_tags(text: str, tags: list[str]) -> dict[str, Any]:
+    """A question as stored: `tags` is the list; `tag` (the first) keeps older readers working."""
+    return {"text": text, "tags": tags, "tag": tags[0] if tags else ""}
+
+
 def plan(brief: str, mode: str) -> tuple[dict[str, Any], str]:
     """Stage 1. Returns (plan, drafted_by)."""
     user = (
@@ -177,7 +203,9 @@ def content(p: dict[str, Any], contexts: dict[str, str] | None = None) -> tuple[
           "taken from the brief where it gives them. "
           "Rubric: if the brief names the competencies being assessed, use EXACTLY those (same names and count, up to 8), "
           "with each anchor taken from the brief's own definition; otherwise write 4-5 drawn from the skills. "
-          "Weights total 100. Tag every question with one competency's exact name."
+          "Weights total 100. Tag every question with the exact name of each competency it brings out: usually one, "
+          "two or three when one question genuinely tests several (e.g. an objection that tests both objection "
+          "handling and evidence)."
         + "\n\nReturn only JSON in this shape:\n" + _CONTENT_SHAPE
     )
     try:
@@ -303,8 +331,7 @@ def normalise_content(raw: dict[str, Any]) -> dict[str, Any]:
     for q in raw.get("questions") or []:
         text = _s((q or {}).get("text") if isinstance(q, dict) else q)
         if text:
-            tag = _s(q.get("tag")) if isinstance(q, dict) else ""
-            questions.append({"text": text, "tag": names.get(tag.lower(), tag)})
+            questions.append(with_tags(text, question_tags(q, names)))
     return {
         "questions": questions,
         "rubric": rubric,
@@ -345,7 +372,7 @@ def revise(row: dict[str, Any], instruction: str) -> dict[str, Any]:
         + "\n\nApply only that change and keep everything else exactly as it is. "
           "Length is set only by followUpDepth (Light 10, Probing 20, Deep dive 30 min): "
           "to change length, change followUpDepth. Rubric weights must still total 100, "
-          "and every question's tag must match a rubric name. Voice must be one of: "
+          "and every name in a question's tags must match a rubric name (a question may have several). Voice must be one of: "
         + ", ".join(rx.VOICE_KEYS)
         + ". Difficulty must be exactly one of: Friendly, Realistic, Tough (use Tough for harder, "
           "Friendly for easier). followUpDepth must be exactly one of: Light, Probing, Deep dive."
@@ -387,19 +414,19 @@ def more_questions(row: dict[str, Any], n: int = 3) -> list[dict[str, str]]:
         + "\nRubric competencies: " + ", ".join(r["name"] for r in a["rubric"])
         + "\nExisting questions:\n" + "\n".join("- " + q["text"] for q in a["questions"])
         + f"\n\nWrite {n} NEW questions Tara could ask, different from the existing ones, "
-          "each tagged with one competency's exact name. "
-          'Return only JSON: {"questions": [{"text": "...", "tag": "..."}]}'
+          "each tagged with the exact name of every competency it brings out (one or more). "
+          'Return only JSON: {"questions": [{"text": "...", "tags": ["..."]}]}'
     )
     out = _complete(_RULES, user, 1500, "question_suggester")
     names = {r["name"].lower(): r["name"] for r in a["rubric"]}
-    return [{"text": _s(q.get("text")), "tag": names.get(_s(q.get("tag")).lower(), _s(q.get("tag")))}
+    return [with_tags(_s(q.get("text")), question_tags(q, names))
             for q in (out.get("questions") or [])[:n] if isinstance(q, dict) and _s(q.get("text"))]
 
 
 def skill_details(row: dict[str, Any], names: list[str], per_skill: int = 2) -> dict[str, Any]:
     """A 1-5 anchor and a few questions for skills just added from the Skill Master.
 
-    Returns {"anchors": {name: anchor}, "questions": [{"text", "tag"}]}. Only the
+    Returns {"anchors": {name: anchor}, "questions": [{"text", "tags", "tag"}]}. Only the
     named skills are touched; every other skill and question stays as it is.
     """
     a = row["agent"]
@@ -427,7 +454,7 @@ def skill_details(row: dict[str, Any], names: list[str], per_skill: int = 2) -> 
             anchors[name] = _s(sk.get("anchor"))
         for q in (sk.get("questions") or [])[:per_skill]:
             if _s(q):
-                questions.append({"text": _s(q), "tag": name})
+                questions.append(with_tags(_s(q), [name]))
     return {"anchors": anchors, "questions": questions}
 
 

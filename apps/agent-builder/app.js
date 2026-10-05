@@ -349,6 +349,14 @@
   $('toReview').addEventListener('click', () => go(3));
 
   /* =============== SCREEN 3 =============== */
+  /* A question may test several skills: `tags`, with `tag` (the first) kept for older readers. */
+  function tagsOf(q) { return Array.isArray(q.tags) ? q.tags.filter(Boolean) : (q.tag ? [q.tag] : []); }
+  function setTags(q, tags) { q.tags = tags; q.tag = tags[0] || ''; }
+  /* A skill renamed (or removed, to = '') carries its questions with it. */
+  function retag(a, from, to) {
+    if (!from) return;
+    a.questions.forEach((q) => { const t = tagsOf(q); if (t.includes(from)) setTags(q, [...new Set(t.map((x) => (x === from ? to : x)).filter(Boolean))]); });
+  }
   function loadRow(row) {
     S.row = row; S.agentId = row.agent_id;
     S.fields = row.fields; S.agent = row.agent; S.cfg = row.cfg; S.reviewed = row.reviewed;
@@ -519,10 +527,10 @@
     const rows = a.rubric.map((r, i) => {
       const w = h('input', { type: 'number', min: '0', max: '100', value: String(r.weight), 'aria-label': 'Weight for ' + r.name, oninput: (e) => { r.weight = Math.max(0, Math.round(+e.target.value || 0)); S.reviewed = false; touch(); updTotal(); } });
       return h('div', { class: 'rr' },
-        h('textarea', { class: 'ed n', rows: '1', 'aria-label': 'Skill name', value: r.name, oninput: (e) => { r.name = e.target.value; S.reviewed = false; touch(); } }),
+        h('textarea', { class: 'ed n', rows: '1', 'aria-label': 'Skill name', value: r.name, oninput: (e) => { const was = r.name; r.name = e.target.value; retag(a, was, r.name); S.reviewed = false; touch(); }, onchange: () => renderMain() }),
         h('div', { class: 'a-cell' }, h('textarea', { class: 'ed a', rows: '2', 'aria-label': 'What a 5 looks like', value: r.anchor, oninput: (e) => { r.anchor = e.target.value; S.reviewed = false; touch(); } })),
         h('div', { class: 'wbox' }, w, h('span', { text: '%' })),
-        h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Remove ' + r.name, html: ICON.x, onclick: () => { a.rubric.splice(i, 1); S.reviewed = false; touch(); renderMain(); } }));
+        h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Remove ' + r.name, html: ICON.x, onclick: () => { a.rubric.splice(i, 1); retag(a, r.name, ''); S.reviewed = false; touch(); renderMain(); } }));
     });
     const totPill = h('span', { class: 'totpill' + (tot === 100 ? '' : ' off'), id: 'totp', text: 'Total ' + tot + '%' });
     function updTotal() { const t = a.rubric.reduce((x, r) => x + (+r.weight || 0), 0); totPill.textContent = 'Total ' + t + '%'; totPill.className = 'totpill' + (t === 100 ? '' : ' off'); renderSide(); }
@@ -536,12 +544,27 @@
         h('button', { class: 'obtn ghost', type: 'button', text: 'Balance weights to 100%', disabled: !a.rubric.length, onclick: () => { balanceWeights(a.rubric); S.reviewed = false; touch(); renderMain(); } }))));
 
     const qlist = h('div', { class: 'qlist' });
+    const skillNames = a.rubric.map((r) => r.name).filter((n) => n && n.trim());
+    const focusQ = () => { const t = $('main3').querySelector('.qbody textarea'); if (t) t.focus(); };
+    const doneQ = (q) => { q.text = (q.text || '').trim() || 'New question'; S.editQ = -1; touch(); renderMain(); };
     let dragFrom = -1;
     a.questions.forEach((q, i) => {
       const editing = S.editQ === i;
+      const tags = tagsOf(q);
+      const chips = tags.length
+        ? h('span', { class: 'qtags' }, tags.map((t) => h('span', { class: 'qtag' + (skillNames.includes(t) ? '' : ' off'), title: skillNames.includes(t) ? '' : 'Not one of this agent\'s skills', text: t })))
+        : h('span', { class: 'qtags' }, h('span', { class: 'qtag off', text: 'No skill mapped' }));
       const body = editing
-        ? h('div', { class: 'qbody' }, h('textarea', { rows: '2', 'aria-label': 'Question text', value: q.text, onblur: (e) => { q.text = e.target.value.trim() || q.text; S.editQ = -1; touch(); renderMain(); }, onkeydown: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); } } }), q.tag ? h('span', { class: 'qtag', text: q.tag }) : null)
-        : h('div', { class: 'qbody' }, h('span', { class: 'qt', text: q.text }), q.tag ? h('span', { class: 'qtag', text: q.tag }) : null);
+        ? h('div', { class: 'qbody' },
+          h('textarea', { rows: '2', 'aria-label': 'Question text', value: q.text, oninput: (e) => { q.text = e.target.value; touch(); }, onkeydown: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doneQ(q); } } }),
+          h('div', { class: 'skpick', role: 'group', 'aria-label': 'Skills this question tests' },
+            h('span', { class: 'lbl', text: 'Skills this question tests' }),
+            h('span', { class: 'qtags' }, skillNames.map((n) => h('button', { type: 'button', class: 'skchip', 'aria-pressed': String(tags.includes(n)), text: n,
+              onclick: () => { setTags(q, tags.includes(n) ? tags.filter((t) => t !== n) : skillNames.filter((x) => x === n || tags.includes(x))); touch(); renderMain(); focusQ(); } }))),
+            !skillNames.length ? h('small', { class: 'advhint', text: 'Add skills first, then map questions to them.' }) : null),
+          h('div', { class: 'qedit-foot' }, h('small', { class: 'advhint', style: 'margin:0', text: tags.length ? tags.length + ' skill' + (tags.length === 1 ? '' : 's') + ' selected' : 'Pick at least one skill so this question counts toward scoring coverage.' }),
+            h('button', { class: 'fillbtn', type: 'button', text: 'Done', onclick: () => doneQ(q) })))
+        : h('div', { class: 'qbody' }, h('span', { class: 'qt', text: q.text }), chips);
       const row = h('div', { class: 'qrow', draggable: 'true' },
         h('span', { class: 'grip', 'aria-hidden': 'true', html: ICON.grip }), body,
         h('button', { class: 'xbtn', style: 'color:var(--accent-ink)', type: 'button', 'aria-label': 'Edit question', html: ICON.edit, onclick: () => { S.editQ = i; renderMain(); const t = $('main3').querySelector('.qbody textarea'); if (t) t.focus(); } }),
@@ -559,7 +582,7 @@
       qlist,
       h('div', { class: 'togrow' }, h('span', null, h('b', { text: 'Adaptive follow-ups' }), h('small', { text: 'Tara asks probing follow-ups when an answer is vague or strong.' })),
         h('button', { class: 'sw', type: 'button', role: 'switch', 'aria-checked': String(c.followups), 'aria-label': 'Adaptive follow-ups', onclick: () => { c.followups = !c.followups; touch(); renderMain(); } }, h('i'))),
-      h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add question', onclick: () => { a.questions.push({ text: 'New question', tag: '' }); S.editQ = a.questions.length - 1; touch(); renderMain(); const t = $('main3').querySelector('.qbody textarea'); if (t) { t.focus(); t.select(); } } })));
+      h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add question', onclick: () => { a.questions.push({ text: 'New question', tags: [], tag: '' }); S.editQ = a.questions.length - 1; touch(); renderMain(); const t = $('main3').querySelector('.qbody textarea'); if (t) { t.focus(); t.select(); } } })));
 
     m.append(exhibitsSection(a));
     const srow = (title, hint, key, opts) => h('div', { class: 'srow' }, h('span', { class: 'tt' }, h('b', { text: title }), h('small', { text: hint })), seg(title, key, opts));
