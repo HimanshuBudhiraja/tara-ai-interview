@@ -524,11 +524,21 @@
         h('div', { class: 'segwrap' }, h('span', { class: 'lbl', text: 'Follow-up depth' }), seg('Follow-up depth', 'depth', ['Light', 'Probing', 'Deep dive']),
           h('small', { style: 'font-size:13px;color:var(--muted-2)', text: 'Also sets the length: Light ≈ ' + OPT.depth_minutes.Light + ' min · Probing ≈ ' + OPT.depth_minutes.Probing + ' min · Deep dive ≈ ' + OPT.depth_minutes['Deep dive'] + ' min' })))));
 
+    // Coverage: how many questions bring each skill out (a question may map to several).
+    const cover = (name) => a.questions.filter((q) => tagsOf(q).includes(name)).length;
+    const showQs = (name) => { S.qFocus = name; renderMain(); const el = $('questions'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); clearTimeout(S.qFocusT); S.qFocusT = setTimeout(() => { S.qFocus = ''; renderMain(); }, 3000); };
+    const addQFor = (name) => { a.questions.push({ text: 'New question', tags: [name], tag: name }); S.editQ = a.questions.length - 1; touch(); renderMain(); const el = $('questions'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); const t = $('main3').querySelector('.qbody textarea'); if (t) { t.focus({ preventScroll: true }); t.select(); } };
+    const covered = a.rubric.filter((r) => r.name.trim() && cover(r.name) > 0).length;
     const rows = a.rubric.map((r, i) => {
+      const n = cover(r.name);
+      const cov = n
+        ? h('button', { class: 'covbtn', type: 'button', 'aria-label': n + ' question' + (n === 1 ? '' : 's') + ' test ' + r.name + '. Show them.', onclick: () => showQs(r.name) }, h('b', { text: String(n) }), ' question' + (n === 1 ? '' : 's'))
+        : h('button', { class: 'covbtn none', type: 'button', 'aria-label': 'No question tests ' + r.name + '. Add one.', onclick: () => addQFor(r.name) }, 'No question', h('small', { text: '+ Add one' }));
       const w = h('input', { type: 'number', min: '0', max: '100', value: String(r.weight), 'aria-label': 'Weight for ' + r.name, oninput: (e) => { r.weight = Math.max(0, Math.round(+e.target.value || 0)); S.reviewed = false; touch(); updTotal(); } });
       return h('div', { class: 'rr' },
         h('textarea', { class: 'ed n', rows: '1', 'aria-label': 'Skill name', value: r.name, oninput: (e) => { const was = r.name; r.name = e.target.value; retag(a, was, r.name); S.reviewed = false; touch(); }, onchange: () => renderMain() }),
         h('div', { class: 'a-cell' }, h('textarea', { class: 'ed a', rows: '2', 'aria-label': 'What a 5 looks like', value: r.anchor, oninput: (e) => { r.anchor = e.target.value; S.reviewed = false; touch(); } })),
+        h('div', { class: 'cov-cell' }, cov),
         h('div', { class: 'wbox' }, w, h('span', { text: '%' })),
         h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Remove ' + r.name, html: ICON.x, onclick: () => { a.rubric.splice(i, 1); retag(a, r.name, ''); S.reviewed = false; touch(); renderMain(); } }));
     });
@@ -538,7 +548,10 @@
       h('div', { class: 'ch2' }, h('div', { class: 'tt' }, h('h2', { id: 'rub-h', text: 'Skills' }), h('p', { class: 'sub', text: 'Each skill is scored 1–5 with anchored descriptors. Weights must total 100%. Never sent to the voice agent.' })), totPill),
       !S.reviewed ? h('div', { class: 'warnbox' }, h('span', null, h('span', { class: 'spark', html: ICON.warn }), 'Tara drafted these skills from your brief. Check the weights before you publish.'),
         h('button', { class: 'fillbtn', type: 'button', text: 'Mark as reviewed', onclick: () => { const t = a.rubric.reduce((x, r) => x + (+r.weight || 0), 0); if (t !== 100) { toast('Weights total ' + t + '%. Make them add up to 100% first.'); return; } S.reviewed = true; touch(); renderMain(); } })) : null,
-      h('div', { class: 'rtab' }, h('div', { class: 'rr hd' }, h('span', { text: 'SKILL' }), h('span', { class: 'a-cell', text: 'WHAT A 5 LOOKS LIKE' }), h('span', { style: 'text-align:right', text: 'WEIGHT' }), h('span')), rows),
+      h('div', { class: 'rtab' }, h('div', { class: 'rr hd' }, h('span', { text: 'SKILL' }), h('span', { class: 'a-cell', text: 'WHAT A 5 LOOKS LIKE' }), h('span', { class: 'cov-cell', text: 'QUESTIONS' }), h('span', { style: 'text-align:right', text: 'WEIGHT' }), h('span')), rows),
+      a.rubric.length ? h('p', { class: 'covsum' + (covered === a.rubric.length ? '' : ' warn') }, covered === a.rubric.length
+        ? 'Every skill has at least one question.'
+        : (a.rubric.length - covered) + ' of ' + a.rubric.length + ' skills ' + (a.rubric.length - covered === 1 ? 'has' : 'have') + ' no question yet. The conversation may never reach them, and a skill that isn\'t discussed is Not assessed.') : null,
       h('div', { class: 'rbtns' },
         h('button', { class: 'dashbtn ghost', type: 'button', text: '+ Add skill from Skill Master', onclick: openSkillMaster }),
         h('button', { class: 'obtn ghost', type: 'button', text: 'Balance weights to 100%', disabled: !a.rubric.length, onclick: () => { balanceWeights(a.rubric); S.reviewed = false; touch(); renderMain(); } }))));
@@ -565,7 +578,7 @@
           h('div', { class: 'qedit-foot' }, h('small', { class: 'advhint', style: 'margin:0', text: tags.length ? tags.length + ' skill' + (tags.length === 1 ? '' : 's') + ' selected' : 'Pick at least one skill so this question counts toward scoring coverage.' }),
             h('button', { class: 'fillbtn', type: 'button', text: 'Done', onclick: () => doneQ(q) })))
         : h('div', { class: 'qbody' }, h('span', { class: 'qt', text: q.text }), chips);
-      const row = h('div', { class: 'qrow', draggable: 'true' },
+      const row = h('div', { class: 'qrow' + (S.qFocus && tags.includes(S.qFocus) ? ' hl' : ''), draggable: 'true' },
         h('span', { class: 'grip', 'aria-hidden': 'true', html: ICON.grip }), body,
         h('button', { class: 'xbtn', style: 'color:var(--accent-ink)', type: 'button', 'aria-label': 'Edit question', html: ICON.edit, onclick: () => { S.editQ = i; renderMain(); const t = $('main3').querySelector('.qbody textarea'); if (t) t.focus(); } }),
         h('button', { class: 'xbtn', type: 'button', 'aria-label': 'Remove question', html: ICON.x, onclick: () => { a.questions.splice(i, 1); touch(); renderMain(); } }));

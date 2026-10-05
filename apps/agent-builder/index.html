@@ -279,13 +279,30 @@ textarea.inp{height:auto;padding:14px 16px;line-height:1.6;resize:vertical}
 .warnbox span{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--warn-ink)}
 .fillbtn{height:40px;padding:0 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-weight:700;font-size:14px}
 .rtab{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.rr{display:grid;grid-template-columns:minmax(140px,1.1fr) minmax(200px,2fr) 96px 40px;gap:12px;padding:12px 16px;border-top:1px solid var(--line-2);align-items:center}
+.rr{display:grid;grid-template-columns:minmax(140px,1.1fr) minmax(200px,2fr) 112px 96px 40px;gap:12px;padding:12px 16px;border-top:1px solid var(--line-2);align-items:center}
 .rr.hd{background:var(--bg);font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted-2);border-top:none}
 .rr .ed{border:1px solid transparent;border-radius:8px;padding:6px 8px;width:100%;background:transparent;font-size:15px;color:var(--ink);resize:none;line-height:1.45}
 .rr .ed:hover{border-color:var(--line)}
 .rr .ed:focus{outline:none;border-color:var(--accent);background:var(--white)}
-.rr .ed.n{font-weight:700}
+.rr .ed.n{font-weight:700;field-sizing:content;min-height:2.2em}
+.rr .ed.a{field-sizing:content;min-height:2.6em}
+/* Narrow screens: skill, questions, weight on one line; the strong-answer description below it. */
+@media (max-width:1180px){
+.rr{grid-template-columns:minmax(0,1fr) 112px 88px 40px;row-gap:4px}
+.rr .a-cell{grid-column:1 / -1;grid-row:2}
+.rr.hd .a-cell{display:none}
+}
 .rr .ed.a{font-size:14px;color:var(--muted)}
+.cov-cell{display:flex;align-items:center}
+.covbtn{font:inherit;font-size:13px;font-weight:600;display:inline-flex;flex-direction:column;align-items:flex-start;gap:0;min-height:36px;padding:4px 10px;border-radius:10px;border:1px solid var(--line-2);background:#fff;color:var(--ink-2,#344054);cursor:pointer;text-align:left;line-height:1.3}
+.covbtn b{font-size:15px;color:#1570EF;margin-right:2px}
+.covbtn:not(.none){flex-direction:row;align-items:baseline}
+.covbtn:hover{border-color:#1570EF;color:#1570EF}
+.covbtn.none{background:#FFFAEB;border-color:#FEDF89;color:#B54708}
+.covbtn.none small{font-size:12px;font-weight:600;color:#1570EF}
+.covsum{margin:0;font-size:13px;color:#067647}
+.covsum.warn{color:#B54708}
+.qrow.hl{border-color:#1570EF;background:#EFF8FF;transition:background .3s}
 .wbox{display:flex;justify-content:flex-end;align-items:center;gap:2px}
 .wbox input{width:64px;height:38px;padding:0 8px;border-radius:10px;border:1px solid var(--field);font-size:15px;font-weight:700;text-align:right}
 .wbox span{font-weight:700}
@@ -1064,6 +1081,6 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 <aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261005a"></script>
+<script src="/agent-builder/app.js?v=20261005c"></script>
 </body>
 </html>
