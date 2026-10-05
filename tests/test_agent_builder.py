@@ -1153,3 +1153,24 @@ def test_audio_setup_is_passed_through_to_retell_only_for_your_own_call(client, 
     assert seen["auth"] == "Bearer call_token" and b"offer" in seen["body"]      # the call's own token, as sent
     assert p.post(f"{base}/call_other/v1/webrtc/sessions", json={}).status_code == 404   # not your call
     assert p.post(f"{base}/call_mine/v2/anything-else", json={}).status_code == 404      # only WebRTC signalling
+
+
+# --------------------------------------------------------------------------- #
+#  The page itself sits behind the sign-in
+# --------------------------------------------------------------------------- #
+def test_the_builder_page_shows_the_sign_in_until_there_is_a_session(data_dir, tenant):
+    anonymous = TestClient(app)
+    first = anonymous.get("/agent-builder")
+    assert first.status_code == 200
+    assert 'id="f"' in first.text and "/api/auth/login" in first.text
+    assert "no-store" in first.headers["cache-control"]
+
+    sign_in(anonymous, tenant)
+    after = anonymous.get("/agent-builder")
+    assert 'id="f"' not in after.text and "/api/auth/login" not in after.text
+
+
+def test_builder_open_does_not_skip_the_page_sign_in(data_dir, tenant, monkeypatch):
+    monkeypatch.setattr(config, "BUILDER_OPEN", True)
+    page = TestClient(app).get("/agent-builder")
+    assert 'id="f"' in page.text

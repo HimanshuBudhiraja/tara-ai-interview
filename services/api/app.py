@@ -173,10 +173,19 @@ async def roleplay_builder_page():
     return FileResponse(ROOT / "apps" / "roleplay" / "builder.html")
 
 @app.get("/agent-builder")
-async def agent_builder_page():
+async def agent_builder_page(request: Request):
     """The Agent Builder: brief, build, review & test. A static page; all of
-    its data comes from the recruiter-guarded `/api/recruiter/agent-builder`."""
-    return FileResponse(ROOT / "apps" / "agent-builder" / "index.html")
+    its data comes from the recruiter-guarded `/api/recruiter/agent-builder`.
+
+    Without a live session the visitor gets the sign-in page at this same URL,
+    which reloads into the builder once the login succeeds. `TARA_BUILDER_OPEN`
+    only relaxes the API guard; it never skips this sign-in.
+    """
+    page = "index.html" if security.optional_principal(request) else "login.html"
+    return FileResponse(
+        ROOT / "apps" / "agent-builder" / page,
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.get("/agent-builder/app.js")
