@@ -342,6 +342,19 @@ def set_status(user_id: str, status: str) -> User | None:
 
 
 @_serialised(USERS)
+def set_password(user_id: str, password: str) -> User | None:
+    """Replace a user's password. The caller revokes their live sessions."""
+    new_hash = hash_password(password)
+    rows = _read(USERS, User)
+    user = rows.get(user_id)
+    if user is None:
+        return None
+    user.password_hash = new_hash
+    _write(USERS, rows)
+    return user
+
+
+@_serialised(USERS)
 def _stamp_login(user_id: str) -> None:
     rows = _read(USERS, User)
     user = rows.get(user_id)

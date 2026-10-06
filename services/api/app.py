@@ -301,6 +301,20 @@ async def _startup() -> None:
         except accounts.AccountError as exc:
             print(f"[boot] ⚠ could not create the first administrator: {exc}", flush=True)
 
+    if config.RESET_PASSWORD and config.BOOTSTRAP_EMAIL and config.BOOTSTRAP_PASSWORD:
+        # Opt-in and explicit: an existing account takes the configured password,
+        # and every login it holds is revoked.
+        target_user = accounts.find_user(config.BOOTSTRAP_EMAIL)
+        if target_user is None:
+            print("[boot] ⚠ TARA_RESET_PASSWORD is on but no account has that email.", flush=True)
+        else:
+            try:
+                accounts.set_password(target_user.user_id, config.BOOTSTRAP_PASSWORD)
+                accounts.revoke_sessions_for(target_user.user_id)
+                print(f"[boot] password reset: {target_user.email}", flush=True)
+            except accounts.AccountError as exc:
+                print(f"[boot] ⚠ could not reset the password: {exc}", flush=True)
+
     pool = candidate.pool
     default = interviews.ensure_default(pool)
     if not default.organization_id:

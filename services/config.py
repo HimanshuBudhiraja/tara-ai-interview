@@ -240,6 +240,9 @@ COOKIES_SECURE = _flag("TARA_COOKIES_SECURE", is_production())
 BOOTSTRAP_EMAIL = os.environ.get("TARA_BOOTSTRAP_EMAIL", "").strip()
 BOOTSTRAP_PASSWORD = os.environ.get("TARA_BOOTSTRAP_PASSWORD", "")
 BOOTSTRAP_ORG = os.environ.get("TARA_BOOTSTRAP_ORG", "").strip()
+# One-shot: with TARA_BOOTSTRAP_EMAIL and TARA_BOOTSTRAP_PASSWORD also set, an
+# EXISTING account gets that password at boot. Remove all three afterwards.
+RESET_PASSWORD = _flag("TARA_RESET_PASSWORD", False)
 
 
 #: The development seed's invitation token. Named here so the production check
@@ -512,6 +515,11 @@ def _debug_problems() -> list[str]:
         problems.append(
             "TARA_LLM is 'mock'. A production deployment would run interviews "
             "against the deterministic stub and no evaluation would be real."
+        )
+    if RESET_PASSWORD:
+        problems.append(
+            "TARA_RESET_PASSWORD is still set. It resets the account password on "
+            "every boot; remove it, and the password variable, once the reset has worked."
         )
     if BOOTSTRAP_PASSWORD:
         problems.append(
