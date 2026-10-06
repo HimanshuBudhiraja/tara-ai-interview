@@ -554,6 +554,21 @@ body{padding-left:var(--rail)}
 .imrail a.on{background:var(--soft);color:var(--accent-ink);cursor:pointer}
 .imrail a.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
 .imrail a.on svg{color:var(--accent)}
+.imacct{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 16px;border-top:1px solid var(--line-2)}
+.me-ava.sm{width:34px;height:34px;font-size:12px}
+.imout{font:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:44px;width:100%;padding:6px 4px;border:none;background:none;color:var(--muted-2);font-size:11.5px;font-weight:600;cursor:pointer;border-radius:8px}
+.imout svg{width:20px;height:20px}
+.imout:hover,.imout:focus-visible{color:#1570EF;background:#EFF8FF}
+.memenu{position:relative}
+button.me-ava{cursor:pointer}
+button.me-ava:hover,button.me-ava[aria-expanded="true"]{box-shadow:0 0 0 2px #1570EF}
+.mepop{position:absolute;right:0;top:calc(100% + 8px);z-index:60;min-width:240px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(16,24,40,.14);padding:6px;display:flex;flex-direction:column}
+.mepop[hidden]{display:none}
+.mewho{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-bottom:1px solid var(--line-2);margin-bottom:4px}
+.mewho small{font-size:12px;color:var(--muted-2)}
+.mewho b{font-size:13.5px;color:var(--ink);word-break:break-all}
+.mepop button{font:inherit;display:flex;align-items:center;gap:10px;min-height:40px;padding:8px 12px;border:none;background:none;border-radius:8px;color:var(--ink-2,#344054);font-size:14px;font-weight:600;cursor:pointer;text-align:left}
+.mepop button:hover,.mepop button:focus-visible{background:#EFF8FF;color:#1570EF}
 .imrail .beta{position:absolute;top:2px;right:4px;font-size:9.5px;font-weight:700;letter-spacing:.04em;color:var(--accent)}
 @media (max-width:760px){:root{--rail:0px}.imrail{display:none}}
 .mine-st{font-weight:600}
@@ -906,6 +921,10 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
   <a class="on" href="#" id="railAgent" aria-current="page"><span class="beta">BETA</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="15" height="11" rx="2"/><path d="M8 20h5M10.5 16v4"/><path d="M20 3v4M18 5h4"/><path d="M8 10.5h.01M13 10.5h.01"/></svg>AI Conversation Agent</a>
   <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><span class="beta">BETA</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>AI Skills Match</a>
   <a aria-disabled="true" class="off" title="Opens in the iMocha platform"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>More</a>
+  <div class="imacct">
+    <span class="me-ava sm" data-me-ava role="img" aria-label="Signed in" title="Signed in">HB</span>
+    <button class="imout" type="button" data-logout title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Log out</button>
+  </div>
 </aside>
 <nav class="subnav" aria-label="AI Conversation Agent">
   <a href="#" data-home id="subRoleplays" class="on">Role-plays</a>
@@ -950,7 +969,13 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
     </div>
     <div class="hr">
       <button class="ibtn" type="button" aria-label="Help" title="How it works" data-help><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 17h.01"/></svg></button>
-      <span class="me-ava" role="img" aria-label="Signed in as HB" title="Signed in as HB">HB</span>
+      <div class="memenu">
+        <button class="me-ava" type="button" data-me-ava data-me-toggle aria-haspopup="menu" aria-expanded="false" aria-label="Account" title="Account">HB</button>
+        <div class="mepop" role="menu" hidden>
+          <span class="mewho"><small>Signed in as</small><b data-me-email>…</b></span>
+          <button type="button" role="menuitem" data-logout><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Log out</button>
+        </div>
+      </div>
     </div>
   </header>
   <main class="m1">
@@ -1081,6 +1106,6 @@ table.repgrid{border-collapse:collapse;width:100%;font-size:14px;font-variant-nu
 <aside class="repdrawer" id="repDrawer" hidden aria-label="Attempt report"></aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="/agent-builder/app.js?v=20261005c"></script>
+<script src="/agent-builder/app.js?v=20261006a"></script>
 </body>
 </html>

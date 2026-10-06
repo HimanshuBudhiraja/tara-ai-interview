@@ -48,6 +48,43 @@
 
   /* ---------------- API ---------------- */
   const API = '/api/recruiter/agent-builder';
+  /* ---- Account: who is signed in, and log out ---- */
+  function initialsOf(email) {
+    const local = String(email || '').split('@')[0];
+    const parts = local.split(/[._\-\s]+/).filter(Boolean);
+    return ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : (parts[0] || '').slice(1, 2))).toUpperCase();
+  }
+  async function loadMe() {
+    try {
+      const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
+      if (!r.ok) return;
+      const d = await r.json(), email = (d.user && d.user.email) || '';
+      if (!email) return;
+      document.querySelectorAll('[data-me-ava]').forEach((el) => { el.textContent = initialsOf(email); el.title = 'Signed in as ' + email; el.setAttribute('aria-label', el.tagName === 'BUTTON' ? 'Account: ' + email : 'Signed in as ' + email); });
+      document.querySelectorAll('[data-me-email]').forEach((el) => { el.textContent = email; });
+    } catch (e) { /* the page still works without it */ }
+  }
+  async function logout() {
+    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }); } catch (e) { /* sign out locally anyway */ }
+    location.href = '/agent-builder';
+  }
+  document.addEventListener('click', (e) => {
+    const out = e.target.closest('[data-logout]');
+    if (out) { e.preventDefault(); logout(); return; }
+    const tog = e.target.closest('[data-me-toggle]');
+    document.querySelectorAll('.mepop').forEach((pop) => {
+      const btn = pop.parentElement.querySelector('[data-me-toggle]');
+      const open = tog === btn ? pop.hidden : false;
+      if (tog !== btn && pop.contains(e.target)) return;
+      pop.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.mepop:not([hidden])').forEach((pop) => { pop.hidden = true; const b = pop.parentElement.querySelector('[data-me-toggle]'); b.setAttribute('aria-expanded', 'false'); b.focus(); });
+  });
+  loadMe();
+
   async function api(path, opts) {
     const o = opts || {};
     const r = await fetch(API + path, {
