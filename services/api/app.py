@@ -173,10 +173,19 @@ async def roleplay_builder_page():
     return FileResponse(ROOT / "apps" / "roleplay" / "builder.html")
 
 @app.get("/agent-builder")
-async def agent_builder_page():
+async def agent_builder_page(request: Request):
     """The Agent Builder: brief, build, review & test. A static page; all of
-    its data comes from the recruiter-guarded `/api/recruiter/agent-builder`."""
-    return FileResponse(ROOT / "apps" / "agent-builder" / "index.html")
+    its data comes from the recruiter-guarded `/api/recruiter/agent-builder`.
+
+    Without a live session the visitor gets the sign-in page at this same URL,
+    which reloads into the builder once the login succeeds. `TARA_BUILDER_OPEN`
+    only relaxes the API guard; it never skips this sign-in.
+    """
+    page = "index.html" if security.optional_principal(request) else "login.html"
+    return FileResponse(
+        ROOT / "apps" / "agent-builder" / page,
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.get("/agent-builder/app.js")
@@ -291,6 +300,20 @@ async def _startup() -> None:
             )
         except accounts.AccountError as exc:
             print(f"[boot] ⚠ could not create the first administrator: {exc}", flush=True)
+
+    if config.RESET_PASSWORD and config.BOOTSTRAP_EMAIL and config.BOOTSTRAP_PASSWORD:
+        # Opt-in and explicit: an existing account takes the configured password,
+        # and every login it holds is revoked.
+        target_user = accounts.find_user(config.BOOTSTRAP_EMAIL)
+        if target_user is None:
+            print("[boot] ⚠ TARA_RESET_PASSWORD is on but no account has that email.", flush=True)
+        else:
+            try:
+                accounts.set_password(target_user.user_id, config.BOOTSTRAP_PASSWORD)
+                accounts.revoke_sessions_for(target_user.user_id)
+                print(f"[boot] password reset: {target_user.email}", flush=True)
+            except accounts.AccountError as exc:
+                print(f"[boot] ⚠ could not reset the password: {exc}", flush=True)
 
     pool = candidate.pool
     default = interviews.ensure_default(pool)
