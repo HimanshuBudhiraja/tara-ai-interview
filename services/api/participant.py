@@ -398,7 +398,11 @@ async def call(body: CallBody, row: dict[str, Any] = Depends(participant_scope))
     if r.status_code == 429:
         raise HTTPException(503, {"error": "busy", "message": "All sessions are in use."})
     if r.status_code >= 400:
-        raise HTTPException(502, "The voice service refused the call.")
+        why, _ = rx.refusal(r.status_code, r.text)
+        # The participant never sees billing or configuration detail.
+        raise HTTPException(503 if why == "credit" else 502,
+                            {"error": "voice_unavailable",
+                             "message": "Conversations are temporarily unavailable. Please try again later, or contact the team that invited you."})
     out = r.json()
     row.setdefault("calls", []).append(str(out.get("call_id") or ""))
     row["status"] = "in_call"

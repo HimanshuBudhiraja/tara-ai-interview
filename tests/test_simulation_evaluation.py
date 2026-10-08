@@ -191,7 +191,8 @@ def test_an_unusable_judge_answer_is_retried_never_scored_as_zero():
     assert by["Negotiation"]["total"] == 22 and by["Discovery"]["total"] == 13
 
 
-def test_a_judge_that_never_answers_usably_fails_loudly():
+def test_a_judge_that_never_answers_usably_fails_loudly(monkeypatch):
+    monkeypatch.setattr(sim, "JUDGE_BACKOFF_SEC", (0, 0, 0))
     llm = FlakyJudge([{"skills": []}] * (sim.JUDGE_ATTEMPTS * sim.JUDGE_SAMPLES))
     with pytest.raises(sim.EvaluationError, match="no usable score"):
         sim.evaluate(snapshot(), TRANSCRIPT, complete=llm)

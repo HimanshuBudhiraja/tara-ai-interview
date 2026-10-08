@@ -412,3 +412,26 @@ def assessment_content(row: dict[str, Any]) -> list[str]:
 def leaked_cues(body: dict[str, Any], row: dict[str, Any]) -> list[str]:
     blob = json.dumps(body).lower()
     return [cue for cue in assessment_content(row) if cue.lower() in blob]
+
+
+def refusal(status: int, text: str) -> tuple[str, str]:
+    """Why Retell refused to create a call: (reason code, message for the admin).
+
+    Logged with Retell's own message so a failure can be diagnosed from the
+    logs. The key is never part of either. Seen live on 2026-10-07/08: every
+    call refused with 402 because the account's credit had run out.
+    """
+    import logging
+
+    try:
+        detail = str((json.loads(text) or {}).get("message") or "")[:200]
+    except (ValueError, AttributeError):
+        detail = (text or "")[:200]
+    logging.getLogger("tara.retell").warning("retell create-web-call refused: status=%s message=%s", status, detail)
+    if status == 402:
+        return "credit", "Voice calls are paused: the Retell account is out of credit. Top it up in Retell to continue."
+    if status in (401, 403):
+        return "auth", "The voice service rejected this server's key. Check RETELL_API_KEY."
+    if status == 404:
+        return "agent", "The voice agent wasn't found. Check RETELL_AGENT_BUILDER_AGENT_ID."
+    return "refused", f"The voice service refused the call ({status}{': ' + detail if detail else ''})."

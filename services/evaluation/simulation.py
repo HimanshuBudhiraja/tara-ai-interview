@@ -275,7 +275,7 @@ def _usable(j: Any, criteria: list[str]) -> dict[str, int] | None:
 
 
 def _judge_once(complete: Complete, skills: list[dict[str, Any]], criteria: list[str],
-                evidence: list[dict[str, Any]], guide: str) -> dict[str, dict[str, Any]]:
+                evidence: list[dict[str, Any]], guide: str, errors: list[str] | None = None) -> dict[str, dict[str, Any]]:
     blocks = []
     for s in skills:
         items = [e for e in evidence if e["skill"] == s["name"]]
@@ -302,7 +302,9 @@ def _judge_once(complete: Complete, skills: list[dict[str, Any]], criteria: list
     )
     try:
         out = complete(_SYSTEM, user, 4000, "agent_scorer")
-    except Exception:  # noqa: BLE001 — a failed call is retried like an unusable answer
+    except Exception as exc:  # noqa: BLE001 — a failed call is retried like an unusable answer
+        if errors is not None:
+            errors.append(f"{type(exc).__name__}: {str(exc)[:160]}")
         return {}
     got: dict[str, dict[str, Any]] = {}
     names = {s["name"].lower(): s["name"] for s in skills}
@@ -321,8 +323,12 @@ def _judge_once(complete: Complete, skills: list[dict[str, Any]], criteria: list
 #: stray 0 must not decide a score (measured 2026-10-03: single runs of the same
 #: transcript ranged 5-21/25 on a skill; status flips caused most of it).
 JUDGE_SAMPLES = 3
-#: Rounds to collect them before the evaluation fails loudly.
-JUDGE_ATTEMPTS = 3
+#: Rounds to collect them before the evaluation fails loudly, and the pause
+#: before a round that follows one where nothing usable came back. Seen live on
+#: 2026-10-08: one scoring got nothing from nine calls in quick succession and
+#: the same request scored normally moments later.
+JUDGE_ATTEMPTS = 4
+JUDGE_BACKOFF_SEC = (2.0, 5.0, 10.0)
 
 
 def _combine(samples: list[dict[str, Any]], criteria: list[str]) -> dict[str, Any]:
@@ -340,14 +346,21 @@ def _judge(complete: Complete, skills: list[dict[str, Any]], criteria: list[str]
     """Scores for every skill, or EvaluationError. An unusable answer is never read as a zero."""
     from concurrent.futures import ThreadPoolExecutor
 
+    import time
+
     samples: dict[str, list[dict[str, Any]]] = {s["name"]: [] for s in skills}
+    errors: list[str] = []
+    empty_rounds = 0
     for attempt in range(JUDGE_ATTEMPTS):
         todo = [s for s in skills if len(samples[s["name"]]) < JUDGE_SAMPLES]
         if not todo:
             break
+        if empty_rounds:
+            time.sleep(JUDGE_BACKOFF_SEC[min(empty_rounds, len(JUDGE_BACKOFF_SEC)) - 1])
         need = max(JUDGE_SAMPLES - min(len(samples[s["name"]]) for s in todo), 1)
         with ThreadPoolExecutor(max_workers=need) as pool:
-            runs = list(pool.map(lambda _: _judge_once(complete, todo, criteria, evidence, guide), range(need)))
+            runs = list(pool.map(lambda _: _judge_once(complete, todo, criteria, evidence, guide, errors), range(need)))
+        empty_rounds = empty_rounds + 1 if not any(runs) else 0
         for got in runs:
             for name, j in got.items():
                 if len(samples[name]) < JUDGE_SAMPLES:
@@ -355,7 +368,8 @@ def _judge(complete: Complete, skills: list[dict[str, Any]], criteria: list[str]
     # A skill scored by fewer runs than asked is still scored (best effort), but never by none.
     missing = [n for n, v in samples.items() if not v]
     if missing:
-        raise EvaluationError([f"the scoring model gave no usable score for: {', '.join(missing)}; try again"])
+        why = f" (last error: {errors[-1]})" if errors else " (its answers were not in the expected shape)"
+        raise EvaluationError([f"the scoring model gave no usable score for: {', '.join(missing)}{why}; try again"])
     return {n: _combine(v, criteria) for n, v in samples.items()}
 
 

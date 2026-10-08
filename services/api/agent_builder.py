@@ -584,7 +584,7 @@ async def test_call(agent_id: str, request: Request) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(502, "Couldn't reach the voice service.") from exc
     if r.status_code >= 400:
-        raise HTTPException(502, "The voice service refused the call.")
+        raise HTTPException(502, rx.refusal(r.status_code, r.text)[1])
     out = r.json()
     call_id = str(out.get("call_id") or "")
     row.setdefault("tests", []).append({"call_id": call_id, "kind": "voice", "at": time.time(),

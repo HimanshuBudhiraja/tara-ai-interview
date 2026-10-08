@@ -1254,3 +1254,54 @@ def test_the_builder_offers_log_out_and_logging_out_brings_back_the_sign_in(data
     back = c.get("/agent-builder")
     assert 'id="f"' in back.text and "/api/auth/login" in back.text
     assert c.get("/api/auth/me").status_code == 401
+
+
+def _retell_refuses(monkeypatch, status, body):
+    class R:
+        status_code = status
+        text = json.dumps(body)
+
+        def json(self):
+            return body
+
+    class FakeClient:
+        def __init__(self, *a, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def post(self, url, json=None, headers=None):
+            return R()
+
+    import httpx
+    monkeypatch.setattr(config, "RETELL_API_KEY", "key_test")
+    monkeypatch.setattr(config, "RETELL_AGENT_BUILDER_AGENT_ID", "agent_one")
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+
+
+def test_out_of_voice_credit_is_named_for_the_admin(client, monkeypatch):
+    aid = _draft(client)["done"]["agent_id"]
+    _retell_refuses(monkeypatch, 402, {"status": "error", "message": "Credit balance exhausted, please top up to continue."})
+    r = client.post(f"{BASE}/agents/{aid}/test-call")
+    assert r.status_code == 502 and "out of credit" in r.json()["detail"]
+
+
+def test_out_of_voice_credit_tells_the_participant_only_to_try_later(client, monkeypatch):
+    aid, code = _published_invite(client)
+    p = TestClient(app)
+    sid = p.post("/api/participant/sign-in", json={"code": code, "name": "Aarav Mehta", "email": "a@x.test", "consent": True}).json()["session_id"]
+    _book_now(p, sid, monkeypatch)
+    _retell_refuses(monkeypatch, 402, {"status": "error", "message": "Credit balance exhausted, please top up to continue."})
+    r = p.post(f"/api/participant/session/{sid}/call", json={})
+    assert r.status_code == 503
+    msg = r.json()["detail"]["message"]
+    assert "temporarily unavailable" in msg and "credit" not in msg.lower() and "retell" not in msg.lower()
+
+
+@pytest.mark.parametrize("status,why", [(402, "credit"), (401, "auth"), (404, "agent"), (500, "refused")])
+def test_each_retell_refusal_has_its_own_reason(status, why):
+    assert rx.refusal(status, '{"message": "x"}')[0] == why
